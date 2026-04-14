@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Sprout, 
@@ -30,7 +30,8 @@ import {
   ChevronRight,
   Save,
   Check,
-  X
+  X,
+  Lock
 } from "lucide-react";
 import { Navbar } from "@/components/sections/navbar";
 import { Footer } from "@/components/sections/footer";
@@ -79,86 +80,94 @@ import { collection, query, orderBy, doc, updateDoc, deleteDoc } from "firebase/
 import { useMemoFirebase } from "@/firebase/firestore/use-collection";
 import { useToast } from "@/hooks/use-toast";
 
-// Enhanced Mock data for the 50-grid heatmap
-const crops = ["Banarasi Mango", "Organic Tomato", "Basmati Rice", "Wheat", "Mustard", "Corn"];
-const owners = ["Ram Singh", "Vijay Kumar", "Anita Devi", "Suresh Prasad", "Rajesh Khanna", "Sunita Verma"];
-
 interface GridItem {
   id: number;
   fieldId: string;
+  isLeased: boolean;
+  leaseData?: any;
   produced: string;
   nutrients: { n: number; p: number; k: number };
   moisture: number;
-  statusColor: "healthy" | "warning" | "critical";
-  ownerName: string;
-  crop: string;
-  revenue: number;
+  statusColor: "healthy" | "warning" | "critical" | "inactive";
   status: string;
-  pincode: string;
   irrigationPass: boolean;
   soilTestPass: boolean;
   cropHealthPass: boolean;
 }
-
-const generateGridData = (): GridItem[] => {
-  return Array.from({ length: 50 }, (_, i) => {
-    const moisture = Math.floor(Math.random() * 60) + 5; 
-    const nutrients = {
-      n: Math.floor(Math.random() * 60) + 5,
-      p: Math.floor(Math.random() * 40) + 5,
-      k: Math.floor(Math.random() * 50) + 5,
-    };
-
-    let statusColor: "healthy" | "warning" | "critical" = "healthy";
-    const avgN = (nutrients.n + nutrients.p + nutrients.k) / 3;
-
-    if (moisture < 15 || avgN < 18) {
-      statusColor = "critical";
-    } else if (moisture < 30 || avgN < 30) {
-      statusColor = "warning";
-    }
-
-    return {
-      id: i,
-      fieldId: `FLD-${2000 + i}`,
-      produced: (Math.random() * 5 + 1).toFixed(1) + " Tons",
-      nutrients,
-      moisture,
-      statusColor,
-      ownerName: owners[Math.floor(Math.random() * owners.length)],
-      crop: crops[Math.floor(Math.random() * crops.length)],
-      revenue: Math.floor(Math.random() * 45000) + 15000,
-      status: statusColor === "healthy" ? "Optimal Health" : statusColor === "warning" ? "Needs Attention" : "Action Required",
-      pincode: "22100" + (i % 10),
-      irrigationPass: Math.random() > 0.2,
-      soilTestPass: Math.random() > 0.15,
-      cropHealthPass: statusColor === "healthy",
-    };
-  });
-};
 
 export default function DashboardPage() {
   const { lang } = useSettings();
   const { user } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
-  const [gridData, setGridData] = useState<GridItem[]>(generateGridData());
   const [activeTab, setActiveTab] = useState("overview");
   const [selectedSector, setSelectedSector] = useState<GridItem | null>(null);
   const [selectedLease, setSelectedLease] = useState<any | null>(null);
 
-  // Fetch registrations
+  // Fetch all registrations
   const registrationsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return query(collection(firestore, "landLeaseRegistrations"), orderBy("createdAt", "desc"));
   }, [firestore]);
 
-  const { data: registrations } = useCollection(registrationsQuery);
+  const { data: registrations, loading: loadingRegs } = useCollection(registrationsQuery);
+
+  const pendingRegistrations = useMemo(() => 
+    registrations?.filter(r => r.status === 'pending') || [], 
+    [registrations]
+  );
+  
+  const activeLeases = useMemo(() => 
+    registrations?.filter(r => r.status === 'reviewed') || [], 
+    [registrations]
+  );
+
+  // Generate 50 Grid Sectors mapping to real leases where available
+  const gridData: GridItem[] = useMemo(() => {
+    return Array.from({ length: 50 }, (_, i) => {
+      const lease = activeLeases[i];
+      const isLeased = !!lease;
+      
+      // Mocked sensor data for leased fields
+      const moisture = isLeased ? (Math.floor(Math.random() * 40) + 20) : 0;
+      const nutrients = isLeased ? {
+        n: Math.floor(Math.random() * 60) + 10,
+        p: Math.floor(Math.random() * 40) + 10,
+        k: Math.floor(Math.random() * 50) + 10,
+      } : { n: 0, p: 0, k: 0 };
+
+      let statusColor: GridItem['statusColor'] = "inactive";
+      if (isLeased) {
+        const avgN = (nutrients.n + nutrients.p + nutrients.k) / 3;
+        if (moisture < 25 || avgN < 20) statusColor = "critical";
+        else if (moisture < 35 || avgN < 35) statusColor = "warning";
+        else statusColor = "healthy";
+      }
+
+      return {
+        id: i,
+        fieldId: `FLD-${2000 + i}`,
+        isLeased,
+        leaseData: lease,
+        produced: isLeased ? (Math.random() * 3 + 1).toFixed(1) + " Tons" : "0",
+        nutrients,
+        moisture,
+        statusColor,
+        status: !isLeased ? "Unleased Asset" : statusColor === "healthy" ? "Optimal" : statusColor === "warning" ? "Needs Attention" : "Action Required",
+        irrigationPass: isLeased && moisture > 30,
+        soilTestPass: isLeased && (nutrients.n + nutrients.p + nutrients.k) > 60,
+        cropHealthPass: isLeased && statusColor === "healthy",
+      };
+    });
+  }, [activeLeases]);
 
   const handleApprove = (regId: string) => {
     if (!firestore) return;
     const docRef = doc(firestore, "landLeaseRegistrations", regId);
-    updateDoc(docRef, { status: "reviewed" });
+    updateDoc(docRef, { status: "reviewed" })
+      .then(() => {
+        toast({ title: "Lease Approved", description: "Land is now active in the field monitor." });
+      });
   };
 
   const handleReject = (regId: string) => {
@@ -167,17 +176,10 @@ export default function DashboardPage() {
     updateDoc(docRef, { status: "rejected" });
   };
 
-  const updateFieldData = (id: number, updates: Partial<GridItem>) => {
-    setGridData(prev => prev.map(item => item.id === id ? { ...item, ...updates } : item));
-    if (selectedSector && selectedSector.id === id) {
-      setSelectedSector(prev => prev ? { ...prev, ...updates } : null);
-    }
-  };
-
   const handleSaveFieldReport = () => {
     toast({
-      title: "Field Report Updated",
-      description: `Sector ${selectedSector?.fieldId} has been successfully synchronized with the IOT network.`,
+      title: "Field Intelligence Synced",
+      description: `Sector ${selectedSector?.fieldId} monitoring logs updated.`,
     });
     setSelectedSector(null);
   };
@@ -185,17 +187,12 @@ export default function DashboardPage() {
   const t = {
     title: lang === 'en' ? "Dashboard" : "डैशबोर्ड",
     subtitle: lang === 'en' ? "Staff Intelligence Dashboard - Uttar Pradesh Clusters" : "स्टाफ इंटेलिजेंस डैशबोर्ड - उत्तर प्रदेश क्लस्टर",
-    heatmapTitle: lang === 'en' ? "Field Monitor Heatmap" : "फील्ड मॉनिटर हीटमैप",
-    iotTitle: lang === 'en' ? "IOT Sensor Network" : "आईओटी सेंसर नेटवर्क",
-    approvalTitle: lang === 'en' ? "Lease Queue" : "लीज कतार",
-    activeLeaseTitle: lang === 'en' ? "Active Leases" : "सक्रिय लीज",
+    heatmapTitle: lang === 'en' ? "Field Monitor" : "फील्ड मॉनिटर",
     details: {
       owner: lang === 'en' ? "Land Owner" : "ज़मीन मालिक",
       crop: lang === 'en' ? "Current Crop" : "वर्तमान फसल",
-      revenue: lang === 'en' ? "Est. Revenue" : "अनुमानित राजस्व",
       produced: lang === 'en' ? "Yield Produced" : "उत्पादित पैदावार",
       nutrients: lang === 'en' ? "Soil Nutrients (N-P-K)" : "मिट्टी के पोषक तत्व",
-      status: lang === 'en' ? "Status" : "स्थिति",
       payout: lang === 'en' ? "Monthly Payout" : "मासिक भुगतान",
     }
   };
@@ -203,14 +200,10 @@ export default function DashboardPage() {
   const navItems = [
     { id: "overview", label: lang === 'en' ? "Overview" : "अवलोकन", icon: LayoutDashboard },
     { id: "heatmap", label: lang === 'en' ? "Field Monitor" : "फील्ड मॉनिटर", icon: MapPin },
-    { id: "active_leases", label: lang === 'en' ? "Active Leases" : "सक्रिय लीज", icon: FileText },
     { id: "approvals", label: lang === 'en' ? "Lease Queue" : "लीज कतार", icon: History },
+    { id: "active_leases", label: lang === 'en' ? "Active Leases" : "सक्रिय लीज", icon: FileText },
     { id: "iot", label: lang === 'en' ? "Sensor Network" : "सेंसर नेटवर्क", icon: Cpu },
-    { id: "settings", label: lang === 'en' ? "Settings" : "सेटिंग्स", icon: Settings },
   ];
-
-  const pendingCount = registrations?.filter(r => r.status === 'pending').length || 0;
-  const activeLeases = registrations?.filter(r => r.status === 'reviewed') || [];
 
   return (
     <SidebarProvider>
@@ -245,9 +238,9 @@ export default function DashboardPage() {
                         >
                           <item.icon size={18} />
                           <span className="font-medium">{item.label}</span>
-                          {item.id === "approvals" && pendingCount > 0 && (
+                          {item.id === "approvals" && pendingRegistrations.length > 0 && (
                             <Badge className="ml-auto bg-krishi-amber text-white text-[10px] h-5 w-5 flex items-center justify-center p-0 rounded-full">
-                              {pendingCount}
+                              {pendingRegistrations.length}
                             </Badge>
                           )}
                         </SidebarMenuButton>
@@ -264,19 +257,14 @@ export default function DashboardPage() {
               
               <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div className="space-y-2">
-                  <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="flex items-center gap-3"
-                  >
+                  <div className="flex items-center gap-3">
                     <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 px-3 py-1 font-code">
                       <ShieldCheck size={14} className="mr-2" />
                       STAFF_PRIVILEGE_ACTIVE
                     </Badge>
-                    <span className="text-[10px] font-code text-foreground/40 uppercase tracking-widest">Region: EASTERN_UP_ZONE</span>
-                  </motion.div>
+                  </div>
                   <h1 className="text-4xl md:text-6xl font-display">
-                    {activeTab === 'overview' ? t.title : navItems.find(n => n.id === activeTab)?.label}
+                    {navItems.find(n => n.id === activeTab)?.label}
                   </h1>
                   <p className="text-xl text-foreground/60 font-body">{t.subtitle}</p>
                 </div>
@@ -288,7 +276,6 @@ export default function DashboardPage() {
                     key="overview"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
                     className="grid lg:grid-cols-3 gap-8"
                   >
                     <Card className="lg:col-span-2 rounded-[2.5rem] border-border shadow-sm overflow-hidden bg-card">
@@ -296,7 +283,7 @@ export default function DashboardPage() {
                         <div className="flex justify-between items-center">
                           <div>
                             <CardTitle className="text-2xl font-headline font-bold">{t.heatmapTitle}</CardTitle>
-                            <CardDescription>Visual Diagnostic • Grid-based Sensor Intelligence</CardDescription>
+                            <CardDescription>Live Verification & Diagnostic Heatmap</CardDescription>
                           </div>
                           <div className="flex gap-4 text-[10px] font-bold">
                             <div className="flex items-center gap-1.5">
@@ -311,6 +298,10 @@ export default function DashboardPage() {
                                 <div className="w-3 h-3 rounded-full bg-red-500" />
                                 <span className="text-red-500">CRITICAL</span>
                             </div>
+                            <div className="flex items-center gap-1.5">
+                                <div className="w-3 h-3 rounded-full bg-muted" />
+                                <span className="text-foreground/20">UNLEASED</span>
+                            </div>
                         </div>
                         </div>
                       </CardHeader>
@@ -319,45 +310,45 @@ export default function DashboardPage() {
                           {gridData.map((grid) => (
                             <motion.div
                               key={grid.id}
-                              whileHover={{ scale: 1.1, zIndex: 10 }}
-                              onClick={() => setSelectedSector(grid)}
-                              className={`aspect-square rounded-lg flex flex-col items-center justify-center cursor-pointer transition-all border border-black/5 hover:shadow-lg ${
-                                grid.statusColor === "healthy" ? "bg-krishi-lime" :
-                                grid.statusColor === "warning" ? "bg-krishi-amber" :
-                                "bg-red-500"
+                              whileHover={grid.isLeased ? { scale: 1.1, zIndex: 10 } : {}}
+                              onClick={() => grid.isLeased && setSelectedSector(grid)}
+                              className={`aspect-square rounded-lg flex flex-col items-center justify-center transition-all border border-black/5 ${
+                                !grid.isLeased ? "bg-muted/30 grayscale opacity-40 cursor-not-allowed" :
+                                grid.statusColor === "healthy" ? "bg-krishi-lime cursor-pointer shadow-sm hover:shadow-lg" :
+                                grid.statusColor === "warning" ? "bg-krishi-amber cursor-pointer shadow-sm hover:shadow-lg" :
+                                "bg-red-500 cursor-pointer shadow-sm hover:shadow-lg"
                               }`}
                             >
-                              <span className="text-[8px] font-bold text-white/40 mb-0.5">#{grid.id}</span>
-                              {grid.statusColor === "critical" && <AlertTriangle size={12} className="text-white animate-pulse" />}
-                              {grid.statusColor === "warning" && <Activity size={12} className="text-white/80" />}
+                              <span className={`text-[8px] font-bold mb-0.5 ${grid.isLeased ? 'text-white/60' : 'text-foreground/20'}`}>#{grid.id}</span>
+                              {!grid.isLeased && <Lock size={10} className="text-foreground/10" />}
+                              {grid.isLeased && grid.statusColor === "critical" && <AlertTriangle size={12} className="text-white animate-pulse" />}
                             </motion.div>
                           ))}
                         </div>
+                        {!activeLeases.length && (
+                          <div className="mt-8 p-6 bg-primary/5 rounded-2xl border border-dashed border-primary/20 text-center">
+                            <p className="text-sm text-primary font-medium italic">All sectors currently unleased. Approve applications in the Lease Queue to activate field monitoring.</p>
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
 
                     <div className="space-y-8">
                       <Card className="rounded-[2rem] bg-krishi-black text-white p-8 relative overflow-hidden">
                         <div className="absolute top-0 right-0 p-4 opacity-10">
-                            <Zap size={80} />
+                            <Database size={80} />
                         </div>
-                        <p className="text-krishi-gold text-[10px] font-bold uppercase tracking-[0.2em] mb-4">LEASING_SNAPSHOT</p>
-                        <h4 className="text-4xl font-display mb-2">{activeLeases.length}</h4>
-                        <p className="text-sm text-white/60">Verified Land Assets in Eastern UP Cluster.</p>
-                      </Card>
-                      <Card className="rounded-[2rem] border-border p-8 bg-card">
-                         <h4 className="font-headline font-bold mb-4">Recent Activity</h4>
-                         <div className="space-y-4">
-                            {registrations?.slice(0, 3).map((reg: any) => (
-                               <div key={reg.id} className="flex items-center gap-3 pb-3 border-b border-border/50 last:border-0">
-                                  <div className={`w-2 h-2 rounded-full ${reg.status === 'pending' ? 'bg-krishi-amber' : 'bg-krishi-lime'}`} />
-                                  <div className="flex-1">
-                                     <p className="text-sm font-bold">{reg.aadharName}</p>
-                                     <p className="text-[10px] text-foreground/40 uppercase">{reg.status}</p>
-                                  </div>
-                               </div>
-                            ))}
-                         </div>
+                        <p className="text-krishi-gold text-[10px] font-bold uppercase tracking-[0.2em] mb-4">Verification Stats</p>
+                        <div className="grid grid-cols-2 gap-4">
+                           <div>
+                              <h4 className="text-3xl font-display">{activeLeases.length}</h4>
+                              <p className="text-[10px] text-white/40 uppercase">Active</p>
+                           </div>
+                           <div>
+                              <h4 className="text-3xl font-display">{pendingRegistrations.length}</h4>
+                              <p className="text-[10px] text-white/40 uppercase">Queue</p>
+                           </div>
+                        </div>
                       </Card>
                     </div>
                   </motion.div>
@@ -368,7 +359,6 @@ export default function DashboardPage() {
                     key="approvals"
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
                     className="space-y-8"
                   >
                     <Card className="rounded-[2.5rem] border-border shadow-sm overflow-hidden bg-card">
@@ -379,16 +369,16 @@ export default function DashboardPage() {
                             <TableHead className="font-bold">Location</TableHead>
                             <TableHead className="font-bold">Area</TableHead>
                             <TableHead className="font-bold">Status</TableHead>
-                            <TableHead className="text-right font-bold">Actions</TableHead>
+                            <TableHead className="text-right font-bold">Verification Actions</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {registrations?.filter(r => r.status === 'pending').map((reg: any) => (
+                          {pendingRegistrations.map((reg: any) => (
                             <TableRow key={reg.id} className="hover:bg-muted/10">
                               <TableCell className="font-medium">
                                 <div>
                                     <p className="font-bold">{reg.aadharName}</p>
-                                    <p className="text-xs text-foreground/40">{reg.mobile}</p>
+                                    <p className="text-xs text-foreground/40">Mobile: {reg.mobile}</p>
                                 </div>
                               </TableCell>
                               <TableCell>
@@ -398,24 +388,27 @@ export default function DashboardPage() {
                                 <Badge variant="secondary">{reg.fieldSize} {reg.fieldUnit}</Badge>
                               </TableCell>
                               <TableCell>
-                                <Badge className="bg-krishi-amber text-white">PENDING</Badge>
+                                <Badge className="bg-krishi-amber text-white">PENDING_REVIEW</Badge>
                               </TableCell>
                               <TableCell className="text-right">
-                                <div className="flex justify-end gap-2">
+                                <div className="flex justify-end gap-3">
                                     <Button size="sm" variant="ghost" className="text-krishi-lime hover:bg-krishi-lime/10" onClick={() => handleApprove(reg.id)}>
-                                      <CheckCircle2 size={18} />
+                                      <CheckCircle2 size={18} className="mr-2" /> Approve
                                     </Button>
                                     <Button size="sm" variant="ghost" className="text-destructive hover:bg-destructive/10" onClick={() => handleReject(reg.id)}>
-                                      <XCircle size={18} />
+                                      <XCircle size={18} className="mr-2" /> Reject
                                     </Button>
                                 </div>
                               </TableCell>
                             </TableRow>
                           ))}
-                          {pendingCount === 0 && (
+                          {pendingRegistrations.length === 0 && (
                             <TableRow>
-                              <TableCell colSpan={5} className="text-center py-20 text-foreground/40 italic">
-                                No pending registrations in queue.
+                              <TableCell colSpan={5} className="text-center py-24">
+                                <div className="space-y-4 opacity-30">
+                                   <History size={48} className="mx-auto" />
+                                   <p className="font-medium italic">No pending land lease applications in queue.</p>
+                                </div>
                               </TableCell>
                             </TableRow>
                           )}
@@ -430,33 +423,29 @@ export default function DashboardPage() {
                     key="active_leases"
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    className="space-y-8"
+                    className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
                   >
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {activeLeases.map((reg: any) => (
-                        <Card key={reg.id} className="rounded-3xl border-border bg-card p-6 hover:shadow-xl transition-all group cursor-pointer" onClick={() => setSelectedLease(reg)}>
-                           <div className="flex justify-between items-start mb-6">
-                              <div className="p-3 bg-primary/10 text-primary rounded-2xl group-hover:bg-primary group-hover:text-white transition-colors">
-                                 <FileText size={20} />
-                              </div>
-                              <Badge className="bg-krishi-lime/10 text-krishi-lime border-krishi-lime/20">VERIFIED</Badge>
-                           </div>
-                           <h4 className="text-lg font-bold mb-1">{reg.aadharName}</h4>
-                           <p className="text-xs text-foreground/40 mb-4 uppercase tracking-widest">{reg.village}, {reg.district}</p>
-                           <div className="flex items-center justify-between pt-4 border-t border-border">
-                              <span className="text-sm font-medium">{reg.fieldSize} {reg.fieldUnit}</span>
-                              <ChevronRight className="text-foreground/20 group-hover:text-primary transition-colors" size={16} />
-                           </div>
-                        </Card>
-                      ))}
-                      {activeLeases.length === 0 && (
-                        <div className="col-span-full py-24 text-center bg-card border border-dashed border-border rounded-[3rem]">
-                           <FileText className="mx-auto h-12 w-12 text-foreground/10 mb-4" />
-                           <p className="text-foreground/40">No active leases found. Approve some from the queue.</p>
-                        </div>
-                      )}
-                    </div>
+                    {activeLeases.map((reg: any) => (
+                      <Card key={reg.id} className="rounded-3xl border-border bg-card p-6 hover:shadow-xl transition-all group cursor-pointer" onClick={() => setSelectedLease(reg)}>
+                         <div className="flex justify-between items-start mb-6">
+                            <div className="p-3 bg-primary/10 text-primary rounded-2xl group-hover:bg-primary group-hover:text-white transition-colors">
+                               <FileText size={20} />
+                            </div>
+                            <Badge className="bg-krishi-lime/10 text-krishi-lime border-krishi-lime/20">VERIFIED</Badge>
+                         </div>
+                         <h4 className="text-lg font-bold mb-1">{reg.aadharName}</h4>
+                         <p className="text-xs text-foreground/40 mb-4 uppercase tracking-widest">{reg.village}, {reg.district}</p>
+                         <div className="flex items-center justify-between pt-4 border-t border-border">
+                            <span className="text-sm font-medium">{reg.fieldSize} {reg.fieldUnit}</span>
+                            <ChevronRight className="text-foreground/20 group-hover:text-primary transition-colors" size={16} />
+                         </div>
+                      </Card>
+                    ))}
+                    {activeLeases.length === 0 && (
+                      <div className="col-span-full py-24 text-center bg-card border border-dashed border-border rounded-[3rem] opacity-40 italic">
+                         No active leases managed. Approve land from the queue to start.
+                      </div>
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -464,169 +453,74 @@ export default function DashboardPage() {
           </SidebarInset>
         </div>
 
-        {/* Sector Details & Edit Dialog */}
+        {/* Sector Details Dialog */}
         <Dialog open={!!selectedSector} onOpenChange={() => setSelectedSector(null)}>
-          <DialogContent className="rounded-[2.5rem] p-8 max-w-lg border-primary/20 bg-card/95 backdrop-blur-xl overflow-y-auto max-h-[90vh]">
+          <DialogContent className="rounded-[2.5rem] p-8 max-w-lg border-primary/20 bg-card/95 backdrop-blur-xl">
             <DialogHeader className="space-y-4">
               <div className="flex justify-between items-start">
                 <Badge className={`${
                   selectedSector?.statusColor === 'healthy' ? 'bg-krishi-lime' :
                   selectedSector?.statusColor === 'warning' ? 'bg-krishi-amber' : 'bg-red-500'
-                } text-white`}>
+                } text-white uppercase tracking-widest px-3 py-1`}>
                   Field ID: {selectedSector?.fieldId}
                 </Badge>
-                <div className="text-[10px] font-code text-foreground/40">PIN: {selectedSector?.pincode}</div>
               </div>
-              <DialogTitle className="text-3xl font-display">Field Intelligence Report</DialogTitle>
+              <DialogTitle className="text-3xl font-display">Sector Diagnostic Report</DialogTitle>
               <DialogDescription className="font-code text-foreground/60">
-                Live Monitoring & Diagnostics
+                Linked Lease Record: #KR-{selectedSector?.leaseData?.id?.slice(0, 4).toUpperCase()}
               </DialogDescription>
             </DialogHeader>
 
             <div className="grid gap-6 mt-6">
-              {/* Field Owner Info */}
               <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-2xl border border-border">
                 <div className="p-3 bg-primary/10 text-primary rounded-xl">
                   <Users size={20} />
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-foreground/40 uppercase tracking-widest">{t.details.owner}</p>
-                  <p className="font-bold text-lg">{selectedSector?.ownerName}</p>
+                  <p className="font-bold text-lg">{selectedSector?.leaseData?.aadharName}</p>
                 </div>
               </div>
 
-              {/* Editable Fields: Crop & Yield */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">{t.details.crop}</Label>
-                  <Input 
-                    value={selectedSector?.crop || ""} 
-                    onChange={(e) => selectedSector && updateFieldData(selectedSector.id, { crop: e.target.value })}
-                    className="rounded-xl bg-muted/20 border-border"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">{t.details.produced}</Label>
-                  <Input 
-                    value={selectedSector?.produced || ""} 
-                    onChange={(e) => selectedSector && updateFieldData(selectedSector.id, { produced: e.target.value })}
-                    className="rounded-xl bg-muted/20 border-border"
-                  />
-                </div>
-              </div>
-
-              {/* Pass/Fail Checklists */}
               <div className="p-6 bg-muted/30 rounded-3xl border border-border space-y-6">
-                <h4 className="text-xs font-bold uppercase tracking-widest text-foreground/40 mb-2">Diagnostic Checklists</h4>
+                <h4 className="text-xs font-bold uppercase tracking-widest text-foreground/40 mb-2">Field Status Check</h4>
                 
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Droplets size={18} className="text-primary" />
-                    <span className="text-sm font-medium">Irrigation System</span>
+                  <div className="flex items-center gap-3 text-sm font-medium">
+                    <Droplets size={18} className="text-primary" /> Irrigation Log
                   </div>
-                  <div className="flex gap-2">
-                    <Button 
-                      size="icon" 
-                      variant={selectedSector?.irrigationPass ? "default" : "outline"}
-                      className={`h-8 w-8 rounded-lg ${selectedSector?.irrigationPass ? 'bg-krishi-lime' : ''}`}
-                      onClick={() => selectedSector && updateFieldData(selectedSector.id, { irrigationPass: true })}
-                    >
-                      <Check size={16} />
-                    </Button>
-                    <Button 
-                      size="icon" 
-                      variant={!selectedSector?.irrigationPass ? "destructive" : "outline"}
-                      className="h-8 w-8 rounded-lg"
-                      onClick={() => selectedSector && updateFieldData(selectedSector.id, { irrigationPass: false })}
-                    >
-                      <X size={16} />
-                    </Button>
-                  </div>
+                  <Badge variant={selectedSector?.moisture! > 30 ? "default" : "destructive"}>
+                    {selectedSector?.moisture! > 30 ? "PASS" : "LOW_MOISTURE"}
+                  </Badge>
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Beaker size={18} className="text-primary" />
-                    <span className="text-sm font-medium">Soil Quality Test</span>
+                  <div className="flex items-center gap-3 text-sm font-medium">
+                    <Beaker size={18} className="text-primary" /> Soil Nutrient Test
                   </div>
-                  <div className="flex gap-2">
-                    <Button 
-                      size="icon" 
-                      variant={selectedSector?.soilTestPass ? "default" : "outline"}
-                      className={`h-8 w-8 rounded-lg ${selectedSector?.soilTestPass ? 'bg-krishi-lime' : ''}`}
-                      onClick={() => selectedSector && updateFieldData(selectedSector.id, { soilTestPass: true })}
-                    >
-                      <Check size={16} />
-                    </Button>
-                    <Button 
-                      size="icon" 
-                      variant={!selectedSector?.soilTestPass ? "destructive" : "outline"}
-                      className="h-8 w-8 rounded-lg"
-                      onClick={() => selectedSector && updateFieldData(selectedSector.id, { soilTestPass: false })}
-                    >
-                      <X size={16} />
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Activity size={18} className="text-primary" />
-                    <span className="text-sm font-medium">Crop Health Scan</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button 
-                      size="icon" 
-                      variant={selectedSector?.cropHealthPass ? "default" : "outline"}
-                      className={`h-8 w-8 rounded-lg ${selectedSector?.cropHealthPass ? 'bg-krishi-lime' : ''}`}
-                      onClick={() => selectedSector && updateFieldData(selectedSector.id, { cropHealthPass: true })}
-                    >
-                      <Check size={16} />
-                    </Button>
-                    <Button 
-                      size="icon" 
-                      variant={!selectedSector?.cropHealthPass ? "destructive" : "outline"}
-                      className="h-8 w-8 rounded-lg"
-                      onClick={() => selectedSector && updateFieldData(selectedSector.id, { cropHealthPass: false })}
-                    >
-                      <X size={16} />
-                    </Button>
-                  </div>
+                  <Badge variant={selectedSector?.soilTestPass ? "default" : "destructive"}>
+                    {selectedSector?.soilTestPass ? "OPTIMAL" : "DEPLETED"}
+                  </Badge>
                 </div>
               </div>
 
-              {/* Nutrients Display */}
-              <div className="p-6 bg-krishi-black/5 rounded-2xl border border-border">
-                <div className="flex items-center gap-2 mb-4">
-                  <Beaker size={16} className="text-primary" />
-                  <span className="text-[10px] font-bold uppercase tracking-widest">{t.details.nutrients}</span>
-                </div>
-                <div className="grid grid-cols-3 gap-4 text-center">
-                  <div className="space-y-1">
-                    <p className="text-[10px] font-bold text-foreground/40">NITROGEN</p>
-                    <p className="font-code font-bold text-primary">{selectedSector?.nutrients.n} mg/kg</p>
+              <div className="p-6 bg-krishi-black text-white rounded-2xl border border-border">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-[10px] text-white/40 uppercase mb-1">{t.details.produced}</p>
+                    <p className="text-lg font-bold">{selectedSector?.produced}</p>
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-[10px] font-bold text-foreground/40">PHOSPHORUS</p>
-                    <p className="font-code font-bold text-primary">{selectedSector?.nutrients.p} mg/kg</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-[10px] font-bold text-foreground/40">POTASSIUM</p>
-                    <p className="font-code font-bold text-primary">{selectedSector?.nutrients.k} mg/kg</p>
+                  <div>
+                    <p className="text-[10px] text-white/40 uppercase mb-1">Moisture Level</p>
+                    <p className="text-lg font-bold">{selectedSector?.moisture}%</p>
                   </div>
                 </div>
               </div>
             </div>
             
-            <div className="grid grid-cols-2 gap-4 mt-8">
-              <Button variant="outline" onClick={() => setSelectedSector(null)} className="rounded-full py-6 font-bold">
-                Dismiss
-              </Button>
-              <Button onClick={handleSaveFieldReport} className="rounded-full py-6 font-bold bg-primary text-white flex gap-2">
-                <Save size={18} />
-                Sync Report
-              </Button>
-            </div>
+            <Button onClick={handleSaveFieldReport} className="w-full rounded-full py-8 mt-8 font-bold bg-primary text-white">
+              Sync Diagnostic Report
+            </Button>
           </DialogContent>
         </Dialog>
 
@@ -635,8 +529,8 @@ export default function DashboardPage() {
            <DialogContent className="rounded-[3rem] p-0 max-w-2xl border-border bg-card overflow-hidden">
               <div className="h-32 bg-primary relative overflow-hidden">
                  <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/leaf.png')]" />
-                 <div className="absolute bottom-6 left-8">
-                    <h2 className="text-2xl font-display text-white">Digital Lease #KRAI-{selectedLease?.id.slice(0, 5).toUpperCase()}</h2>
+                 <div className="absolute bottom-6 left-8 text-white">
+                    <h2 className="text-2xl font-display italic">Digital Agreement #KR-{selectedLease?.id?.slice(0, 6).toUpperCase()}</h2>
                  </div>
               </div>
 
@@ -664,38 +558,13 @@ export default function DashboardPage() {
                           </div>
                           <div>
                              <h4 className="font-bold">{t.details.payout}</h4>
-                             <p className="text-[10px] text-foreground/40 uppercase">Recurring Monthly</p>
+                             <p className="text-[10px] text-foreground/40 uppercase">Monthly Verified</p>
                           </div>
                        </div>
-                       <p className="text-3xl font-display font-bold">₹{(selectedLease?.fieldSize * 4500).toLocaleString()}</p>
+                       <p className="text-3xl font-display font-bold text-primary">₹{(selectedLease?.fieldSize * 3500).toLocaleString()}</p>
                     </div>
-                    <div className="space-y-3">
-                       <p className="text-xs font-bold text-foreground/40 uppercase tracking-widest">Payout History</p>
-                       <div className="flex items-center justify-between text-sm py-2 border-b border-border/50">
-                          <span className="flex items-center gap-2 font-medium">
-                             <CalendarDays size={14} className="text-primary" /> Jan 2024
-                          </span>
-                          <span className="text-krishi-lime font-bold">Processed</span>
-                       </div>
-                       <div className="flex items-center justify-between text-sm py-2">
-                          <span className="flex items-center gap-2 font-medium">
-                             <CalendarDays size={14} className="text-primary" /> Feb 2024 (Upcoming)
-                          </span>
-                          <span className="text-krishi-amber font-bold">Scheduled</span>
-                       </div>
-                    </div>
-                 </div>
-
-                 <div className="space-y-4">
-                    <h4 className="font-headline font-bold flex items-center gap-2">
-                       <FileText size={18} className="text-primary" />
-                       Lease Agreement Summary
-                    </h4>
-                    <div className="p-6 bg-muted/30 rounded-2xl border border-border text-xs leading-relaxed text-foreground/60 space-y-4 max-h-40 overflow-y-auto">
-                       <p>1. This digital agreement is executed between KrishiAI Intelligence and {selectedLease?.aadharName} for agricultural land operations in {selectedLease?.village}.</p>
-                       <p>2. The lease term is set for 24 months, starting from {selectedLease?.createdAt?.toDate().toLocaleDateString()}.</p>
-                       <p>3. KrishiAI guarantees a fixed monthly payout based on precision yield projections and soil health carbon credits.</p>
-                       <p>4. The owner grants KrishiAI full rights to install IOT sensors and conduct automated farming operations for the duration of the lease.</p>
+                    <div className="space-y-2 text-xs text-foreground/40 uppercase font-bold tracking-widest">
+                       Agreement Status: <span className="text-krishi-lime ml-2">VERIFIED_AND_ACTIVE</span>
                     </div>
                  </div>
 
@@ -711,3 +580,4 @@ export default function DashboardPage() {
     </SidebarProvider>
   );
 }
+
