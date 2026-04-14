@@ -42,7 +42,7 @@ export const Stats = () => {
   ];
 
   return (
-    <section className="py-24 bg-krishi-black border-y border-krishi-cream/5">
+    <section className="py-24 bg-muted/20 border-y border-border">
       <div className="container mx-auto px-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 text-center">
           {stats.map((stat, i) => (
@@ -55,7 +55,7 @@ export const Stats = () => {
               className="space-y-2"
             >
               <Counter value={stat.value} suffix={stat.suffix} />
-              <p className="text-sm font-headline font-bold uppercase tracking-widest text-krishi-cream/60">
+              <p className="text-sm font-headline font-bold uppercase tracking-widest text-foreground/60">
                 {stat.label}
               </p>
             </motion.div>

@@ -22,11 +22,11 @@ const FeatureCard = ({
     whileInView={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.6, delay }}
     viewport={{ once: true }}
-    className={`group relative overflow-hidden rounded-2xl bg-[#0F110D] border border-krishi-cream/5 p-8 hover:border-krishi-lime/30 transition-all duration-500 hover:-translate-y-1 ${className}`}
+    className={`group relative overflow-hidden rounded-2xl bg-card border border-border p-8 hover:border-krishi-lime/30 transition-all duration-500 hover:-translate-y-1 ${className}`}
   >
     <div className="mb-6">{icon}</div>
-    <h3 className="text-2xl font-headline font-bold text-krishi-cream mb-2">{title}</h3>
-    <p className="text-krishi-cream/60 font-body leading-relaxed max-w-xs">{description}</p>
+    <h3 className="text-2xl font-headline font-bold text-foreground mb-2">{title}</h3>
+    <p className="text-foreground/60 font-body leading-relaxed max-w-xs">{description}</p>
     {children}
     
     {/* Subtle hover glow */}
@@ -36,10 +36,10 @@ const FeatureCard = ({
 
 export const FeatureGrid = () => {
   return (
-    <section id="features" className="py-24 bg-krishi-black">
+    <section id="features" className="py-24 bg-background">
       <div className="container mx-auto px-6">
         <div className="text-center mb-16 space-y-4">
-          <h2 className="text-4xl md:text-5xl font-display text-krishi-cream">
+          <h2 className="text-4xl md:text-5xl font-display text-foreground">
             <span className="relative">
               Everything
               <span className="absolute -bottom-2 left-0 w-full h-1 bg-krishi-gold rounded-full" />
@@ -61,15 +61,15 @@ export const FeatureGrid = () => {
               </svg>
             }
           >
-             <div className="mt-8 p-4 rounded-xl bg-krishi-black border border-krishi-cream/5 font-code text-[11px] space-y-2">
+             <div className="mt-8 p-4 rounded-xl bg-muted/50 border border-border font-code text-[11px] space-y-2">
                 <div className="flex justify-between items-center text-krishi-lime">
                    <span>SCANNING_LEAF...</span>
                    <span>97.2%</span>
                 </div>
-                <div className="w-full bg-krishi-cream/5 h-1 rounded-full overflow-hidden">
+                <div className="w-full bg-foreground/5 h-1 rounded-full overflow-hidden">
                    <div className="bg-krishi-lime w-[97.2%] h-full" />
                 </div>
-                <div className="text-krishi-cream/40">RESULT: EARLY BLIGHT (ALTERNARIA SOLANI)</div>
+                <div className="text-foreground/40">RESULT: EARLY BLIGHT (ALTERNARIA SOLANI)</div>
              </div>
           </FeatureCard>
 
@@ -84,7 +84,7 @@ export const FeatureGrid = () => {
             }
           >
              <div className="mt-6 font-code">
-                <div className="text-krishi-amber text-lg font-bold">WHEAT ↑ ₹267 <span className="text-[10px] text-krishi-cream/40 font-normal ml-1">EST. PEAK</span></div>
+                <div className="text-krishi-amber text-lg font-bold">WHEAT ↑ ₹267 <span className="text-[10px] text-foreground/40 font-normal ml-1">EST. PEAK</span></div>
              </div>
           </FeatureCard>
 
@@ -121,7 +121,7 @@ export const FeatureGrid = () => {
             title="FPO Global"
             description="Unified dashboard for cooperatives at scale."
             icon={
-               <svg width="40" height="40" viewBox="0 0 40 40" className="text-krishi-mist">
+               <svg width="40" height="40" viewBox="0 0 40 40" className="text-foreground/40">
                   <circle cx="20" cy="20" r="3" fill="currentColor" />
                   <circle cx="10" cy="10" r="2" fill="currentColor" opacity="0.5" />
                   <circle cx="30" cy="30" r="2" fill="currentColor" opacity="0.5" />
@@ -136,7 +136,7 @@ export const FeatureGrid = () => {
             title="Certified Safe"
             description="End-to-end encrypted. Your data belongs to you."
             icon={
-              <svg width="40" height="40" viewBox="0 0 40 40" className="text-krishi-cream/40">
+              <svg width="40" height="40" viewBox="0 0 40 40" className="text-foreground/40">
                 <rect x="10" y="15" width="20" height="15" rx="2" stroke="currentColor" strokeWidth="2" fill="none" />
                 <path d="M15 15V10C15 7.23858 17.2386 5 20 5C22.7614 5 25 7.23858 25 10V15" stroke="currentColor" strokeWidth="2" />
               </svg>
