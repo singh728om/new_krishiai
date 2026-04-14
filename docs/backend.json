@@ -4,109 +4,386 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "UserProfile",
       "type": "object",
-      "description": "Represents a user's profile information within the KrishiAI application, linked to an external authentication system. This entity stores general user details and does not store sensitive authentication data like passwords.",
+      "description": "Represents a user account on the KrishiAI platform, primarily for farmers or cooperative managers.",
       "properties": {
         "id": {
           "type": "string",
           "description": "Unique identifier for the UserProfile entity."
         },
-        "externalAuthId": {
-          "type": "string",
-          "description": "Unique identifier from the external authentication system (e.g., Firebase Auth UID). This ID is crucial for linking the UserProfile to the actual authenticated user managed by an external system."
-        },
         "email": {
           "type": "string",
-          "description": "The user's primary email address. Used for communication and identification, not for authentication within this data model.",
+          "description": "The user's email address, used for authentication and communication.",
           "format": "email"
         },
-        "firstName": {
+        "name": {
           "type": "string",
-          "description": "The user's first name."
+          "description": "The full name of the user or farmer."
         },
-        "lastName": {
+        "location": {
           "type": "string",
-          "description": "The user's last name."
+          "description": "The geographic location of the user (e.g., 'Wardha, Maharashtra')."
+        },
+        "languagePreference": {
+          "type": "string",
+          "description": "The user's preferred language for the application interface and content (e.g., 'en' for English, 'hi' for Hindi).",
+          "items": {
+            "type": "string"
+          }
         },
         "phoneNumber": {
           "type": "string",
-          "description": "The user's primary contact phone number."
-        },
-        "address": {
-          "type": "string",
-          "description": "The user's primary physical address or location."
-        },
-        "profileImageUrl": {
-          "type": "string",
-          "description": "URL to the user's profile picture.",
-          "format": "uri"
+          "description": "The user's contact phone number."
         },
         "createdAt": {
           "type": "string",
-          "description": "Timestamp indicating when the user profile was created.",
+          "description": "Timestamp when the user profile was created.",
           "format": "date-time"
         },
         "updatedAt": {
           "type": "string",
-          "description": "Timestamp indicating when the user profile was last updated.",
+          "description": "Timestamp when the user profile was last updated.",
           "format": "date-time"
         }
       },
       "required": [
         "id",
-        "externalAuthId",
         "email",
-        "firstName",
-        "lastName",
-        "createdAt"
+        "name",
+        "location",
+        "languagePreference",
+        "createdAt",
+        "updatedAt"
       ]
     },
-    "Role": {
+    "Farm": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Role",
+      "title": "Farm",
       "type": "object",
-      "description": "Defines the distinct roles users can have within the KrishiAI platform, such as 'Buyer', 'LandOwner', or 'Staff'. These roles dictate access to specific dashboards and features.",
+      "description": "Represents a specific farm or plot of land managed by a user, allowing for tracking of agricultural activities.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the Role entity."
-        },
-        "name": {
-          "type": "string",
-          "description": "The human-readable name of the role (e.g., 'Buyer', 'LandOwner', 'Staff')."
-        },
-        "description": {
-          "type": "string",
-          "description": "A brief explanation of the permissions and responsibilities associated with this role."
-        }
-      },
-      "required": [
-        "id",
-        "name"
-      ]
-    },
-    "UserRole": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "UserRole",
-      "type": "object",
-      "description": "A linking entity that establishes a many-to-many relationship between UserProfiles and Roles, allowing a single user to possess multiple roles (e.g., a user can be both a 'Buyer' and a 'LandOwner').",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the UserRole linking entity."
+          "description": "Unique identifier for the Farm entity."
         },
         "userId": {
           "type": "string",
-          "description": "Reference to the UserProfile entity to which this role is assigned. (Relationship: UserProfile 1:N UserRole)"
+          "description": "Reference to the UserProfile who owns or manages this farm. (Relationship: UserProfile 1:N Farm)"
         },
-        "roleId": {
+        "name": {
           "type": "string",
-          "description": "Reference to the Role entity that is assigned to the user. (Relationship: Role 1:N UserRole)"
+          "description": "A user-defined name for the farm (e.g., 'North Plot', 'Home Farm')."
+        },
+        "location": {
+          "type": "string",
+          "description": "Geographic location details of the farm, such as an address or coordinates."
+        },
+        "sizeAcres": {
+          "type": "number",
+          "description": "The size of the farm in acres."
+        },
+        "soilType": {
+          "type": "string",
+          "description": "The predominant soil type of the farm (e.g., 'Black', 'Alluvial')."
+        },
+        "lastSoilAnalysisDate": {
+          "type": "string",
+          "description": "The date of the most recent soil analysis performed on the farm.",
+          "format": "date-time"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the farm record was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the farm record was last updated.",
+          "format": "date-time"
         }
       },
       "required": [
         "id",
         "userId",
-        "roleId"
+        "name",
+        "location",
+        "sizeAcres",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "CropCycle": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "CropCycle",
+      "type": "object",
+      "description": "Tracks a specific crop cultivation period on a farm, from planting to harvest.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the CropCycle entity."
+        },
+        "farmId": {
+          "type": "string",
+          "description": "Reference to the Farm where this crop cycle is taking place. (Relationship: Farm 1:N CropCycle)"
+        },
+        "cropType": {
+          "type": "string",
+          "description": "The type of crop being grown (e.g., 'Cherry Tomatoes', 'Wheat', 'Cotton')."
+        },
+        "plantingDate": {
+          "type": "string",
+          "description": "The date when the crop was planted.",
+          "format": "date-time"
+        },
+        "expectedHarvestDate": {
+          "type": "string",
+          "description": "The anticipated date for harvesting the crop.",
+          "format": "date-time"
+        },
+        "status": {
+          "type": "string",
+          "description": "The current stage of the crop cycle (e.g., 'Planned', 'Growing', 'Harvested', 'Completed').",
+          "items": {
+            "type": "string"
+          }
+        },
+        "yieldEstimateKg": {
+          "type": "number",
+          "description": "The estimated yield of the crop in kilograms."
+        },
+        "actualYieldKg": {
+          "type": "number",
+          "description": "The actual yield of the crop in kilograms after harvest."
+        },
+        "carbonCreditsEarned": {
+          "type": "number",
+          "description": "The amount of carbon credits earned for this crop cycle, if applicable."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the crop cycle record was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the crop cycle record was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "farmId",
+        "cropType",
+        "plantingDate",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "DiagnosticReport": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "DiagnosticReport",
+      "type": "object",
+      "description": "Stores the results and details of an AI-powered disease diagnosis for a specific crop or plant.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the DiagnosticReport entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the UserProfile who initiated the diagnosis. (Relationship: UserProfile 1:N DiagnosticReport)"
+        },
+        "farmId": {
+          "type": "string",
+          "description": "Reference to the Farm where this diagnosis was performed. (Relationship: Farm 1:N DiagnosticReport)"
+        },
+        "cropCycleId": {
+          "type": "string",
+          "description": "Reference to the CropCycle this diagnosis pertains to. (Relationship: CropCycle 1:N DiagnosticReport)"
+        },
+        "diagnosisDate": {
+          "type": "string",
+          "description": "Timestamp when the diagnosis was performed.",
+          "format": "date-time"
+        },
+        "cropType": {
+          "type": "string",
+          "description": "The type of crop for which the diagnosis was made (e.g., 'Tomato', 'Wheat')."
+        },
+        "issue": {
+          "type": "string",
+          "description": "The diagnosed issue or disease (e.g., 'Early Blight (Alternaria solani)')."
+        },
+        "confidence": {
+          "type": "number",
+          "description": "The AI's confidence level in the diagnosis, as a percentage (0-100)."
+        },
+        "severity": {
+          "type": "string",
+          "description": "The severity level of the diagnosed issue (e.g., 'LOW', 'MODERATE', 'HIGH').",
+          "items": {
+            "type": "string"
+          }
+        },
+        "remedialAction": {
+          "type": "string",
+          "description": "Recommended remedial action or treatment in English."
+        },
+        "remedialActionHindi": {
+          "type": "string",
+          "description": "Recommended remedial action or treatment in Hindi."
+        },
+        "imageReferenceUrl": {
+          "type": "string",
+          "description": "URL or reference to the image used for diagnosis, if available.",
+          "format": "uri"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the diagnostic report record was created.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "diagnosisDate",
+        "cropType",
+        "issue",
+        "confidence",
+        "severity",
+        "remedialAction",
+        "createdAt"
+      ]
+    },
+    "Product": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Product",
+      "type": "object",
+      "description": "Represents a product available for purchase in the Harit Store.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Product entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the product (e.g., 'Organic Cherry Tomatoes')."
+        },
+        "description": {
+          "type": "string",
+          "description": "A detailed description of the product."
+        },
+        "priceINR": {
+          "type": "number",
+          "description": "The price of the product in Indian Rupees."
+        },
+        "currency": {
+          "type": "string",
+          "description": "The currency of the product price.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "averageRating": {
+          "type": "number",
+          "description": "The average rating of the product from customer reviews (0-5 scale)."
+        },
+        "farmId": {
+          "type": "string",
+          "description": "Reference to the Farm from which this product originated. (Relationship: Farm 1:N Product)"
+        },
+        "clusterName": {
+          "type": "string",
+          "description": "The name of the farming cluster this product belongs to (e.g., 'Wardha Cluster')."
+        },
+        "isOrganic": {
+          "type": "boolean",
+          "description": "Indicates whether the product is certified organic."
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "URL for the primary image of the product.",
+          "format": "uri"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the product record was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the product record was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "description",
+        "priceINR",
+        "currency",
+        "isOrganic",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Testimonial": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Testimonial",
+      "type": "object",
+      "description": "Stores testimonials from farmers, displayed on the KrishiAI marketing website.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Testimonial entity."
+        },
+        "authorName": {
+          "type": "string",
+          "description": "The name of the farmer giving the testimonial (English)."
+        },
+        "authorNameDevanagari": {
+          "type": "string",
+          "description": "The name of the farmer giving the testimonial (Devanagari script)."
+        },
+        "location": {
+          "type": "string",
+          "description": "The location of the farmer (e.g., 'Wardha, Maharashtra')."
+        },
+        "quoteEnglish": {
+          "type": "string",
+          "description": "The full testimonial quote in English."
+        },
+        "quoteHindi": {
+          "type": "string",
+          "description": "The full testimonial quote in Hindi."
+        },
+        "rating": {
+          "type": "number",
+          "description": "The star rating given by the farmer, typically out of 5."
+        },
+        "displayOrder": {
+          "type": "number",
+          "description": "An optional numerical value to determine the order in which testimonials are displayed."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the testimonial was created/submitted.",
+          "format": "date-time"
+        },
+        "isApproved": {
+          "type": "boolean",
+          "description": "Indicates whether the testimonial has been approved for public display."
+        }
+      },
+      "required": [
+        "id",
+        "authorName",
+        "location",
+        "quoteEnglish",
+        "rating",
+        "createdAt",
+        "isApproved"
       ]
     }
   },
@@ -125,80 +402,106 @@
           "schema": {
             "$ref": "#/backend/entities/UserProfile"
           },
-          "description": "Stores individual user profile data. The {userId} in the path must match the user's Firebase Auth UID. Each document includes an 'externalAuthId' field which also must match this UID, reinforcing path-based ownership.",
+          "description": "Stores individual user profile data. Each document's ID is the Firebase Authentication UID. Ownership is path-based, meaning `{userId}` must match `request.auth.uid` for read/write access. The document includes the `id` field matching the document ID."
+        }
+      },
+      {
+        "path": "/users/{userId}/farms/{farmId}",
+        "definition": {
+          "entityName": "Farm",
+          "schema": {
+            "$ref": "#/backend/entities/Farm"
+          },
+          "description": "Stores details for farms owned by a specific user. This subcollection uses path-based ownership. Each Farm document includes a denormalized `userId` field to match the `{userId}` in its path, ensuring authorization independence for security rules.",
           "params": [
             {
               "name": "userId",
-              "description": "The unique identifier of the user, corresponding to their Firebase Authentication UID."
+              "description": "The unique identifier of the UserProfile who owns this farm."
+            },
+            {
+              "name": "farmId",
+              "description": "The unique identifier for the specific farm."
             }
           ]
         }
       },
       {
-        "path": "/role_definitions/{roleId}",
+        "path": "/users/{userId}/farms/{farmId}/cropCycles/{cropCycleId}",
         "definition": {
-          "entityName": "Role",
+          "entityName": "CropCycle",
           "schema": {
-            "$ref": "#/backend/entities/Role"
+            "$ref": "#/backend/entities/CropCycle"
           },
-          "description": "A master collection defining the properties of each distinct role (e.g., 'buyer', 'landowner', 'staff'). These documents are used for lookup and do not directly grant roles. Access is read-only for general users, and write-only for administrative staff.",
+          "description": "Tracks specific crop cultivation periods for a farm. Each CropCycle document includes denormalized `userId` and `farmId` fields to match their respective parent paths, ensuring authorization independence and simplified ownership checks for security rules.",
           "params": [
             {
-              "name": "roleId",
-              "description": "The unique identifier for a specific role (e.g., 'buyer', 'landowner', 'staff')."
+              "name": "userId",
+              "description": "The unique identifier of the UserProfile who owns the farm and this crop cycle."
+            },
+            {
+              "name": "farmId",
+              "description": "The unique identifier of the Farm where this crop cycle is occurring."
+            },
+            {
+              "name": "cropCycleId",
+              "description": "The unique identifier for the specific crop cycle."
             }
           ]
         }
       },
       {
-        "path": "/user_roles_buyer/{userId}",
+        "path": "/users/{userId}/diagnosticReports/{reportId}",
         "definition": {
-          "entityName": "UserRole",
+          "entityName": "DiagnosticReport",
           "schema": {
-            "$ref": "#/backend/entities/UserRole"
+            "$ref": "#/backend/entities/DiagnosticReport"
           },
-          "description": "A dedicated collection for 'Buyer' role membership. The existence of a document here signifies that the '{userId}' is a Buyer. This enables efficient, atomic authorization checks using 'exists()' in security rules. The 'userId' is the Firebase Auth UID. Document content is minimal (e.g., 'assignedAt' timestamp).",
+          "description": "Stores AI-powered disease diagnosis reports initiated by a user. Each DiagnosticReport document includes denormalized `userId` and `farmId` fields, as per schema, ensuring authorization independence and simplified ownership checks for security rules.",
           "params": [
             {
               "name": "userId",
-              "description": "The unique identifier of the user (Firebase Auth UID) who is assigned the 'Buyer' role."
+              "description": "The unique identifier of the UserProfile who initiated this diagnostic report."
+            },
+            {
+              "name": "reportId",
+              "description": "The unique identifier for the specific diagnostic report."
             }
           ]
         }
       },
       {
-        "path": "/user_roles_landowner/{userId}",
+        "path": "/products/{productId}",
         "definition": {
-          "entityName": "UserRole",
+          "entityName": "Product",
           "schema": {
-            "$ref": "#/backend/entities/UserRole"
+            "$ref": "#/backend/entities/Product"
           },
-          "description": "A dedicated collection for 'LandOwner' role membership. The existence of a document here signifies that the '{userId}' is a LandOwner. This enables efficient, atomic authorization checks using 'exists()' in security rules. The 'userId' is the Firebase Auth UID. Document content is minimal.",
+          "description": "Represents products available for purchase in the Harit Store. These documents are publicly readable. For management (create, update, delete), each Product document must include a denormalized `ownerId` (the `userId` of the farm owner) for authorization independence.",
           "params": [
             {
-              "name": "userId",
-              "description": "The unique identifier of the user (Firebase Auth UID) who is assigned the 'LandOwner' role."
+              "name": "productId",
+              "description": "The unique identifier for the specific product."
             }
           ]
         }
       },
       {
-        "path": "/user_roles_staff/{userId}",
+        "path": "/testimonials/{testimonialId}",
         "definition": {
-          "entityName": "UserRole",
+          "entityName": "Testimonial",
           "schema": {
-            "$ref": "#/backend/entities/UserRole"
+            "$ref": "#/backend/entities/Testimonial"
           },
-          "description": "A dedicated collection for 'Staff' role membership. The existence of a document here signifies that the '{userId}' is Staff. This enables efficient, atomic authorization checks using 'exists()' in security rules. The 'userId' is the Firebase Auth UID. Document content is minimal.",
+          "description": "Stores testimonials from farmers for public display on the marketing website. Only approved testimonials (`isApproved: true`) are publicly readable. Management (create, update, delete, approve) is typically restricted to administrators or specific roles.",
           "params": [
             {
-              "name": "userId",
-              "description": "The unique identifier of the user (Firebase Auth UID) who is assigned the 'Staff' role."
+              "name": "testimonialId",
+              "description": "The unique identifier for the specific testimonial."
             }
           ]
         }
       }
     ],
-    "reasoning": "The recommended Firestore structure prioritizes strict adherence to Authorization Independence, DBAC (Database-Based Access Control), and QAPs (Query As Permissions) for robust and debuggable security rules. The core strategy involves using specialized, top-level collections to denote user roles through 'Existence over Content', eliminating the need for 'get()' calls in security rules and enabling atomic operations. \n\n1.  **User Profiles (`/users/{userId}`)**: User-specific profile data is stored under a collection named `users`, where each document's ID (`{userId}`) directly corresponds to the Firebase Authentication UID (`request.auth.uid`). This provides path-based ownership, making security rules for self-access straightforward (e.g., `allow read, write: if request.auth.uid == userId;`). The `externalAuthId` within the document will explicitly match the `userId` in the path, reinforcing ownership. This collection has a homogeneous security posture, primarily allowing self-management and administrative oversight.\n\n2.  **Role Definitions (`/role_definitions/{roleId}`)**: A dedicated collection, `role_definitions`, will store the master list of available roles (e.g., 'buyer', 'landOwner', 'staff'). These documents contain the static properties of each role, such as their human-readable name and description. Access to this collection is primarily read-only for authenticated users to understand available roles, with write access restricted to administrative staff. This collection is structurally segregated, and its security posture is homogeneous.\n\n3.  **Role Membership (`/user_roles_buyer/{userId}`, `/user_roles_landowner/{userId}`, `/user_roles_staff/{userId}`)**: To enable efficient and secure role-based authorization, user role assignments are denormalized into dedicated, role-specific top-level collections. For instance, a document existing at `/user_roles_buyer/{userId}` directly signifies that the `{userId}` possesses the 'Buyer' role. \n    *   **Authorization Independence**: This design is critical for achieving authorization independence. Security rules can check for role membership using `exists(/databases/$(database)/documents/user_roles_buyer/$(request.auth.uid))` without performing any expensive or dependency-creating `get()` operations. This ensures atomic authorization checks and simplifies debugging.\n    *   **QAPs (Query As Permissions)**: For a user to verify their own roles, they can attempt to read from these role-specific collections using their `request.auth.uid`. The security rules will automatically filter results, ensuring only their own role memberships are returned or confirmed. For example, if a user navigates to a 'Buyer' dashboard, the client can check if a document exists for their UID in `/user_roles_buyer`. This makes `list` operations implicitly secure based on `request.auth.uid` matching the path wildcard.\n    *   **DBAC**: Roles are explicitly stored in the database, with their existence in these dedicated collections acting as the authorization context, adhering strictly to the 'Existence over Content' principle. While the `UserRole` entity schema exists, its direct representation is split: its `userId` becomes the document ID, and `roleId` is implicitly the collection name. The `id` field from the `UserRole` schema would not be explicitly stored as a document field in these collections, as the path structure sufficiently conveys the membership. Management of these role assignments would typically involve Cloud Functions to create/delete documents in these collections when a user is assigned/unassigned a role."
+    "reasoning": "The Firestore data structure for KrishiAI prioritizes secure, scalable, and debuggable access by strictly adhering to the core design principles, especially Authorization Independence via Denormalization and Structural Segregation. \n\n**Authorization Independence (Denormalization Strategy):**\n1.  **User-Owned Data (e.g., Farms, CropCycles, DiagnosticReports):** For entities like `Farm`, `CropCycle`, and `DiagnosticReport` which logically belong to a `UserProfile`, the `userId` of the owner is redundantly stored within each document. For instance, a `Farm` document within `/users/{userId}/farms/{farmId}` will explicitly contain a `userId` field matching the `{userId}` in its parent path. Similarly, `CropCycle` documents will contain both `userId` and `farmId`. This denormalization is critical. It eliminates the need for security rules to perform `get()` operations on parent documents (e.g., to fetch the `userId` from a `Farm` when securing a `CropCycle`). Rules can directly check `request.auth.uid == resource.data.userId`, ensuring atomic operations (transactions, batched writes) are robust and rules are simpler to write and debug.\n2.  **Global Entities with Proprietorship (e.g., Products):** The `Product` entity, while globally browsable, is owned and managed by a specific farmer (via their farm). To maintain authorization independence for managing these products, the `Product` document denormalizes the `ownerId` (which is the `userId` of the farm's owner) directly into the `product` document. This allows management rules (e.g., `allow write: if request.auth.uid == resource.data.ownerId;`) to operate without costly and dependency-creating `get()` calls to the associated `Farm` or `UserProfile` document.\n\n**QAPs (Query as a Permission - How `list` operations are secured):**\n1.  **Path-Based Ownership for Private Data:** For user-specific data like `Farm`, `CropCycle`, and `DiagnosticReport`, the structure `/users/{userId}/...` inherently secures `list` operations. Security rules will enforce that `{userId}` in the path must match `request.auth.uid`. This means a user can only query and retrieve a list of *their own* farms, crop cycles, or diagnostic reports, preventing accidental or malicious access to other users' private data. This satisfies QAPs as the query itself (e.g., `db.collection('users').doc(myUid).collection('farms').get()`) implicitly contains the authorization context.\n2.  **Global Collections with State-Based Visibility:** For `Testimonial` documents, which are publicly viewable on the marketing site, read access is controlled by the `isApproved` field. Rules will permit `list` operations only if `resource.data.isApproved == true`. This allows public listing of approved content without relying on `request.auth.uid` for reads. Write/update operations for testimonials are typically restricted to administrative roles or to the user themselves for submitting unapproved drafts (if `submittedByUserId` were added and matched to `request.auth.uid`).\n3.  **Global Collections with Denormalized Proprietor (Public Read, Private Write):** For `Product` documents, `list` operations are open to the public (`allow read: true;`). The authorization rules for write, update, and delete operations will be based on the denormalized `ownerId` within the `Product` document (`allow write: if request.auth.uid == resource.data.ownerId;`). This design cleanly separates public read access from private management access, fulfilling QAPs for both scenarios."
   }
 }

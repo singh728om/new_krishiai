@@ -1,125 +1,155 @@
 /**
- * KrishiAI Security Rules
+ * KrishiAI Firestore Security Rules
  * 
  * Core Philosophy:
- * This ruleset implements a strict Path-Based Ownership and Role-Based Access Control (RBAC) model. 
- * Authorization is decoupled from data content, primarily relying on the existence of documents in 
- * specific collections to determine user permissions ("Existence over Content").
+ * This ruleset implements a strict user-ownership model for personal agricultural data while 
+ * maintaining public visibility for marketplace products and approved testimonials. Access 
+ * control is primarily driven by path-based variables and denormalized ownership fields to 
+ * ensure high performance and authorization independence.
  * 
  * Data Structure:
- * - /users/{userId}: Private user profiles where document ID matches Firebase Auth UID.
- * - /role_definitions/{roleId}: Publicly readable metadata for available roles (Buyer, LandOwner, Staff).
- * - /user_roles_{role_type}/{userId}: Dedicated collections for role membership. The presence of 
- *   a document at a path signifies the user possesses that role.
+ * - /users/{userId}: Root user profiles, where {userId} matches the Firebase Auth UID.
+ * - /users/{userId}/farms/...: Nested agricultural data (farms, crop cycles).
+ * - /users/{userId}/diagnosticReports/...: Personal AI diagnostic history.
+ * - /products/{productId}: Global marketplace entities.
+ * - /testimonials/{testimonialId}: Global marketing content.
  * 
  * Key Security Decisions:
- * - Denormalization: User roles are stored in dedicated collections (/user_roles_staff, etc.) to 
- *   enable performant 'exists()' checks without complex data queries.
- * - Self-Creation: Users are permitted to create their own UserProfile document upon first login 
- *   to facilitate a seamless onboarding flow.
- * - Staff Oversight: Users with the 'Staff' role are granted elevated permissions to view profiles 
- *   and manage role definitions.
- * - Integrity: Strict checks ensure that internal fields like 'externalAuthId' always match 
- *   the document ID and the authenticated user's UID.
+ * - Denormalization for Authorization: Ownership IDs (userId, ownerId) are enforced on 
+ *   documents to allow rules to validate access without costly cross-document lookups.
+ * - Path-Based Security: All data nested under /users/{userId} is restricted to the 
+ *   authenticated user matching that ID.
+ * - Visibility Flags: Testimonials use the 'isApproved' field to control public visibility.
+ * - Prototyping Mode: Logic focuses on strict authorization (who can access) rather than 
+ *   strict schema validation (data types/shapes), facilitating rapid iteration.
  */
 
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // --- Helper Functions ---
+    // --- GLOBAL HELPER FUNCTIONS ---
 
-    /** @description Checks if the request is from a signed-in user. */
+    /** Checks if the request is from a signed-in user. */
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /** @description Checks if the provided ID matches the authenticated user's UID. */
+    /** Checks if the provided UID matches the authenticated user's UID. */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    /** @description Verifies the document exists and the current user is the owner. */
+    /** Checks if the document belongs to the user and exists (for updates/deletes). */
     function isExistingOwner(userId) {
       return resource != null && isOwner(userId);
     }
 
-    /** @description Checks if the authenticated user has the 'Staff' role. */
-    function isStaff() {
-      return isSignedIn() && exists(/databases/$(database)/documents/user_roles_staff/$(request.auth.uid));
+    /** Validates that a field in the incoming data matches the authenticated user. */
+    function dataMatchesAuth(field) {
+      return request.resource.data[field] == request.auth.uid;
     }
 
-    /** 
-     * @description Validates relational integrity for UserProfile.
-     * Ensures the document's internal ID fields match the path and the user's Auth UID.
-     */
-    function isValidUserProfile(userId) {
-      return request.resource.data.id == userId && request.resource.data.externalAuthId == userId;
+    /** Validates that a field is not being changed during an update. */
+    function isImmutable(field) {
+      return request.resource.data[field] == resource.data[field];
     }
 
-    // --- Collection Rules ---
+    // --- COLLECTION RULES ---
 
     /**
-     * @description Security rules for user profiles. Owners manage their data; Staff can view all.
+     * @description Rules for User Profiles. Ensures users can only manage their own profile.
      * @path /users/{userId}
-     * @allow (get) If the user is the owner or is Staff.
-     * @deny (create) If the internal 'id' or 'externalAuthId' does not match the Auth UID.
-     * @principle Path-based ownership and relational integrity validation.
+     * @allow (create) Signed-in user where UID matches document ID and internal 'id' field.
+     * @deny (read/write) Accessing or modifying a different user's profile.
+     * @principle Ownership, Path-based security, and Relational integrity.
      */
     match /users/{userId} {
-      allow get: if isOwner(userId) || isStaff();
-      allow list: if isOwner(userId) || isStaff();
-      allow create: if isOwner(userId) && isValidUserProfile(userId);
-      allow update: if isExistingOwner(userId) && request.resource.data.externalAuthId == resource.data.externalAuthId;
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && isImmutable('id');
       allow delete: if isExistingOwner(userId);
+
+      /**
+       * @description Rules for Farm records. Nested under users for automatic scoping.
+       * @path /users/{userId}/farms/{farmId}
+       * @allow (list) Owner listing their own farms.
+       * @deny (create) Mismatched userId field in document data.
+       * @principle Authorization independence via denormalized userId.
+       */
+      match /farms/{farmId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+        allow update: if isExistingOwner(userId) && isImmutable('userId');
+        allow delete: if isExistingOwner(userId);
+
+        /**
+         * @description Rules for Crop Cycles. Deeply nested under specific farms.
+         * @path /users/{userId}/farms/{farmId}/cropCycles/{cropCycleId}
+         * @allow (update) Owner updating their own crop cycle progress.
+         * @deny (get) Access by a different user.
+         * @principle Path-based ownership inheritance.
+         */
+        match /cropCycles/{cropCycleId} {
+          allow get: if isOwner(userId);
+          allow list: if isOwner(userId);
+          allow create: if isOwner(userId) && request.resource.data.farmId == farmId;
+          allow update: if isExistingOwner(userId) && isImmutable('farmId');
+          allow delete: if isExistingOwner(userId);
+        }
+      }
+
+      /**
+       * @description Rules for Diagnostic Reports initiated by the user.
+       * @path /users/{userId}/diagnosticReports/{reportId}
+       * @allow (create) Authenticated user creating a report for themselves.
+       * @deny (list) Anonymous access to personal diagnostic history.
+       * @principle User-scoped private data.
+       */
+      match /diagnosticReports/{reportId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+        allow update: if isExistingOwner(userId) && isImmutable('userId');
+        allow delete: if isExistingOwner(userId);
+      }
     }
 
     /**
-     * @description Master role definitions. Read-only for users; managed by Staff.
-     * @path /role_definitions/{roleId}
-     * @allow (list) If the user is signed in.
-     * @deny (write) If the user is not Staff.
-     * @principle Structural segregation of static configuration data.
+     * @description Rules for Store Products. Publicly readable, owner-managed.
+     * @path /products/{productId}
+     * @allow (get) Public read access for all users.
+     * @deny (write) Non-owners attempting to modify product details.
+     * @principle Public Read with Owner-Only Writes.
      */
-    match /role_definitions/{roleId} {
-      allow get, list: if isSignedIn();
-      allow create, update, delete: if isStaff();
+    match /products/{productId} {
+      allow get, list: if true;
+      
+      // CRITICAL: The 'Product' entity is missing a clear 'ownerId' field in the schema properties.
+      // Reasoning suggests ownerId (userId of the farm owner) must be present for security.
+      allow create: if isSignedIn() && dataMatchesAuth('ownerId'); 
+      allow update: if isSignedIn() && resource.data.ownerId == request.auth.uid && isImmutable('ownerId');
+      allow delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      // TODO: Ensure the frontend includes 'ownerId' in Product documents.
     }
 
     /**
-     * @description Membership tracking for the 'Buyer' role.
-     * @path /user_roles_buyer/{userId}
-     * @allow (get) If the user is the owner (checking their own role) or Staff.
-     * @deny (create) If not performed by a Staff member.
-     * @principle DBAC (Database-Based Access Control) using existence over content.
+     * @description Rules for Testimonials. Publicly visible only if approved.
+     * @path /testimonials/{testimonialId}
+     * @allow (list) Public users seeing approved content (isApproved == true).
+     * @deny (write) General users modifying or approving testimonials.
+     * @principle State-based visibility (QAP) and administrative write restriction.
      */
-    match /user_roles_buyer/{userId} {
-      allow get, list: if isOwner(userId) || isStaff();
-      allow create, update, delete: if isStaff();
+    match /testimonials/{testimonialId} {
+      allow get: if resource.data.isApproved == true;
+      allow list: if resource.data.isApproved == true;
+      
+      // Management restricted to system/admin. Default to false for users in prototype.
+      allow create, update, delete: if false; 
+      // TODO: Implement 'isAdmin()' check if administrative roles are added to IR.
     }
 
-    /**
-     * @description Membership tracking for the 'LandOwner' role.
-     * @path /user_roles_landowner/{userId}
-     * @allow (list) If the user is checking their own role status.
-     * @deny (update) By anyone except Staff.
-     * @principle Atomic authorization checks via existence in role-specific collections.
-     */
-    match /user_roles_landowner/{userId} {
-      allow get, list: if isOwner(userId) || isStaff();
-      allow create, update, delete: if isStaff();
-    }
-
-    /**
-     * @description Membership tracking for the 'Staff' role.
-     * @path /user_roles_staff/{userId}
-     * @allow (get) If the user is the owner or existing Staff.
-     * @deny (create) By non-staff members to prevent unauthorized privilege escalation.
-     * @principle Strict administrative control over role assignment.
-     */
-    match /user_roles_staff/{userId} {
-      allow get, list: if isOwner(userId) || isStaff();
-      allow create, update, delete: if isStaff();
-    }
   }
 }
