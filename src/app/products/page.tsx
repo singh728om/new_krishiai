@@ -2,7 +2,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Star, ShoppingCart, ArrowLeft, Filter } from "lucide-react";
+import { Star, ShoppingCart, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
@@ -56,12 +56,11 @@ export default function ProductsPage() {
               {lang === 'en' ? "Harit" : "हरित"} <span className="text-primary italic">{lang === 'en' ? "Marketplace" : "बाज़ार"}</span>
             </h1>
             <p className="text-xl text-foreground/60 font-body mt-2">
-              {lang === 'en' ? " Clinical-grade organic produce, direct from village clusters." : "गांव के समूहों से सीधे, क्लिनिकल-ग्रेड जैविक उपज।"}
+              {lang === 'en' ? "Clinical-grade organic produce, direct from village clusters." : "गांव के समूहों से सीधे, क्लिनिकल-ग्रेड जैविक उपज।"}
             </p>
           </div>
         </div>
 
-        {/* Categories Section */}
         <div className="flex gap-4 overflow-x-auto pb-8 mb-8 no-scrollbar">
           {CATEGORIES.map((cat) => (
             <button
@@ -78,7 +77,6 @@ export default function ProductsPage() {
           ))}
         </div>
 
-        {/* Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
           {filteredProducts.map((product) => {
             const imageData = PlaceHolderImages.find(img => img.id === product.id);
