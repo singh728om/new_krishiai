@@ -29,7 +29,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Navbar } from "@/components/sections/navbar";
 import { Footer } from "@/components/sections/footer";
-import { CheckCircle2, ArrowLeft } from "lucide-react";
+import { CheckCircle2, ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 
 const formSchema = z.object({
@@ -100,7 +100,7 @@ export default function LeaseRegistrationPage() {
             Lease Your <span className="text-primary italic">Land</span> for AI Agriculture.
           </h1>
           <p className="text-xl text-foreground/60 font-body mt-4">
-            Join the smart farming revolution. Provide your land details below, and our team will get in touch.
+            Join the smart farming revolution in Uttar Pradesh. Provide your land and Aadhar details below.
           </p>
         </div>
 
@@ -123,7 +123,7 @@ export default function LeaseRegistrationPage() {
                         <FormItem>
                           <FormLabel>Full Name (As on Aadhar)</FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter your name" {...field} className="rounded-xl h-12" />
+                            <Input placeholder="Enter your full name" {...field} className="rounded-xl h-12" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -134,7 +134,7 @@ export default function LeaseRegistrationPage() {
                       name="aadharNumber"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Aadhar Number</FormLabel>
+                          <FormLabel>Aadhar Number (Mandatory)</FormLabel>
                           <FormControl>
                             <Input placeholder="12-digit number" {...field} className="rounded-xl h-12" maxLength={12} />
                           </FormControl>
@@ -163,7 +163,7 @@ export default function LeaseRegistrationPage() {
                       name="pincode"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Pincode</FormLabel>
+                          <FormLabel>Pincode (Mandatory)</FormLabel>
                           <FormControl>
                             <Input placeholder="6-digit PIN" {...field} className="rounded-xl h-12" maxLength={6} />
                           </FormControl>
@@ -286,7 +286,12 @@ export default function LeaseRegistrationPage() {
                     className="w-full bg-primary hover:bg-primary/90 text-white rounded-full h-16 text-lg font-bold shadow-lg shadow-primary/20"
                     disabled={isSubmitting}
                   >
-                    {isSubmitting ? "Submitting..." : "Submit Registration →"}
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        Submitting...
+                      </>
+                    ) : "Submit Registration →"}
                   </Button>
                 </form>
               </Form>
@@ -302,9 +307,9 @@ export default function LeaseRegistrationPage() {
                 <CheckCircle2 size={48} />
               </div>
               <div className="space-y-4">
-                <h2 className="text-4xl md:text-5xl font-display">Thank You!</h2>
+                <h2 className="text-4xl md:text-5xl font-display">Registration Successful!</h2>
                 <p className="text-xl text-foreground/60 font-body max-w-md mx-auto">
-                  Your registration is complete. Our village coordinator will reach out to you within 48 hours to discuss the next steps.
+                  Thank you for registering your land with KrishiAI. Our village coordinator in Uttar Pradesh will reach out to you within 48 hours for verification.
                 </p>
               </div>
               <Link href="/">
