@@ -27,12 +27,12 @@ export default function LandOwnerDashboard() {
     if (!firestore || !user) return null;
     return query(
       collection(firestore, "landLeaseRegistrations"),
-      where("mobile", "==", user.phoneNumber || ""), // Simplified match for demo
+      where("userId", "==", user.uid),
       orderBy("createdAt", "desc")
     );
   }, [firestore, user]);
 
-  const { data: leases, isLoading } = useCollection(leaseQuery);
+  const { data: leases } = useCollection(leaseQuery);
 
   if (loading || !user) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
 

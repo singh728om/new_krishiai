@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -13,7 +12,7 @@ import { Navbar } from "@/components/sections/navbar";
 import { Footer } from "@/components/sections/footer";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
-import { Info, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { 
   Dialog, 
   DialogContent, 
@@ -30,7 +29,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { doc, getDoc } from "firebase/firestore";
 
 export default function LoginPage() {
@@ -69,7 +67,7 @@ export default function LoginPage() {
     }
 
     try {
-      // Check roles in order of priority
+      // Check roles in order of priority: Staff -> LandOwner -> Buyer
       const staffRef = doc(firestore, 'user_roles_staff', uid);
       const landownerRef = doc(firestore, 'user_roles_landowner', uid);
       
@@ -86,20 +84,12 @@ export default function LoginPage() {
         router.push("/profile");
       }
     } catch (error) {
-      console.error("Redirection error:", error);
       router.push("/profile");
     }
   };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Demo Login Bypass
-    if (email.toLowerCase() === "demo" && password.toLowerCase() === "demo") {
-      router.push("/dashboard");
-      return;
-    }
-
     setIsPending(true);
     try {
       await loginWithEmail(email, password);
@@ -164,7 +154,6 @@ export default function LoginPage() {
     resetTitle: lang === 'en' ? "Reset Password" : "पासवर्ड बदलें",
     resetDesc: lang === 'en' ? "Enter your email to receive a reset link." : "रीसेट लिंक प्राप्त करने के लिए अपना ईमेल दर्ज करें।",
     send: lang === 'en' ? "Send Link" : "लिंक भेजें",
-    demoHint: lang === 'en' ? "USE 'demo' / 'demo' FOR STAFF PREVIEW" : "स्टाफ पूर्वावलोकन के लिए 'demo' / 'demo' का उपयोग करें",
     roles: {
       buyer: lang === 'en' ? "Buyer (Customer)" : "खरीददार (ग्राहक)",
       landowner: lang === 'en' ? "Land Owner (Leasing)" : "ज़मीन मालिक",
@@ -194,14 +183,6 @@ export default function LoginPage() {
               </p>
             </div>
           </div>
-
-          <Alert className="bg-primary/5 border-primary/20 rounded-2xl">
-            <Info className="h-4 w-4 text-primary" />
-            <AlertTitle className="text-xs font-bold uppercase tracking-widest text-primary">Preview Note</AlertTitle>
-            <AlertDescription className="text-xs text-foreground/70">
-              {t.demoHint}
-            </AlertDescription>
-          </Alert>
 
           <Tabs defaultValue="login" className="w-full">
             <TabsList className="grid w-full grid-cols-2 rounded-full mb-8 bg-muted/50 p-1">
@@ -280,7 +261,7 @@ export default function LoginPage() {
                   <Label htmlFor="signup-name">{t.name}</Label>
                   <Input 
                     id="signup-name" 
-                    placeholder="John Doe" 
+                    placeholder="Full Name" 
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     required 

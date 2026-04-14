@@ -6,35 +6,27 @@ import {
   Sprout, 
   TrendingUp, 
   Droplets, 
-  CloudSun, 
   Zap, 
   MapPin, 
   LayoutDashboard, 
   History, 
   Leaf,
-  Settings,
   Activity,
   Cpu,
-  Database,
   ShieldCheck,
-  Users,
-  IndianRupee,
   Beaker,
   CheckCircle2,
   XCircle,
   AlertTriangle,
   FileText,
   CreditCard,
-  CalendarDays,
   ChevronRight,
   Save,
   Check,
   X,
   Lock,
-  ArrowUpRight,
   Wifi,
-  Signal,
-  Thermometer
+  Signal
 } from "lucide-react";
 import { Navbar } from "@/components/sections/navbar";
 import { Footer } from "@/components/sections/footer";
@@ -80,7 +72,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
-import { collection, query, orderBy, doc, updateDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
+import { collection, query, orderBy, doc, updateDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
 interface GridItem {
@@ -111,7 +103,6 @@ export default function DashboardPage() {
   const [selectedSector, setSelectedSector] = useState<GridItem | null>(null);
   const [selectedLease, setSelectedLease] = useState<any | null>(null);
 
-  // Editable fields for the selected sector
   const [editCrop, setEditCrop] = useState("");
   const [editProduced, setEditProduced] = useState(0);
   const [editRate, setEditRate] = useState(0);
@@ -119,13 +110,12 @@ export default function DashboardPage() {
   const [editSoil, setEditSoil] = useState(true);
   const [editHealth, setEditHealth] = useState(true);
 
-  // Fetch all registrations
   const registrationsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return query(collection(firestore, "landLeaseRegistrations"), orderBy("createdAt", "desc"));
   }, [firestore]);
 
-  const { data: registrations, loading: loadingRegs } = useCollection(registrationsQuery);
+  const { data: registrations } = useCollection(registrationsQuery);
 
   const pendingRegistrations = useMemo(() => 
     registrations?.filter(r => r.status === 'pending') || [], 
@@ -133,25 +123,9 @@ export default function DashboardPage() {
   );
   
   const activeLeases = useMemo(() => {
-    const realLeases = registrations?.filter(r => r.status === 'reviewed') || [];
-    // Ensure at least one demo lease for prototyping
-    if (realLeases.length === 0) {
-      return [{
-        id: "demo-lease-1",
-        aadharName: "Rajesh Kumar (Varanasi Cluster)",
-        district: "Varanasi",
-        village: "Sarnath",
-        fieldSize: 12.5,
-        fieldUnit: "Bigha",
-        status: "reviewed",
-        mobile: "9876543210",
-        isDemo: true
-      }];
-    }
-    return realLeases;
+    return registrations?.filter(r => r.status === 'reviewed') || [];
   }, [registrations]);
 
-  // Generate 50 Grid Sectors mapping to real leases where available
   const gridData: GridItem[] = useMemo(() => {
     return Array.from({ length: 50 }, (_, i) => {
       const lease = activeLeases[i];
@@ -164,7 +138,6 @@ export default function DashboardPage() {
         k: Math.floor(Math.random() * 50) + 10,
       } : { n: 0, p: 0, k: 0 };
 
-      // AI Recommendation Logic based on sensors
       let recommendedCrop = "Soil Analysis Pending";
       if (isLeased) {
         if (moisture > 38 && nutrients.n > 45) recommendedCrop = "Basmati Rice";
@@ -598,7 +571,6 @@ export default function DashboardPage() {
           </SidebarInset>
         </div>
 
-        {/* Sector Details Dialog - Field Master Mode */}
         <Dialog open={!!selectedSector} onOpenChange={() => setSelectedSector(null)}>
           <DialogContent className="rounded-[2.5rem] p-8 max-w-2xl border-primary/20 bg-card/95 backdrop-blur-xl">
             <DialogHeader className="space-y-4">
@@ -617,7 +589,6 @@ export default function DashboardPage() {
             </DialogHeader>
 
             <div className="grid md:grid-cols-2 gap-8 mt-8">
-              {/* Left Column: Diagnostics (Pass/Fail) */}
               <div className="space-y-6">
                 <h4 className="text-xs font-bold uppercase tracking-widest text-foreground/40 mb-2">Field Diagnostics</h4>
                 
@@ -643,7 +614,7 @@ export default function DashboardPage() {
 
                 <div className="flex items-center justify-between p-4 bg-muted/30 rounded-2xl border border-border">
                   <div className="flex items-center gap-3 text-sm font-medium">
-                    <Beaker size={18} className="text-primary" /> Soil Nutrient Test
+                    <Activity size={18} className="text-primary" /> Soil Nutrient Test
                   </div>
                   <div className="flex gap-2">
                     <button 
@@ -691,7 +662,6 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* Right Column: Crop Data Entry */}
               <div className="space-y-6">
                 <h4 className="text-xs font-bold uppercase tracking-widest text-foreground/40 mb-2">Crop Management</h4>
                 
@@ -751,7 +721,6 @@ export default function DashboardPage() {
           </DialogContent>
         </Dialog>
 
-        {/* Lease Deep-Dive Dialog */}
         <Dialog open={!!selectedLease} onOpenChange={() => setSelectedLease(null)}>
            <DialogContent className="rounded-[3rem] p-0 max-w-2xl border-border bg-card overflow-hidden">
               <div className="h-32 bg-primary relative overflow-hidden">
