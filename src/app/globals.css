@@ -3,6 +3,38 @@
 @tailwind utilities;
 
 :root {
+  /* Light Mode Defaults */
+  --background: 45 30% 98%;
+  --foreground: 0 0% 8%;
+  --card: 45 20% 95%;
+  --card-foreground: 0 0% 10%;
+  --popover: 45 30% 98%;
+  --popover-foreground: 0 0% 10%;
+  --primary: 43 78% 46%;
+  --primary-foreground: 45 30% 98%;
+  --secondary: 130 15% 90%;
+  --secondary-foreground: 0 0% 10%;
+  --muted: 130 10% 92%;
+  --muted-foreground: 0 0% 40%;
+  --accent: 85 55% 51%;
+  --accent-foreground: 0 0% 10%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 130 15% 85%;
+  --input: 130 15% 85%;
+  --ring: 43 78% 46%;
+  --radius: 1rem;
+
+  --krishi-black: #0A0A08;
+  --krishi-soil: #2C1A0E;
+  --krishi-gold: #D4A017;
+  --krishi-lime: #8CC63F;
+  --krishi-cream: #F5F0E8;
+  --krishi-mist: #1A1F16;
+  --krishi-amber: #FF6B2C;
+}
+
+.dark {
   --background: 0 0% 4%;
   --foreground: 45 30% 94%;
   --card: 0 0% 6%;
@@ -22,15 +54,6 @@
   --border: 130 15% 15%;
   --input: 130 15% 15%;
   --ring: 43 78% 46%;
-  --radius: 1rem;
-
-  --krishi-black: #0A0A08;
-  --krishi-soil: #2C1A0E;
-  --krishi-gold: #D4A017;
-  --krishi-lime: #8CC63F;
-  --krishi-cream: #F5F0E8;
-  --krishi-mist: #1A1F16;
-  --krishi-amber: #FF6B2C;
 }
 
 @layer base {
@@ -38,7 +61,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-[--krishi-black] text-[--krishi-cream] selection:bg-[--krishi-gold] selection:text-[--krishi-black] antialiased;
+    @apply bg-background text-foreground selection:bg-krishi-gold selection:text-white antialiased;
     font-feature-settings: "ss01", "ss02", "cv01", "cv02";
   }
 }
@@ -65,8 +88,8 @@
 
   .glass-navbar {
     @apply sticky top-0 z-50 backdrop-blur-md;
-    background-color: color-mix(in srgb, var(--krishi-black), transparent 30%);
-    border-bottom: 1px solid color-mix(in srgb, var(--krishi-gold), transparent 90%);
+    background-color: color-mix(in srgb, var(--background), transparent 20%);
+    border-bottom: 1px solid color-mix(in srgb, var(--krishi-gold), transparent 85%);
   }
 }
 
@@ -75,7 +98,7 @@
   width: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--krishi-black);
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
   background: var(--krishi-gold);
@@ -83,19 +106,6 @@
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #b88a14;
-}
-
-/* Custom Cursor */
-.custom-cursor {
-  width: 12px;
-  height: 12px;
-  background-color: var(--krishi-gold);
-  border-radius: 50%;
-  position: fixed;
-  pointer-events: none;
-  z-index: 9999;
-  mix-blend-mode: difference;
-  transition: transform 0.1s ease-out;
 }
 
 .font-headline {
