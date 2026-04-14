@@ -1,14 +1,12 @@
-
 "use client";
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useUser, useFirestore, useCollection } from "@/firebase";
+import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { useSettings } from "@/context/settings-context";
 import { Navbar } from "@/components/sections/navbar";
 import { Footer } from "@/components/sections/footer";
 import { collection, query, where, orderBy } from "firebase/firestore";
-import { useMemoFirebase } from "@/firebase/firestore/use-collection";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
