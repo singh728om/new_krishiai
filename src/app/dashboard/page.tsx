@@ -32,7 +32,10 @@ import {
   Check,
   X,
   Lock,
-  ArrowUpRight
+  ArrowUpRight,
+  Wifi,
+  Signal,
+  Thermometer
 } from "lucide-react";
 import { Navbar } from "@/components/sections/navbar";
 import { Footer } from "@/components/sections/footer";
@@ -96,6 +99,8 @@ interface GridItem {
   irrigationPass: boolean;
   soilTestPass: boolean;
   cropHealthPass: boolean;
+  recommendedCrop: string;
+  sensorSignal: "excellent" | "good" | "weak";
 }
 
 export default function DashboardPage() {
@@ -146,9 +151,18 @@ export default function DashboardPage() {
         k: Math.floor(Math.random() * 50) + 10,
       } : { n: 0, p: 0, k: 0 };
 
-      // Simplified logic for simulation; real logic would use stored field monitoring data
+      // AI Recommendation Logic based on sensors
+      let recommendedCrop = "Soil Analysis Pending";
+      if (isLeased) {
+        if (moisture > 38 && nutrients.n > 45) recommendedCrop = "Basmati Rice";
+        else if (nutrients.n > 50) recommendedCrop = "Hybrid Wheat";
+        else if (moisture < 28) recommendedCrop = "Mustard / Millet";
+        else if (nutrients.p > 35) recommendedCrop = "Organic Potato";
+        else recommendedCrop = "Sugarcane";
+      }
+
       const irrigationPass = moisture > 30;
-      const soilTestPass = (nutrients.n + nutrients.p + nutrients.k) > 60;
+      const soilTestPass = (nutrients.n + nutrients.p + nutrients.k) > 100;
       const cropHealthPass = irrigationPass && soilTestPass;
 
       let statusColor: GridItem['statusColor'] = "inactive";
@@ -173,6 +187,8 @@ export default function DashboardPage() {
         irrigationPass,
         soilTestPass,
         cropHealthPass,
+        recommendedCrop,
+        sensorSignal: Math.random() > 0.8 ? "weak" : Math.random() > 0.4 ? "good" : "excellent"
       };
     });
   }, [activeLeases]);
@@ -204,7 +220,6 @@ export default function DashboardPage() {
   };
 
   const handleSaveFieldReport = () => {
-    // In a real app, we would update a 'fieldMonitoring' sub-collection
     toast({
       title: "Intelligence Synced",
       description: `Sector ${selectedSector?.fieldId} updated with crop ${editCrop}. Revenue: ₹${(editProduced * editRate).toLocaleString()}`,
@@ -229,9 +244,9 @@ export default function DashboardPage() {
   const navItems = [
     { id: "overview", label: lang === 'en' ? "Overview" : "अवलोकन", icon: LayoutDashboard },
     { id: "heatmap", label: lang === 'en' ? "Field Monitor" : "फील्ड मॉनिटर", icon: MapPin },
+    { id: "iot", label: lang === 'en' ? "Sensor Network" : "सेंसर नेटवर्क", icon: Cpu },
     { id: "approvals", label: lang === 'en' ? "Lease Queue" : "लीज कतार", icon: History },
     { id: "active_leases", label: lang === 'en' ? "Active Leases" : "सक्रिय लीज", icon: FileText },
-    { id: "iot", label: lang === 'en' ? "Sensor Network" : "सेंसर नेटवर्क", icon: Cpu },
   ];
 
   return (
@@ -358,7 +373,7 @@ export default function DashboardPage() {
                     </Card>
 
                     <div className="space-y-8">
-                      <Card className="rounded-[2rem] bg-krishi-black text-white p-8 relative overflow-hidden">
+                      <Card className="rounded-[2rem] bg-krishi-black text-white p-8 relative overflow-hidden shadow-2xl">
                         <div className="absolute top-0 right-0 p-4 opacity-10">
                             <TrendingUp size={80} />
                         </div>
@@ -375,6 +390,104 @@ export default function DashboardPage() {
                         </div>
                       </Card>
                     </div>
+                  </motion.div>
+                )}
+
+                {activeTab === "iot" && (
+                  <motion.div
+                    key="iot"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="space-y-8"
+                  >
+                    <div className="grid md:grid-cols-4 gap-6">
+                      <Card className="p-6 bg-card border-border rounded-3xl">
+                        <div className="flex items-center gap-3 mb-2 text-primary">
+                          <Droplets size={20} />
+                          <h4 className="font-bold">Avg Moisture</h4>
+                        </div>
+                        <p className="text-3xl font-display">38.4%</p>
+                        <p className="text-xs text-krishi-lime font-bold uppercase tracking-widest mt-2">Optimal Range</p>
+                      </Card>
+                      <Card className="p-6 bg-card border-border rounded-3xl">
+                        <div className="flex items-center gap-3 mb-2 text-krishi-amber">
+                          <Beaker size={20} />
+                          <h4 className="font-bold">Soil Nutrients</h4>
+                        </div>
+                        <p className="text-3xl font-display">High (N)</p>
+                        <p className="text-xs text-foreground/40 font-bold uppercase tracking-widest mt-2">N-P-K Aggregate</p>
+                      </Card>
+                      <Card className="p-6 bg-card border-border rounded-3xl">
+                        <div className="flex items-center gap-3 mb-2 text-blue-500">
+                          <Wifi size={20} />
+                          <h4 className="font-bold">Kits Online</h4>
+                        </div>
+                        <p className="text-3xl font-display">{gridData.filter(g => g.isLeased).length} / 50</p>
+                        <p className="text-xs text-foreground/40 font-bold uppercase tracking-widest mt-2">Active Sensors</p>
+                      </Card>
+                      <Card className="p-6 bg-card border-border rounded-3xl">
+                        <div className="flex items-center gap-3 mb-2 text-krishi-gold">
+                          <Zap size={20} />
+                          <h4 className="font-bold">AI Advisory</h4>
+                        </div>
+                        <p className="text-xl font-headline leading-tight">Irrigate Sector #04 in 2hrs</p>
+                        <p className="text-xs text-foreground/40 font-bold uppercase tracking-widest mt-2">Prediction Engine</p>
+                      </Card>
+                    </div>
+
+                    <Card className="rounded-[2.5rem] border-border shadow-sm overflow-hidden bg-card">
+                      <Table>
+                        <TableHeader className="bg-muted/30">
+                          <TableRow>
+                            <TableHead className="font-bold">Field ID</TableHead>
+                            <TableHead className="font-bold">Soil Nutrients (N-P-K)</TableHead>
+                            <TableHead className="font-bold">Moisture</TableHead>
+                            <TableHead className="font-bold">Best AI Recommended Crop</TableHead>
+                            <TableHead className="font-bold">Signal</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {gridData.filter(g => g.isLeased).map((grid) => (
+                            <TableRow key={grid.fieldId} className="hover:bg-muted/10">
+                              <TableCell className="font-code font-bold text-primary">{grid.fieldId}</TableCell>
+                              <TableCell>
+                                <div className="flex gap-4">
+                                  <div className="flex flex-col">
+                                    <span className="text-[10px] text-foreground/40 font-bold">N</span>
+                                    <span className="font-bold text-primary">{grid.nutrients.n}</span>
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className="text-[10px] text-foreground/40 font-bold">P</span>
+                                    <span className="font-bold text-krishi-amber">{grid.nutrients.p}</span>
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className="text-[10px] text-foreground/40 font-bold">K</span>
+                                    <span className="font-bold text-krishi-gold">{grid.nutrients.k}</span>
+                                  </div>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <Progress value={grid.moisture} className="h-2 w-16" />
+                                  <span className="font-medium">{grid.moisture}%</span>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="outline" className="border-primary/20 text-primary font-bold">
+                                  {grid.recommendedCrop}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <Signal size={16} className={
+                                  grid.sensorSignal === 'excellent' ? 'text-krishi-lime' :
+                                  grid.sensorSignal === 'good' ? 'text-primary' : 'text-krishi-amber'
+                                } />
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </Card>
                   </motion.div>
                 )}
 
@@ -556,10 +669,11 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="p-6 bg-krishi-black text-white rounded-2xl border border-border">
-                   <p className="text-[10px] text-white/40 uppercase mb-4 tracking-widest">Calculated Revenue</p>
+                   <p className="text-[10px] text-white/40 uppercase mb-2 tracking-widest">AI Best Crop Recommendation</p>
+                   <p className="text-xl font-headline text-krishi-gold mb-4">{selectedSector?.recommendedCrop}</p>
+                   <p className="text-[10px] text-white/40 uppercase mb-2 tracking-widest">Calculated Revenue</p>
                    <div className="flex items-end gap-2">
                       <span className="text-3xl font-display text-krishi-gold">₹{(editProduced * editRate).toLocaleString()}</span>
-                      <Badge className="bg-krishi-lime/20 text-krishi-lime mb-1">PROFIT_LOCKED</Badge>
                    </div>
                 </div>
               </div>
@@ -680,4 +794,3 @@ export default function DashboardPage() {
     </SidebarProvider>
   );
 }
-
