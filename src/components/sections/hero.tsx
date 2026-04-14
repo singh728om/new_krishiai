@@ -1,4 +1,3 @@
-
 "use client";
 
 import { motion } from "framer-motion";
@@ -154,10 +153,12 @@ export const Hero = () => {
             transition={{ duration: 0.6, delay: 0.8 }}
             className="flex flex-col sm:flex-row gap-4"
           >
-            <Button size="lg" className="bg-primary hover:bg-primary/90 text-white rounded-full px-8 h-14 text-lg font-semibold group">
-              {content.ctaPrimary}
-              <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </Button>
+            <Link href="/login">
+              <Button size="lg" className="bg-primary hover:bg-primary/90 text-white rounded-full px-8 h-14 text-lg font-semibold group w-full sm:w-auto">
+                {content.ctaPrimary}
+                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </Button>
+            </Link>
             <Link href="/lease-registration">
               <Button variant="outline" size="lg" className="border-primary/40 text-primary hover:bg-primary/10 rounded-full px-8 h-14 text-lg font-semibold w-full sm:w-auto">
                 {content.ctaSecondary}
