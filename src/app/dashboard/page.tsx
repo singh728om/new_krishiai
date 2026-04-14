@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   Sprout, 
   TrendingUp, 
@@ -22,7 +22,9 @@ import {
   Database,
   ShieldCheck,
   Search,
-  Users
+  Users,
+  IndianRupee,
+  Info
 } from "lucide-react";
 import { Navbar } from "@/components/sections/navbar";
 import { Footer } from "@/components/sections/footer";
@@ -58,16 +60,43 @@ import {
   SidebarInset,
   SidebarHeader
 } from "@/components/ui/sidebar";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { collection, query, orderBy, doc, updateDoc } from "firebase/firestore";
 import { useMemoFirebase } from "@/firebase/firestore/use-collection";
 
-// Mock data for the 50-grid heatmap
-const generateGridData = () => {
+// Enhanced Mock data for the 50-grid heatmap
+const crops = ["Banarasi Mango", "Organic Tomato", "Basmati Rice", "Wheat", "Mustard", "Corn"];
+const owners = ["Ram Singh", "Vijay Kumar", "Anita Devi", "Suresh Prasad", "Rajesh Khanna", "Sunita Verma"];
+
+interface GridItem {
+  id: number;
+  health: number;
+  moisture: number;
+  isAnomalous: boolean;
+  ownerName: string;
+  crop: string;
+  revenue: number;
+  status: string;
+  pincode: string;
+}
+
+const generateGridData = (): GridItem[] => {
   return Array.from({ length: 50 }, (_, i) => ({
     id: i,
     health: Math.floor(Math.random() * 40) + 60, // 60-100%
     moisture: Math.floor(Math.random() * 30) + 40, // 40-70%
-    isAnomalous: Math.random() > 0.9,
+    isAnomalous: Math.random() > 0.92,
+    ownerName: owners[Math.floor(Math.random() * owners.length)],
+    crop: crops[Math.floor(Math.random() * crops.length)],
+    revenue: Math.floor(Math.random() * 45000) + 15000,
+    status: "Reviewed & Active",
+    pincode: "22100" + (i % 10),
   }));
 };
 
@@ -75,8 +104,9 @@ export default function DashboardPage() {
   const { lang } = useSettings();
   const { user } = useUser();
   const firestore = useFirestore();
-  const [gridData] = useState(generateGridData());
+  const [gridData] = useState<GridItem[]>(generateGridData());
   const [activeTab, setActiveTab] = useState("overview");
+  const [selectedSector, setSelectedSector] = useState<GridItem | null>(null);
 
   // Fetch pending registrations for Staff Approval logic
   const registrationsQuery = useMemoFirebase(() => {
@@ -98,6 +128,13 @@ export default function DashboardPage() {
     heatmapTitle: lang === 'en' ? "Field Heatmap" : "फील्ड हीटमैप",
     iotTitle: lang === 'en' ? "IOT Sensor Network" : "आईओटी सेंसर नेटवर्क",
     approvalTitle: lang === 'en' ? "Lease Approval Queue" : "लीज अनुमोदन कतार",
+    details: {
+      owner: lang === 'en' ? "Land Owner" : "ज़मीन मालिक",
+      crop: lang === 'en' ? "Current Crop" : "वर्तमान फसल",
+      revenue: lang === 'en' ? "Est. Revenue" : "अनुमानित राजस्व",
+      health: lang === 'en' ? "Health Score" : "स्वास्थ्य स्कोर",
+      status: lang === 'en' ? "Status" : "स्थिति",
+    }
   };
 
   const navItems = [
@@ -195,14 +232,14 @@ export default function DashboardPage() {
                         <CardTitle className="text-2xl font-headline font-bold">{t.heatmapTitle}</CardTitle>
                         <CardDescription>Varanasi Cluster #09 • Sector Level Monitoring</CardDescription>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 text-[10px] font-bold text-foreground/40">
                         <div className="flex items-center gap-1.5">
                             <div className="w-2 h-2 rounded-full bg-krishi-lime" />
-                            <span className="text-[10px] font-bold text-foreground/40">HEALTHY</span>
+                            <span>HEALTHY</span>
                         </div>
                         <div className="flex items-center gap-1.5">
                             <div className="w-2 h-2 rounded-full bg-krishi-amber" />
-                            <span className="text-[10px] font-bold text-foreground/40">WARNING</span>
+                            <span>WARNING</span>
                         </div>
                       </div>
                     </div>
@@ -213,19 +250,23 @@ export default function DashboardPage() {
                         <motion.div
                           key={grid.id}
                           whileHover={{ scale: 1.1, zIndex: 10 }}
-                          className={`aspect-square rounded-lg flex items-center justify-center cursor-help transition-colors border border-black/5 ${
+                          onClick={() => setSelectedSector(grid)}
+                          className={`aspect-square rounded-lg flex items-center justify-center cursor-pointer transition-all border border-black/5 hover:shadow-lg ${
                             grid.isAnomalous 
                             ? "bg-krishi-amber" 
                             : grid.health > 90 
                               ? "bg-krishi-lime" 
                               : "bg-krishi-lime/60"
                           }`}
-                          title={`Sector ${grid.id}: Health ${grid.health}%`}
                         >
                           {grid.isAnomalous && <Activity size={12} className="text-white animate-pulse" />}
+                          {!grid.isAnomalous && grid.health < 80 && <Info size={10} className="text-white/40" />}
                         </motion.div>
                       ))}
                     </div>
+                    <p className="mt-4 text-[10px] text-foreground/30 font-code text-center uppercase tracking-widest">
+                      Click any sector grid for detailed ownership and economic intelligence
+                    </p>
                   </CardContent>
                 </Card>
 
@@ -335,6 +376,71 @@ export default function DashboardPage() {
             </div>
           </SidebarInset>
         </div>
+
+        {/* Sector Intelligence Dialog */}
+        <Dialog open={!!selectedSector} onOpenChange={() => setSelectedSector(null)}>
+          <DialogContent className="rounded-[2.5rem] p-8 max-w-md border-primary/20 bg-card/95 backdrop-blur-xl">
+            <DialogHeader className="space-y-4">
+              <div className="flex justify-between items-start">
+                <Badge className={`${selectedSector?.health && selectedSector.health > 85 ? 'bg-krishi-lime' : 'bg-krishi-amber'} text-white`}>
+                  Sector #{selectedSector?.id} Analysis
+                </Badge>
+                <div className="text-[10px] font-code text-foreground/40">PIN: {selectedSector?.pincode}</div>
+              </div>
+              <DialogTitle className="text-3xl font-display">{selectedSector?.crop}</DialogTitle>
+              <DialogDescription className="font-code text-primary font-bold">
+                {selectedSector?.status}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="grid gap-6 mt-6">
+              <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-2xl border border-border">
+                <div className="p-3 bg-primary/10 text-primary rounded-xl">
+                  <Users size={20} />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-foreground/40 uppercase tracking-widest">{t.details.owner}</p>
+                  <p className="font-bold text-lg">{selectedSector?.ownerName}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 bg-krishi-gold/5 rounded-2xl border border-krishi-gold/20">
+                  <div className="flex items-center gap-2 mb-2 text-krishi-gold">
+                    <IndianRupee size={14} />
+                    <span className="text-[10px] font-bold uppercase tracking-widest">{t.details.revenue}</span>
+                  </div>
+                  <p className="text-xl font-display font-bold">₹{selectedSector?.revenue?.toLocaleString()}</p>
+                </div>
+                <div className="p-4 bg-krishi-lime/5 rounded-2xl border border-krishi-lime/20">
+                  <div className="flex items-center gap-2 mb-2 text-krishi-lime">
+                    <Activity size={14} />
+                    <span className="text-[10px] font-bold uppercase tracking-widest">{t.details.health}</span>
+                  </div>
+                  <p className="text-xl font-headline font-bold">{selectedSector?.health}%</p>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-border">
+                <div className="flex justify-between text-xs mb-2">
+                   <span className="text-foreground/40">MOISTURE_CONTENT</span>
+                   <span className="font-bold">{selectedSector?.moisture}%</span>
+                </div>
+                <div className="w-full bg-muted h-1 rounded-full overflow-hidden">
+                   <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: `${selectedSector?.moisture}%` }}
+                    className="bg-blue-500 h-full" 
+                   />
+                </div>
+              </div>
+            </div>
+            
+            <Button onClick={() => setSelectedSector(null)} className="w-full mt-6 rounded-full py-6 font-bold bg-foreground text-background">
+              Close Report
+            </Button>
+          </DialogContent>
+        </Dialog>
 
         <Footer />
       </div>
