@@ -75,6 +75,7 @@ const owners = ["Ram Singh", "Vijay Kumar", "Anita Devi", "Suresh Prasad", "Raje
 
 interface GridItem {
   id: number;
+  fieldId: string;
   produced: string;
   nutrients: { n: number; p: number; k: number };
   moisture: number;
@@ -97,9 +98,6 @@ const generateGridData = (): GridItem[] => {
     };
 
     // Logical Status Determination
-    // Healthy: Balanced nutrients and moisture
-    // Warning: Low moisture OR one nutrient dropping
-    // Critical: Very low moisture OR multiple nutrients low
     let statusColor: "healthy" | "warning" | "critical" = "healthy";
     const avgN = (nutrients.n + nutrients.p + nutrients.k) / 3;
 
@@ -111,6 +109,7 @@ const generateGridData = (): GridItem[] => {
 
     return {
       id: i,
+      fieldId: `FLD-${2000 + i}`,
       produced: (Math.random() * 5 + 1).toFixed(1) + " Tons",
       nutrients,
       moisture,
@@ -277,12 +276,13 @@ export default function DashboardPage() {
                           key={grid.id}
                           whileHover={{ scale: 1.1, zIndex: 10 }}
                           onClick={() => setSelectedSector(grid)}
-                          className={`aspect-square rounded-lg flex items-center justify-center cursor-pointer transition-all border border-black/5 hover:shadow-lg ${
+                          className={`aspect-square rounded-lg flex flex-col items-center justify-center cursor-pointer transition-all border border-black/5 hover:shadow-lg ${
                             grid.statusColor === "healthy" ? "bg-krishi-lime" :
                             grid.statusColor === "warning" ? "bg-krishi-amber" :
                             "bg-red-500"
                           }`}
                         >
+                          <span className="text-[8px] font-bold text-white/40 mb-0.5">#{grid.id}</span>
                           {grid.statusColor === "critical" && <AlertTriangle size={12} className="text-white animate-pulse" />}
                           {grid.statusColor === "warning" && <Activity size={12} className="text-white/80" />}
                         </motion.div>
@@ -407,7 +407,7 @@ export default function DashboardPage() {
                   selectedSector?.statusColor === 'healthy' ? 'bg-krishi-lime' :
                   selectedSector?.statusColor === 'warning' ? 'bg-krishi-amber' : 'bg-red-500'
                 } text-white`}>
-                  Sector #{selectedSector?.id} Intelligence
+                  Field ID: {selectedSector?.fieldId}
                 </Badge>
                 <div className="text-[10px] font-code text-foreground/40">PIN: {selectedSector?.pincode}</div>
               </div>
@@ -506,4 +506,3 @@ export default function DashboardPage() {
     </SidebarProvider>
   );
 }
-
