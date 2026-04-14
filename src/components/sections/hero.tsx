@@ -2,9 +2,24 @@
 
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, CloudSun, Sprout, Wind } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useSettings } from "@/context/settings-context";
+
+const VillageHorizon = () => (
+  <div className="absolute bottom-0 left-0 w-full h-32 opacity-10 pointer-events-none overflow-hidden">
+    <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full h-full fill-primary">
+      <path d="M0,120 L1200,120 L1200,80 C1100,60 1000,100 900,80 C800,60 700,90 600,70 C500,50 400,100 300,80 C200,60 100,90 0,70 Z" />
+      <rect x="50" y="40" width="20" height="30" />
+      <rect x="80" y="50" width="15" height="20" />
+      <circle cx="150" cy="30" r="10" />
+      <path d="M400,20 L420,60 L380,60 Z" />
+      <path d="M450,30 L470,70 L430,70 Z" />
+      <rect x="800" y="40" width="25" height="40" />
+      <circle cx="950" cy="20" r="15" />
+    </svg>
+  </div>
+);
 
 const DataTerminal = () => {
   const [data, setData] = useState({
@@ -31,26 +46,26 @@ const DataTerminal = () => {
       initial={{ opacity: 0, x: 40 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.8, delay: 0.4 }}
-      className="relative p-1 rounded-2xl bg-gradient-to-br from-krishi-gold/30 to-transparent"
+      className="relative p-1 rounded-2xl bg-gradient-to-br from-primary/30 to-transparent"
     >
       <div className="bg-card rounded-2xl p-6 border border-border shadow-2xl font-code text-sm">
         <div className="flex items-center justify-between mb-6">
           <div className="flex gap-1.5">
             <div className="w-2.5 h-2.5 rounded-full bg-red-500/50" />
             <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/50" />
-            <div className="w-2.5 h-2.5 rounded-full bg-green-500/50" />
+            <div className="w-2.5 h-2.5 rounded-full bg-primary/50" />
           </div>
-          <span className="text-[10px] text-foreground/40 uppercase tracking-widest">Krishi Core v2.4</span>
+          <span className="text-[10px] text-foreground/40 uppercase tracking-widest">Krishi Core AI v2.4</span>
         </div>
 
         <div className="space-y-4">
           <div className="flex justify-between items-center group">
             <span className="text-foreground/60">SOIL_PH</span>
-            <span className="text-krishi-gold">{data.pH}</span>
+            <span className="text-primary font-bold">{data.pH}</span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-foreground/60">CROP_HEALTH</span>
-            <span className="text-krishi-lime">{data.health}%</span>
+            <span className="text-primary">{data.health}%</span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-foreground/60">MOISTURE</span>
@@ -58,7 +73,7 @@ const DataTerminal = () => {
           </div>
           <div className="flex justify-between items-center">
             <span className="text-foreground/60">PATH_RISK</span>
-            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${data.risk === 'LOW' ? 'bg-krishi-lime/20 text-krishi-lime' : 'bg-krishi-amber/20 text-krishi-amber'}`}>
+            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${data.risk === 'LOW' ? 'bg-primary/20 text-primary' : 'bg-krishi-amber/20 text-krishi-amber'}`}>
               {data.risk}
             </span>
           </div>
@@ -69,7 +84,7 @@ const DataTerminal = () => {
           <p className="mt-1">_ COORDINATES: 21.1458° N, 79.0882° E</p>
         </div>
       </div>
-      <div className="absolute -inset-4 bg-krishi-gold/5 blur-3xl -z-10 rounded-full" />
+      <div className="absolute -inset-4 bg-primary/5 blur-3xl -z-10 rounded-full" />
     </motion.div>
   );
 };
@@ -78,6 +93,7 @@ export const Hero = () => {
   const { lang } = useSettings();
   
   const content = {
+    badge: lang === 'en' ? 'Smart AI Agriculture for Bharat' : 'भारत के लिए स्मार्ट एआई कृषि',
     headline: lang === 'en' ? 'Farming at the speed of light.' : 'प्रकाश की गति से खेती करें।',
     subline: lang === 'en' 
       ? 'AI-powered precision for Bharat. Increase yield by 40%, diagnose diseases in seconds, and unlock carbon credit revenue.' 
@@ -92,10 +108,21 @@ export const Hero = () => {
   const headlineWords = content.headline.split(" ");
 
   return (
-    <section className="relative min-h-[90vh] flex items-center overflow-hidden pt-20 grain">
+    <section className="relative min-h-[90vh] flex items-center overflow-hidden pt-20 grain bg-background">
+      <VillageHorizon />
+      
       <div className="container mx-auto px-6 grid lg:grid-cols-12 gap-12 items-center relative z-10">
         
         <div className="lg:col-span-7 space-y-8">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-headline font-bold uppercase tracking-widest"
+          >
+            <Sprout size={14} />
+            {content.badge}
+          </motion.div>
+
           <h1 className="text-5xl md:text-8xl font-display font-medium leading-[1.1] text-foreground">
             {headlineWords.map((word, i) => (
               <motion.span
@@ -125,11 +152,11 @@ export const Hero = () => {
             transition={{ duration: 0.6, delay: 0.8 }}
             className="flex flex-col sm:flex-row gap-4"
           >
-            <Button size="lg" className="bg-krishi-amber hover:bg-krishi-amber/90 text-white rounded-full px-8 h-14 text-lg font-semibold group">
+            <Button size="lg" className="bg-primary hover:bg-primary/90 text-white rounded-full px-8 h-14 text-lg font-semibold group">
               {content.ctaPrimary}
               <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Button>
-            <Button variant="outline" size="lg" className="border-krishi-gold/40 text-krishi-gold hover:bg-krishi-gold/10 rounded-full px-8 h-14 text-lg font-semibold">
+            <Button variant="outline" size="lg" className="border-primary/40 text-primary hover:bg-primary/10 rounded-full px-8 h-14 text-lg font-semibold">
               {content.ctaSecondary}
             </Button>
           </motion.div>
@@ -140,14 +167,14 @@ export const Hero = () => {
             transition={{ duration: 1, delay: 1.2 }}
             className="flex flex-wrap gap-8 pt-8"
           >
-            <div className="flex items-center gap-2 text-xs font-headline font-bold uppercase tracking-widest text-krishi-gold">
-              <span className="text-xl">🌾</span> {content.stat1}
+            <div className="flex items-center gap-2 text-xs font-headline font-bold uppercase tracking-widest text-primary">
+              <Sprout size={18} className="animate-bounce" /> {content.stat1}
             </div>
-            <div className="flex items-center gap-2 text-xs font-headline font-bold uppercase tracking-widest text-krishi-gold">
-              <span className="text-xl">⚡</span> {content.stat2}
+            <div className="flex items-center gap-2 text-xs font-headline font-bold uppercase tracking-widest text-primary">
+              <CloudSun size={18} /> {content.stat2}
             </div>
-            <div className="flex items-center gap-2 text-xs font-headline font-bold uppercase tracking-widest text-krishi-gold">
-              <span className="text-xl">₹</span> {content.stat3}
+            <div className="flex items-center gap-2 text-xs font-headline font-bold uppercase tracking-widest text-primary">
+              <Wind size={18} /> {content.stat3}
             </div>
           </motion.div>
         </div>
@@ -157,8 +184,7 @@ export const Hero = () => {
         </div>
       </div>
 
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-krishi-gold/5 blur-[120px] rounded-full pointer-events-none" />
-      <div className="absolute -bottom-24 -left-24 w-[400px] h-[400px] bg-krishi-lime/5 blur-[100px] rounded-full pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 blur-[120px] rounded-full pointer-events-none" />
     </section>
   );
 };

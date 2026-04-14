@@ -5,6 +5,7 @@ import { Navbar } from "@/components/sections/navbar";
 import { Hero } from "@/components/sections/hero";
 import { SocialProofBar } from "@/components/sections/social-proof";
 import { FeatureGrid } from "@/components/sections/features";
+import { WeatherIntelligence } from "@/components/sections/weather-intelligence";
 import { DiagnosticsDemo } from "@/components/sections/diagnostics-demo";
 import { LandLease } from "@/components/sections/land-lease";
 import { HaritStore } from "@/components/sections/harit-store";
@@ -22,6 +23,7 @@ export default function LandingPage() {
       <Hero />
       <SocialProofBar />
       <FeatureGrid />
+      <WeatherIntelligence />
       <DiagnosticsDemo />
       <LandLease />
       <HaritStore />
