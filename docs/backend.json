@@ -1,0 +1,65 @@
+
+{
+  "entities": {
+    "LandLeaseRegistration": {
+      "title": "Land Lease Registration",
+      "description": "Details of farmers interested in leasing their land.",
+      "type": "object",
+      "properties": {
+        "aadharName": {
+          "type": "string",
+          "description": "Full name as per Aadhar card."
+        },
+        "village": {
+          "type": "string",
+          "description": "Village name."
+        },
+        "state": {
+          "type": "string",
+          "description": "State."
+        },
+        "district": {
+          "type": "string",
+          "description": "District."
+        },
+        "mobile": {
+          "type": "string",
+          "description": "Mobile number for contact."
+        },
+        "fieldSize": {
+          "type": "number",
+          "description": "Numerical value of field size."
+        },
+        "fieldUnit": {
+          "type": "string",
+          "enum": ["Biswa", "Bigha"],
+          "description": "Unit of measurement for the field."
+        },
+        "hasIrrigation": {
+          "type": "boolean",
+          "description": "Whether the land has irrigation facilities."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "contacted", "reviewed"],
+          "description": "Status of the lead."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of registration."
+        }
+      },
+      "required": ["aadharName", "village", "state", "district", "mobile", "fieldSize", "fieldUnit"]
+    }
+  },
+  "auth": {
+    "providers": ["google.com"]
+  },
+  "firestore": {
+    "/landLeaseRegistrations/{registrationId}": {
+      "schema": "#/entities/LandLeaseRegistration",
+      "description": "Collection of land lease registration applications."
+    }
+  }
+}

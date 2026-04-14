@@ -1,3 +1,4 @@
+
 "use client";
 
 import { motion } from "framer-motion";
@@ -5,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, CloudSun, Sprout, Wind } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useSettings } from "@/context/settings-context";
+import Link from "next/link";
 
 const VillageHorizon = () => (
   <div className="absolute bottom-0 left-0 w-full h-32 opacity-10 pointer-events-none overflow-hidden">
@@ -156,9 +158,11 @@ export const Hero = () => {
               {content.ctaPrimary}
               <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Button>
-            <Button variant="outline" size="lg" className="border-primary/40 text-primary hover:bg-primary/10 rounded-full px-8 h-14 text-lg font-semibold">
-              {content.ctaSecondary}
-            </Button>
+            <Link href="/lease-registration">
+              <Button variant="outline" size="lg" className="border-primary/40 text-primary hover:bg-primary/10 rounded-full px-8 h-14 text-lg font-semibold w-full sm:w-auto">
+                {content.ctaSecondary}
+              </Button>
+            </Link>
           </motion.div>
 
           <motion.div

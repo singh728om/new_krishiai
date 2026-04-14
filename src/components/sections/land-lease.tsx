@@ -1,8 +1,10 @@
+
 "use client";
 
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Leaf } from "lucide-react";
+import Link from "next/link";
 
 export const LandLease = () => {
   return (
@@ -40,9 +42,11 @@ export const LandLease = () => {
               ))}
             </div>
 
-            <Button className="bg-krishi-amber hover:bg-krishi-amber/90 text-white rounded-full px-10 h-16 text-lg font-bold w-full sm:w-auto shadow-lg shadow-krishi-amber/20">
-              Lease My Land Now →
-            </Button>
+            <Link href="/lease-registration">
+              <Button className="bg-krishi-amber hover:bg-krishi-amber/90 text-white rounded-full px-10 h-16 text-lg font-bold w-full sm:w-auto shadow-lg shadow-krishi-amber/20">
+                Lease My Land Now →
+              </Button>
+            </Link>
           </div>
 
           <div className="relative">
