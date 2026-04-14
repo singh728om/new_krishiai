@@ -24,7 +24,8 @@ import {
   Search,
   Users,
   IndianRupee,
-  Info
+  Info,
+  Beaker
 } from "lucide-react";
 import { Navbar } from "@/components/sections/navbar";
 import { Footer } from "@/components/sections/footer";
@@ -76,7 +77,8 @@ const owners = ["Ram Singh", "Vijay Kumar", "Anita Devi", "Suresh Prasad", "Raje
 
 interface GridItem {
   id: number;
-  health: number;
+  produced: string;
+  nutrients: { n: number; p: number; k: number };
   moisture: number;
   isAnomalous: boolean;
   ownerName: string;
@@ -89,8 +91,13 @@ interface GridItem {
 const generateGridData = (): GridItem[] => {
   return Array.from({ length: 50 }, (_, i) => ({
     id: i,
-    health: Math.floor(Math.random() * 40) + 60, // 60-100%
-    moisture: Math.floor(Math.random() * 30) + 40, // 40-70%
+    produced: (Math.random() * 5 + 1).toFixed(1) + " Tons",
+    nutrients: {
+      n: Math.floor(Math.random() * 50) + 20,
+      p: Math.floor(Math.random() * 30) + 10,
+      k: Math.floor(Math.random() * 40) + 15,
+    },
+    moisture: Math.floor(Math.random() * 30) + 40,
     isAnomalous: Math.random() > 0.92,
     ownerName: owners[Math.floor(Math.random() * owners.length)],
     crop: crops[Math.floor(Math.random() * crops.length)],
@@ -132,7 +139,8 @@ export default function DashboardPage() {
       owner: lang === 'en' ? "Land Owner" : "ज़मीन मालिक",
       crop: lang === 'en' ? "Current Crop" : "वर्तमान फसल",
       revenue: lang === 'en' ? "Est. Revenue" : "अनुमानित राजस्व",
-      health: lang === 'en' ? "Health Score" : "स्वास्थ्य स्कोर",
+      produced: lang === 'en' ? "Yield Produced" : "उत्पादित पैदावार",
+      nutrients: lang === 'en' ? "Soil Nutrients (N-P-K)" : "मिट्टी के पोषक तत्व",
       status: lang === 'en' ? "Status" : "स्थिति",
     }
   };
@@ -152,7 +160,6 @@ export default function DashboardPage() {
         <Navbar />
         
         <div className="flex flex-1 pt-20">
-          {/* Sub Nav Sidebar */}
           <Sidebar className="border-r border-border bg-card mt-20" collapsible="none">
             <SidebarHeader className="p-6">
                <div className="flex items-center gap-3">
@@ -189,7 +196,6 @@ export default function DashboardPage() {
             </SidebarContent>
           </Sidebar>
 
-          {/* Main Dashboard Content */}
           <SidebarInset className="flex-1 bg-background/50 overflow-y-auto">
             <div className="p-8 md:p-12 max-w-7xl mx-auto space-y-12">
               
@@ -224,7 +230,6 @@ export default function DashboardPage() {
               </header>
 
               <div className="grid lg:grid-cols-3 gap-8">
-                {/* Heatmap Section */}
                 <Card className="lg:col-span-2 rounded-[2.5rem] border-border shadow-sm overflow-hidden bg-card">
                   <CardHeader className="border-b border-border/50 p-8">
                     <div className="flex justify-between items-center">
@@ -235,11 +240,11 @@ export default function DashboardPage() {
                       <div className="flex gap-2 text-[10px] font-bold text-foreground/40">
                         <div className="flex items-center gap-1.5">
                             <div className="w-2 h-2 rounded-full bg-krishi-lime" />
-                            <span>HEALTHY</span>
+                            <span>STABLE</span>
                         </div>
                         <div className="flex items-center gap-1.5">
                             <div className="w-2 h-2 rounded-full bg-krishi-amber" />
-                            <span>WARNING</span>
+                            <span>ANOMALY</span>
                         </div>
                       </div>
                     </div>
@@ -254,13 +259,10 @@ export default function DashboardPage() {
                           className={`aspect-square rounded-lg flex items-center justify-center cursor-pointer transition-all border border-black/5 hover:shadow-lg ${
                             grid.isAnomalous 
                             ? "bg-krishi-amber" 
-                            : grid.health > 90 
-                              ? "bg-krishi-lime" 
-                              : "bg-krishi-lime/60"
+                            : "bg-krishi-lime"
                           }`}
                         >
                           {grid.isAnomalous && <Activity size={12} className="text-white animate-pulse" />}
-                          {!grid.isAnomalous && grid.health < 80 && <Info size={10} className="text-white/40" />}
                         </motion.div>
                       ))}
                     </div>
@@ -270,7 +272,6 @@ export default function DashboardPage() {
                   </CardContent>
                 </Card>
 
-                {/* IOT Status Sidebar */}
                 <div className="space-y-8">
                   <h2 className="text-2xl font-headline font-bold flex items-center gap-2">
                     <Cpu className="text-primary" />
@@ -312,7 +313,6 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* Approval Queue Section */}
               <div className="space-y-8">
                 <h2 className="text-2xl font-headline font-bold flex items-center gap-2">
                   <History className="text-primary" />
@@ -377,12 +377,11 @@ export default function DashboardPage() {
           </SidebarInset>
         </div>
 
-        {/* Sector Intelligence Dialog */}
         <Dialog open={!!selectedSector} onOpenChange={() => setSelectedSector(null)}>
           <DialogContent className="rounded-[2.5rem] p-8 max-w-md border-primary/20 bg-card/95 backdrop-blur-xl">
             <DialogHeader className="space-y-4">
               <div className="flex justify-between items-start">
-                <Badge className={`${selectedSector?.health && selectedSector.health > 85 ? 'bg-krishi-lime' : 'bg-krishi-amber'} text-white`}>
+                <Badge className="bg-primary text-white">
                   Sector #{selectedSector?.id} Analysis
                 </Badge>
                 <div className="text-[10px] font-code text-foreground/40">PIN: {selectedSector?.pincode}</div>
@@ -414,10 +413,31 @@ export default function DashboardPage() {
                 </div>
                 <div className="p-4 bg-krishi-lime/5 rounded-2xl border border-krishi-lime/20">
                   <div className="flex items-center gap-2 mb-2 text-krishi-lime">
-                    <Activity size={14} />
-                    <span className="text-[10px] font-bold uppercase tracking-widest">{t.details.health}</span>
+                    <TrendingUp size={14} />
+                    <span className="text-[10px] font-bold uppercase tracking-widest">{t.details.produced}</span>
                   </div>
-                  <p className="text-xl font-headline font-bold">{selectedSector?.health}%</p>
+                  <p className="text-xl font-headline font-bold">{selectedSector?.produced}</p>
+                </div>
+              </div>
+
+              <div className="p-6 bg-muted/30 rounded-2xl border border-border">
+                <div className="flex items-center gap-2 mb-4">
+                  <Beaker size={16} className="text-primary" />
+                  <span className="text-[10px] font-bold uppercase tracking-widest">{t.details.nutrients}</span>
+                </div>
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-bold text-foreground/40">NITROGEN (N)</p>
+                    <p className="font-code font-bold text-primary">{selectedSector?.nutrients.n} mg/kg</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-bold text-foreground/40">PHOSPHORUS (P)</p>
+                    <p className="font-code font-bold text-primary">{selectedSector?.nutrients.p} mg/kg</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-bold text-foreground/40">POTASSIUM (K)</p>
+                    <p className="font-code font-bold text-primary">{selectedSector?.nutrients.k} mg/kg</p>
+                  </div>
                 </div>
               </div>
 
