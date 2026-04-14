@@ -1,111 +1,204 @@
-
 {
   "entities": {
     "UserProfile": {
-      "title": "User Profile",
-      "description": "Extended information for a registered user.",
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserProfile",
       "type": "object",
+      "description": "Represents a user's profile information within the KrishiAI application, linked to an external authentication system. This entity stores general user details and does not store sensitive authentication data like passwords.",
       "properties": {
-        "uid": { "type": "string" },
-        "name": { "type": "string" },
-        "email": { "type": "string" },
-        "role": { 
-          "type": "string", 
-          "enum": ["buyer", "land_owner", "farmer", "staff"],
-          "description": "User's primary role in the ecosystem."
-        },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["uid", "name", "email", "role"]
-    },
-    "LandLeaseRegistration": {
-      "title": "Land Lease Registration",
-      "description": "Details of farmers interested in leasing their land.",
-      "type": "object",
-      "properties": {
-        "aadharName": {
+        "id": {
           "type": "string",
-          "description": "Full name as per Aadhar card."
+          "description": "Unique identifier for the UserProfile entity."
         },
-        "aadharNumber": {
+        "externalAuthId": {
           "type": "string",
-          "description": "12-digit Aadhar number."
+          "description": "Unique identifier from the external authentication system (e.g., Firebase Auth UID). This ID is crucial for linking the UserProfile to the actual authenticated user managed by an external system."
         },
-        "village": {
+        "email": {
           "type": "string",
-          "description": "Village name."
+          "description": "The user's primary email address. Used for communication and identification, not for authentication within this data model.",
+          "format": "email"
         },
-        "state": {
+        "firstName": {
           "type": "string",
-          "description": "State."
+          "description": "The user's first name."
         },
-        "district": {
+        "lastName": {
           "type": "string",
-          "description": "District."
+          "description": "The user's last name."
         },
-        "pincode": {
+        "phoneNumber": {
           "type": "string",
-          "description": "6-digit postal code."
+          "description": "The user's primary contact phone number."
         },
-        "mobile": {
+        "address": {
           "type": "string",
-          "description": "Mobile number for contact."
+          "description": "The user's primary physical address or location."
         },
-        "fieldSize": {
-          "type": "number",
-          "description": "Numerical value of field size."
-        },
-        "fieldUnit": {
+        "profileImageUrl": {
           "type": "string",
-          "enum": ["Biswa", "Bigha"],
-          "description": "Unit of measurement for the field."
-        },
-        "hasIrrigation": {
-          "type": "boolean",
-          "description": "Whether the land has irrigation facilities."
-        },
-        "status": {
-          "type": "string",
-          "enum": ["pending", "contacted", "reviewed"],
-          "description": "Status of the lead."
+          "description": "URL to the user's profile picture.",
+          "format": "uri"
         },
         "createdAt": {
           "type": "string",
-          "format": "date-time",
-          "description": "Timestamp of registration."
+          "description": "Timestamp indicating when the user profile was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the user profile was last updated.",
+          "format": "date-time"
         }
       },
-      "required": ["aadharName", "aadharNumber", "village", "state", "district", "pincode", "mobile", "fieldSize", "fieldUnit"]
+      "required": [
+        "id",
+        "externalAuthId",
+        "email",
+        "firstName",
+        "lastName",
+        "createdAt"
+      ]
     },
-    "Order": {
-      "title": "Order",
-      "description": "Details of a customer purchase.",
+    "Role": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Role",
       "type": "object",
+      "description": "Defines the distinct roles users can have within the KrishiAI platform, such as 'Buyer', 'LandOwner', or 'Staff'. These roles dictate access to specific dashboards and features.",
       "properties": {
-        "userId": { "type": "string" },
-        "items": { "type": "array" },
-        "total": { "type": "number" },
-        "paymentMethod": { "type": "string", "enum": ["cod", "card"] },
-        "status": { "type": "string", "enum": ["pending", "confirmed", "shipped", "delivered"] },
-        "createdAt": { "type": "string", "format": "date-time" }
-      }
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Role entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The human-readable name of the role (e.g., 'Buyer', 'LandOwner', 'Staff')."
+        },
+        "description": {
+          "type": "string",
+          "description": "A brief explanation of the permissions and responsibilities associated with this role."
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ]
+    },
+    "UserRole": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserRole",
+      "type": "object",
+      "description": "A linking entity that establishes a many-to-many relationship between UserProfiles and Roles, allowing a single user to possess multiple roles (e.g., a user can be both a 'Buyer' and a 'LandOwner').",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the UserRole linking entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the UserProfile entity to which this role is assigned. (Relationship: UserProfile 1:N UserRole)"
+        },
+        "roleId": {
+          "type": "string",
+          "description": "Reference to the Role entity that is assigned to the user. (Relationship: Role 1:N UserRole)"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "roleId"
+      ]
     }
   },
   "auth": {
-    "providers": ["google.com", "password"]
+    "providers": [
+      "password",
+      "anonymous"
+    ]
   },
   "firestore": {
-    "/users/{userId}": {
-      "schema": "#/entities/UserProfile",
-      "description": "User account and role data."
-    },
-    "/landLeaseRegistrations/{registrationId}": {
-      "schema": "#/entities/LandLeaseRegistration",
-      "description": "Collection of land lease registration applications."
-    },
-    "/orders/{orderId}": {
-      "schema": "#/entities/Order",
-      "description": "Collection of customer orders."
-    }
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "UserProfile",
+          "schema": {
+            "$ref": "#/backend/entities/UserProfile"
+          },
+          "description": "Stores individual user profile data. The {userId} in the path must match the user's Firebase Auth UID. Each document includes an 'externalAuthId' field which also must match this UID, reinforcing path-based ownership.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user, corresponding to their Firebase Authentication UID."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/role_definitions/{roleId}",
+        "definition": {
+          "entityName": "Role",
+          "schema": {
+            "$ref": "#/backend/entities/Role"
+          },
+          "description": "A master collection defining the properties of each distinct role (e.g., 'buyer', 'landowner', 'staff'). These documents are used for lookup and do not directly grant roles. Access is read-only for general users, and write-only for administrative staff.",
+          "params": [
+            {
+              "name": "roleId",
+              "description": "The unique identifier for a specific role (e.g., 'buyer', 'landowner', 'staff')."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/user_roles_buyer/{userId}",
+        "definition": {
+          "entityName": "UserRole",
+          "schema": {
+            "$ref": "#/backend/entities/UserRole"
+          },
+          "description": "A dedicated collection for 'Buyer' role membership. The existence of a document here signifies that the '{userId}' is a Buyer. This enables efficient, atomic authorization checks using 'exists()' in security rules. The 'userId' is the Firebase Auth UID. Document content is minimal (e.g., 'assignedAt' timestamp).",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user (Firebase Auth UID) who is assigned the 'Buyer' role."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/user_roles_landowner/{userId}",
+        "definition": {
+          "entityName": "UserRole",
+          "schema": {
+            "$ref": "#/backend/entities/UserRole"
+          },
+          "description": "A dedicated collection for 'LandOwner' role membership. The existence of a document here signifies that the '{userId}' is a LandOwner. This enables efficient, atomic authorization checks using 'exists()' in security rules. The 'userId' is the Firebase Auth UID. Document content is minimal.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user (Firebase Auth UID) who is assigned the 'LandOwner' role."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/user_roles_staff/{userId}",
+        "definition": {
+          "entityName": "UserRole",
+          "schema": {
+            "$ref": "#/backend/entities/UserRole"
+          },
+          "description": "A dedicated collection for 'Staff' role membership. The existence of a document here signifies that the '{userId}' is Staff. This enables efficient, atomic authorization checks using 'exists()' in security rules. The 'userId' is the Firebase Auth UID. Document content is minimal.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user (Firebase Auth UID) who is assigned the 'Staff' role."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The recommended Firestore structure prioritizes strict adherence to Authorization Independence, DBAC (Database-Based Access Control), and QAPs (Query As Permissions) for robust and debuggable security rules. The core strategy involves using specialized, top-level collections to denote user roles through 'Existence over Content', eliminating the need for 'get()' calls in security rules and enabling atomic operations. \n\n1.  **User Profiles (`/users/{userId}`)**: User-specific profile data is stored under a collection named `users`, where each document's ID (`{userId}`) directly corresponds to the Firebase Authentication UID (`request.auth.uid`). This provides path-based ownership, making security rules for self-access straightforward (e.g., `allow read, write: if request.auth.uid == userId;`). The `externalAuthId` within the document will explicitly match the `userId` in the path, reinforcing ownership. This collection has a homogeneous security posture, primarily allowing self-management and administrative oversight.\n\n2.  **Role Definitions (`/role_definitions/{roleId}`)**: A dedicated collection, `role_definitions`, will store the master list of available roles (e.g., 'buyer', 'landOwner', 'staff'). These documents contain the static properties of each role, such as their human-readable name and description. Access to this collection is primarily read-only for authenticated users to understand available roles, with write access restricted to administrative staff. This collection is structurally segregated, and its security posture is homogeneous.\n\n3.  **Role Membership (`/user_roles_buyer/{userId}`, `/user_roles_landowner/{userId}`, `/user_roles_staff/{userId}`)**: To enable efficient and secure role-based authorization, user role assignments are denormalized into dedicated, role-specific top-level collections. For instance, a document existing at `/user_roles_buyer/{userId}` directly signifies that the `{userId}` possesses the 'Buyer' role. \n    *   **Authorization Independence**: This design is critical for achieving authorization independence. Security rules can check for role membership using `exists(/databases/$(database)/documents/user_roles_buyer/$(request.auth.uid))` without performing any expensive or dependency-creating `get()` operations. This ensures atomic authorization checks and simplifies debugging.\n    *   **QAPs (Query As Permissions)**: For a user to verify their own roles, they can attempt to read from these role-specific collections using their `request.auth.uid`. The security rules will automatically filter results, ensuring only their own role memberships are returned or confirmed. For example, if a user navigates to a 'Buyer' dashboard, the client can check if a document exists for their UID in `/user_roles_buyer`. This makes `list` operations implicitly secure based on `request.auth.uid` matching the path wildcard.\n    *   **DBAC**: Roles are explicitly stored in the database, with their existence in these dedicated collections acting as the authorization context, adhering strictly to the 'Existence over Content' principle. While the `UserRole` entity schema exists, its direct representation is split: its `userId` becomes the document ID, and `roleId` is implicitly the collection name. The `id` field from the `UserRole` schema would not be explicitly stored as a document field in these collections, as the path structure sufficiently conveys the membership. Management of these role assignments would typically involve Cloud Functions to create/delete documents in these collections when a user is assigned/unassigned a role."
   }
 }

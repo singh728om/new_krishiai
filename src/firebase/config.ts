@@ -1,9 +1,8 @@
-
 export const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSy-dummy-key-for-prototyping",
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "krishi-ai-demo.firebaseapp.com",
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "krishi-ai-demo",
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "krishi-ai-demo.appspot.com",
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "123456789012",
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:123456789012:web:abcdef1234567890",
+  "projectId": "studio-4296057969-fdbc3",
+  "appId": "1:99313315628:web:fea9f0a9e350086e6a4689",
+  "apiKey": "AIzaSyA_aQGD6CpQ0iP5ucwPfizMF8VF21sxosQ",
+  "authDomain": "studio-4296057969-fdbc3.firebaseapp.com",
+  "measurementId": "",
+  "messagingSenderId": "99313315628"
 };

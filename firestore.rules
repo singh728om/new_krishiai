@@ -1,0 +1,125 @@
+/**
+ * KrishiAI Security Rules
+ * 
+ * Core Philosophy:
+ * This ruleset implements a strict Path-Based Ownership and Role-Based Access Control (RBAC) model. 
+ * Authorization is decoupled from data content, primarily relying on the existence of documents in 
+ * specific collections to determine user permissions ("Existence over Content").
+ * 
+ * Data Structure:
+ * - /users/{userId}: Private user profiles where document ID matches Firebase Auth UID.
+ * - /role_definitions/{roleId}: Publicly readable metadata for available roles (Buyer, LandOwner, Staff).
+ * - /user_roles_{role_type}/{userId}: Dedicated collections for role membership. The presence of 
+ *   a document at a path signifies the user possesses that role.
+ * 
+ * Key Security Decisions:
+ * - Denormalization: User roles are stored in dedicated collections (/user_roles_staff, etc.) to 
+ *   enable performant 'exists()' checks without complex data queries.
+ * - Self-Creation: Users are permitted to create their own UserProfile document upon first login 
+ *   to facilitate a seamless onboarding flow.
+ * - Staff Oversight: Users with the 'Staff' role are granted elevated permissions to view profiles 
+ *   and manage role definitions.
+ * - Integrity: Strict checks ensure that internal fields like 'externalAuthId' always match 
+ *   the document ID and the authenticated user's UID.
+ */
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --- Helper Functions ---
+
+    /** @description Checks if the request is from a signed-in user. */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /** @description Checks if the provided ID matches the authenticated user's UID. */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /** @description Verifies the document exists and the current user is the owner. */
+    function isExistingOwner(userId) {
+      return resource != null && isOwner(userId);
+    }
+
+    /** @description Checks if the authenticated user has the 'Staff' role. */
+    function isStaff() {
+      return isSignedIn() && exists(/databases/$(database)/documents/user_roles_staff/$(request.auth.uid));
+    }
+
+    /** 
+     * @description Validates relational integrity for UserProfile.
+     * Ensures the document's internal ID fields match the path and the user's Auth UID.
+     */
+    function isValidUserProfile(userId) {
+      return request.resource.data.id == userId && request.resource.data.externalAuthId == userId;
+    }
+
+    // --- Collection Rules ---
+
+    /**
+     * @description Security rules for user profiles. Owners manage their data; Staff can view all.
+     * @path /users/{userId}
+     * @allow (get) If the user is the owner or is Staff.
+     * @deny (create) If the internal 'id' or 'externalAuthId' does not match the Auth UID.
+     * @principle Path-based ownership and relational integrity validation.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isStaff();
+      allow list: if isOwner(userId) || isStaff();
+      allow create: if isOwner(userId) && isValidUserProfile(userId);
+      allow update: if isExistingOwner(userId) && request.resource.data.externalAuthId == resource.data.externalAuthId;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Master role definitions. Read-only for users; managed by Staff.
+     * @path /role_definitions/{roleId}
+     * @allow (list) If the user is signed in.
+     * @deny (write) If the user is not Staff.
+     * @principle Structural segregation of static configuration data.
+     */
+    match /role_definitions/{roleId} {
+      allow get, list: if isSignedIn();
+      allow create, update, delete: if isStaff();
+    }
+
+    /**
+     * @description Membership tracking for the 'Buyer' role.
+     * @path /user_roles_buyer/{userId}
+     * @allow (get) If the user is the owner (checking their own role) or Staff.
+     * @deny (create) If not performed by a Staff member.
+     * @principle DBAC (Database-Based Access Control) using existence over content.
+     */
+    match /user_roles_buyer/{userId} {
+      allow get, list: if isOwner(userId) || isStaff();
+      allow create, update, delete: if isStaff();
+    }
+
+    /**
+     * @description Membership tracking for the 'LandOwner' role.
+     * @path /user_roles_landowner/{userId}
+     * @allow (list) If the user is checking their own role status.
+     * @deny (update) By anyone except Staff.
+     * @principle Atomic authorization checks via existence in role-specific collections.
+     */
+    match /user_roles_landowner/{userId} {
+      allow get, list: if isOwner(userId) || isStaff();
+      allow create, update, delete: if isStaff();
+    }
+
+    /**
+     * @description Membership tracking for the 'Staff' role.
+     * @path /user_roles_staff/{userId}
+     * @allow (get) If the user is the owner or existing Staff.
+     * @deny (create) By non-staff members to prevent unauthorized privilege escalation.
+     * @principle Strict administrative control over role assignment.
+     */
+    match /user_roles_staff/{userId} {
+      allow get, list: if isOwner(userId) || isStaff();
+      allow create, update, delete: if isStaff();
+    }
+  }
+}
