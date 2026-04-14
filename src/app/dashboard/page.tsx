@@ -23,7 +23,11 @@ import {
   Beaker,
   CheckCircle2,
   XCircle,
-  AlertTriangle
+  AlertTriangle,
+  FileText,
+  CreditCard,
+  CalendarDays,
+  ChevronRight
 } from "lucide-react";
 import { Navbar } from "@/components/sections/navbar";
 import { Footer } from "@/components/sections/footer";
@@ -66,7 +70,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { collection, query, orderBy, doc, updateDoc } from "firebase/firestore";
+import { collection, query, orderBy, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { useMemoFirebase } from "@/firebase/firestore/use-collection";
 
 // Enhanced Mock data for the 50-grid heatmap
@@ -89,15 +93,13 @@ interface GridItem {
 
 const generateGridData = (): GridItem[] => {
   return Array.from({ length: 50 }, (_, i) => {
-    // Generate randomized but realistic values
-    const moisture = Math.floor(Math.random() * 60) + 5; // 5% to 65%
+    const moisture = Math.floor(Math.random() * 60) + 5; 
     const nutrients = {
       n: Math.floor(Math.random() * 60) + 5,
       p: Math.floor(Math.random() * 40) + 5,
       k: Math.floor(Math.random() * 50) + 5,
     };
 
-    // Logical Status Determination
     let statusColor: "healthy" | "warning" | "critical" = "healthy";
     const avgN = (nutrients.n + nutrients.p + nutrients.k) / 3;
 
@@ -130,8 +132,9 @@ export default function DashboardPage() {
   const [gridData] = useState<GridItem[]>(generateGridData());
   const [activeTab, setActiveTab] = useState("overview");
   const [selectedSector, setSelectedSector] = useState<GridItem | null>(null);
+  const [selectedLease, setSelectedLease] = useState<any | null>(null);
 
-  // Fetch pending registrations for Staff Approval logic
+  // Fetch registrations
   const registrationsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return query(collection(firestore, "landLeaseRegistrations"), orderBy("createdAt", "desc"));
@@ -145,12 +148,20 @@ export default function DashboardPage() {
     updateDoc(docRef, { status: "reviewed" });
   };
 
+  const handleReject = (regId: string) => {
+    if (!firestore) return;
+    const docRef = doc(firestore, "landLeaseRegistrations", regId);
+    // In a real app we might update status to 'rejected', but for the prototype we can delete or update
+    updateDoc(docRef, { status: "rejected" });
+  };
+
   const t = {
     title: lang === 'en' ? "Dashboard" : "डैशबोर्ड",
     subtitle: lang === 'en' ? "Staff Intelligence Dashboard - Uttar Pradesh Clusters" : "स्टाफ इंटेलिजेंस डैशबोर्ड - उत्तर प्रदेश क्लस्टर",
     heatmapTitle: lang === 'en' ? "Field Monitor Heatmap" : "फील्ड मॉनिटर हीटमैप",
     iotTitle: lang === 'en' ? "IOT Sensor Network" : "आईओटी सेंसर नेटवर्क",
-    approvalTitle: lang === 'en' ? "Lease Approval Queue" : "लीज अनुमोदन कतार",
+    approvalTitle: lang === 'en' ? "Lease Queue" : "लीज कतार",
+    activeLeaseTitle: lang === 'en' ? "Active Leases" : "सक्रिय लीज",
     details: {
       owner: lang === 'en' ? "Land Owner" : "ज़मीन मालिक",
       crop: lang === 'en' ? "Current Crop" : "वर्तमान फसल",
@@ -158,17 +169,21 @@ export default function DashboardPage() {
       produced: lang === 'en' ? "Yield Produced" : "उत्पादित पैदावार",
       nutrients: lang === 'en' ? "Soil Nutrients (N-P-K)" : "मिट्टी के पोषक तत्व",
       status: lang === 'en' ? "Status" : "स्थिति",
+      payout: lang === 'en' ? "Monthly Payout" : "मासिक भुगतान",
     }
   };
 
   const navItems = [
     { id: "overview", label: lang === 'en' ? "Overview" : "अवलोकन", icon: LayoutDashboard },
     { id: "heatmap", label: lang === 'en' ? "Field Monitor" : "फील्ड मॉनिटर", icon: MapPin },
-    { id: "iot", label: lang === 'en' ? "Sensor Network" : "सेंसर नेटवर्क", icon: Cpu },
+    { id: "active_leases", label: lang === 'en' ? "Active Leases" : "सक्रिय लीज", icon: FileText },
     { id: "approvals", label: lang === 'en' ? "Lease Queue" : "लीज कतार", icon: History },
-    { id: "farmers", label: lang === 'en' ? "Farmers" : "किसान", icon: Users },
+    { id: "iot", label: lang === 'en' ? "Sensor Network" : "सेंसर नेटवर्क", icon: Cpu },
     { id: "settings", label: lang === 'en' ? "Settings" : "सेटिंग्स", icon: Settings },
   ];
+
+  const pendingCount = registrations?.filter(r => r.status === 'pending').length || 0;
+  const activeLeases = registrations?.filter(r => r.status === 'reviewed') || [];
 
   return (
     <SidebarProvider>
@@ -203,6 +218,11 @@ export default function DashboardPage() {
                         >
                           <item.icon size={18} />
                           <span className="font-medium">{item.label}</span>
+                          {item.id === "approvals" && pendingCount > 0 && (
+                            <Badge className="ml-auto bg-krishi-amber text-white text-[10px] h-5 w-5 flex items-center justify-center p-0 rounded-full">
+                              {pendingCount}
+                            </Badge>
+                          )}
                         </SidebarMenuButton>
                       </SidebarMenuItem>
                     ))}
@@ -213,7 +233,7 @@ export default function DashboardPage() {
           </Sidebar>
 
           <SidebarInset className="flex-1 bg-background/50 overflow-y-auto">
-            <div className="p-8 md:p-12 max-w-7xl mx-auto space-y-12">
+            <div className="p-8 md:p-12 max-w-7xl mx-auto space-y-12 pb-24">
               
               <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div className="space-y-2">
@@ -228,177 +248,196 @@ export default function DashboardPage() {
                     </Badge>
                     <span className="text-[10px] font-code text-foreground/40 uppercase tracking-widest">Region: EASTERN_UP_ZONE</span>
                   </motion.div>
-                  <h1 className="text-4xl md:text-6xl font-display">{t.title}</h1>
+                  <h1 className="text-4xl md:text-6xl font-display">
+                    {activeTab === 'overview' ? t.title : navItems.find(n => n.id === activeTab)?.label}
+                  </h1>
                   <p className="text-xl text-foreground/60 font-body">{t.subtitle}</p>
-                </div>
-                
-                <div className="flex gap-4">
-                  <Card className="bg-card border-border px-6 py-4 rounded-2xl flex items-center gap-4">
-                      <div className="p-3 bg-krishi-gold/10 text-krishi-gold rounded-xl">
-                        <Leaf size={20} />
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-bold text-foreground/40 uppercase">Carbon Credits</p>
-                        <p className="text-xl font-bold">1,242.8 CO2e</p>
-                      </div>
-                  </Card>
                 </div>
               </header>
 
-              <div className="grid lg:grid-cols-3 gap-8">
-                <Card className="lg:col-span-2 rounded-[2.5rem] border-border shadow-sm overflow-hidden bg-card">
-                  <CardHeader className="border-b border-border/50 p-8">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <CardTitle className="text-2xl font-headline font-bold">{t.heatmapTitle}</CardTitle>
-                        <CardDescription>Visual Diagnostic • Grid-based Sensor Intelligence</CardDescription>
-                      </div>
-                      <div className="flex gap-4 text-[10px] font-bold">
-                        <div className="flex items-center gap-1.5">
-                            <div className="w-3 h-3 rounded-full bg-krishi-lime" />
-                            <span className="text-krishi-lime">HEALTHY</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                            <div className="w-3 h-3 rounded-full bg-krishi-amber" />
-                            <span className="text-krishi-amber">WARNING</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                            <div className="w-3 h-3 rounded-full bg-red-500" />
-                            <span className="text-red-500">CRITICAL</span>
-                        </div>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="p-8">
-                    <div className="grid grid-cols-5 md:grid-cols-10 gap-2">
-                      {gridData.map((grid) => (
-                        <motion.div
-                          key={grid.id}
-                          whileHover={{ scale: 1.1, zIndex: 10 }}
-                          onClick={() => setSelectedSector(grid)}
-                          className={`aspect-square rounded-lg flex flex-col items-center justify-center cursor-pointer transition-all border border-black/5 hover:shadow-lg ${
-                            grid.statusColor === "healthy" ? "bg-krishi-lime" :
-                            grid.statusColor === "warning" ? "bg-krishi-amber" :
-                            "bg-red-500"
-                          }`}
-                        >
-                          <span className="text-[8px] font-bold text-white/40 mb-0.5">#{grid.id}</span>
-                          {grid.statusColor === "critical" && <AlertTriangle size={12} className="text-white animate-pulse" />}
-                          {grid.statusColor === "warning" && <Activity size={12} className="text-white/80" />}
-                        </motion.div>
-                      ))}
-                    </div>
-                    <p className="mt-4 text-[10px] text-foreground/30 font-code text-center uppercase tracking-widest">
-                      Color codes derived from real-time N-P-K and moisture sensor payloads
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <div className="space-y-8">
-                  <h2 className="text-2xl font-headline font-bold flex items-center gap-2">
-                    <Cpu className="text-primary" />
-                    {t.iotTitle}
-                  </h2>
-                  <div className="space-y-4">
-                    {[
-                      { name: "NPK Soil Probes", status: "Online", icon: Database, val: "94%" },
-                      { name: "Thermal Imaging", status: "Active", icon: CloudSun, val: "100%" },
-                      { name: "Flow Meter V4", status: "Warning", icon: Droplets, val: "12%" },
-                    ].map((sensor) => (
-                      <Card key={sensor.name} className="rounded-2xl border-border p-4 hover:border-primary/30 transition-all cursor-pointer group">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className="p-2 bg-muted rounded-xl group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-                                  <sensor.icon size={18} />
-                              </div>
-                              <div>
-                                  <p className="text-sm font-bold">{sensor.name}</p>
-                                  <p className={`text-[10px] font-bold uppercase tracking-widest ${sensor.status === 'Warning' ? 'text-krishi-amber' : 'text-krishi-lime'}`}>
-                                    {sensor.status}
-                                  </p>
-                              </div>
+              <AnimatePresence mode="wait">
+                {activeTab === "overview" && (
+                  <motion.div
+                    key="overview"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className="grid lg:grid-cols-3 gap-8"
+                  >
+                    <Card className="lg:col-span-2 rounded-[2.5rem] border-border shadow-sm overflow-hidden bg-card">
+                      <CardHeader className="border-b border-border/50 p-8">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <CardTitle className="text-2xl font-headline font-bold">{t.heatmapTitle}</CardTitle>
+                            <CardDescription>Visual Diagnostic • Grid-based Sensor Intelligence</CardDescription>
+                          </div>
+                          <div className="flex gap-4 text-[10px] font-bold">
+                            <div className="flex items-center gap-1.5">
+                                <div className="w-3 h-3 rounded-full bg-krishi-lime" />
+                                <span className="text-krishi-lime">HEALTHY</span>
                             </div>
-                            <span className="font-code text-sm font-bold">{sensor.val}</span>
+                            <div className="flex items-center gap-1.5">
+                                <div className="w-3 h-3 rounded-full bg-krishi-amber" />
+                                <span className="text-krishi-amber">WARNING</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <div className="w-3 h-3 rounded-full bg-red-500" />
+                                <span className="text-red-500">CRITICAL</span>
+                            </div>
+                          </div>
                         </div>
+                      </CardHeader>
+                      <CardContent className="p-8">
+                        <div className="grid grid-cols-5 md:grid-cols-10 gap-2">
+                          {gridData.map((grid) => (
+                            <motion.div
+                              key={grid.id}
+                              whileHover={{ scale: 1.1, zIndex: 10 }}
+                              onClick={() => setSelectedSector(grid)}
+                              className={`aspect-square rounded-lg flex flex-col items-center justify-center cursor-pointer transition-all border border-black/5 hover:shadow-lg ${
+                                grid.statusColor === "healthy" ? "bg-krishi-lime" :
+                                grid.statusColor === "warning" ? "bg-krishi-amber" :
+                                "bg-red-500"
+                              }`}
+                            >
+                              <span className="text-[8px] font-bold text-white/40 mb-0.5">#{grid.id}</span>
+                              {grid.statusColor === "critical" && <AlertTriangle size={12} className="text-white animate-pulse" />}
+                              {grid.statusColor === "warning" && <Activity size={12} className="text-white/80" />}
+                            </motion.div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <div className="space-y-8">
+                      <Card className="rounded-[2rem] bg-krishi-black text-white p-8 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-4 opacity-10">
+                            <Zap size={80} />
+                        </div>
+                        <p className="text-krishi-gold text-[10px] font-bold uppercase tracking-[0.2em] mb-4">LEASING_SNAPSHOT</p>
+                        <h4 className="text-4xl font-display mb-2">{activeLeases.length}</h4>
+                        <p className="text-sm text-white/60">Verified Land Assets in Eastern UP Cluster.</p>
                       </Card>
-                    ))}
-                  </div>
-
-                  <Card className="rounded-[2rem] bg-krishi-black text-white p-8 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-4 opacity-10">
-                        <Zap size={80} />
+                      <Card className="rounded-[2rem] border-border p-8 bg-card">
+                         <h4 className="font-headline font-bold mb-4">Recent Activity</h4>
+                         <div className="space-y-4">
+                            {registrations?.slice(0, 3).map((reg: any) => (
+                               <div key={reg.id} className="flex items-center gap-3 pb-3 border-b border-border/50 last:border-0">
+                                  <div className={`w-2 h-2 rounded-full ${reg.status === 'pending' ? 'bg-krishi-amber' : 'bg-krishi-lime'}`} />
+                                  <div className="flex-1">
+                                     <p className="text-sm font-bold">{reg.aadharName}</p>
+                                     <p className="text-[10px] text-foreground/40 uppercase">{reg.status}</p>
+                                  </div>
+                               </div>
+                            ))}
+                         </div>
+                      </Card>
                     </div>
-                    <p className="text-krishi-gold text-[10px] font-bold uppercase tracking-[0.2em] mb-4">SYSTEM_HEALTH</p>
-                    <h4 className="text-2xl font-display mb-2">99.8% Uptime</h4>
-                    <p className="text-sm text-white/60">Cloud nodes active.</p>
-                  </Card>
-                </div>
-              </div>
+                  </motion.div>
+                )}
 
-              <div className="space-y-8">
-                <h2 className="text-2xl font-headline font-bold flex items-center gap-2">
-                  <History className="text-primary" />
-                  {t.approvalTitle}
-                </h2>
-                <Card className="rounded-[2.5rem] border-border shadow-sm overflow-hidden">
-                  <Table>
-                    <TableHeader className="bg-muted/30">
-                      <TableRow>
-                        <TableHead className="font-bold">Applicant</TableHead>
-                        <TableHead className="font-bold">Location</TableHead>
-                        <TableHead className="font-bold">Area</TableHead>
-                        <TableHead className="font-bold">Status</TableHead>
-                        <TableHead className="text-right font-bold">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {registrations?.map((reg: any) => (
-                        <TableRow key={reg.id} className="hover:bg-muted/10">
-                          <TableCell className="font-medium">
-                            <div>
-                                <p className="font-bold">{reg.aadharName}</p>
-                                <p className="text-xs text-foreground/40">{reg.mobile}</p>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <p className="text-sm">{reg.village}, {reg.district}</p>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="secondary">{reg.fieldSize} {reg.fieldUnit}</Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge className={
-                                reg.status === 'pending' ? 'bg-krishi-amber' : 
-                                reg.status === 'reviewed' ? 'bg-krishi-lime' : 'bg-muted'
-                            }>
-                                {reg.status?.toUpperCase()}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {reg.status === 'pending' && (
-                              <div className="flex justify-end gap-2">
-                                  <Button size="sm" variant="ghost" className="text-krishi-lime" onClick={() => handleApprove(reg.id)}>
-                                    <CheckCircle2 size={18} />
-                                  </Button>
-                                  <Button size="sm" variant="ghost" className="text-destructive">
-                                    <XCircle size={18} />
-                                  </Button>
+                {activeTab === "approvals" && (
+                  <motion.div
+                    key="approvals"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="space-y-8"
+                  >
+                    <Card className="rounded-[2.5rem] border-border shadow-sm overflow-hidden bg-card">
+                      <Table>
+                        <TableHeader className="bg-muted/30">
+                          <TableRow>
+                            <TableHead className="font-bold">Applicant</TableHead>
+                            <TableHead className="font-bold">Location</TableHead>
+                            <TableHead className="font-bold">Area</TableHead>
+                            <TableHead className="font-bold">Status</TableHead>
+                            <TableHead className="text-right font-bold">Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {registrations?.filter(r => r.status === 'pending').map((reg: any) => (
+                            <TableRow key={reg.id} className="hover:bg-muted/10">
+                              <TableCell className="font-medium">
+                                <div>
+                                    <p className="font-bold">{reg.aadharName}</p>
+                                    <p className="text-xs text-foreground/40">{reg.mobile}</p>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <p className="text-sm">{reg.village}, {reg.district}</p>
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="secondary">{reg.fieldSize} {reg.fieldUnit}</Badge>
+                              </TableCell>
+                              <TableCell>
+                                <Badge className="bg-krishi-amber text-white">PENDING</Badge>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex justify-end gap-2">
+                                    <Button size="sm" variant="ghost" className="text-krishi-lime hover:bg-krishi-lime/10" onClick={() => handleApprove(reg.id)}>
+                                      <CheckCircle2 size={18} />
+                                    </Button>
+                                    <Button size="sm" variant="ghost" className="text-destructive hover:bg-destructive/10" onClick={() => handleReject(reg.id)}>
+                                      <XCircle size={18} />
+                                    </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                          {pendingCount === 0 && (
+                            <TableRow>
+                              <TableCell colSpan={5} className="text-center py-20 text-foreground/40 italic">
+                                No pending registrations in queue.
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
+                    </Card>
+                  </motion.div>
+                )}
+
+                {activeTab === "active_leases" && (
+                  <motion.div
+                    key="active_leases"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="space-y-8"
+                  >
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {activeLeases.map((reg: any) => (
+                        <Card key={reg.id} className="rounded-3xl border-border bg-card p-6 hover:shadow-xl transition-all group cursor-pointer" onClick={() => setSelectedLease(reg)}>
+                           <div className="flex justify-between items-start mb-6">
+                              <div className="p-3 bg-primary/10 text-primary rounded-2xl group-hover:bg-primary group-hover:text-white transition-colors">
+                                 <FileText size={20} />
                               </div>
-                            )}
-                            {reg.status === 'reviewed' && (
-                                <span className="text-xs text-krishi-lime font-bold">VERIFIED</span>
-                            )}
-                          </TableCell>
-                        </TableRow>
+                              <Badge className="bg-krishi-lime/10 text-krishi-lime border-krishi-lime/20">VERIFIED</Badge>
+                           </div>
+                           <h4 className="text-lg font-bold mb-1">{reg.aadharName}</h4>
+                           <p className="text-xs text-foreground/40 mb-4 uppercase tracking-widest">{reg.village}, {reg.district}</p>
+                           <div className="flex items-center justify-between pt-4 border-t border-border">
+                              <span className="text-sm font-medium">{reg.fieldSize} {reg.fieldUnit}</span>
+                              <ChevronRight className="text-foreground/20 group-hover:text-primary transition-colors" size={16} />
+                           </div>
+                        </Card>
                       ))}
-                    </TableBody>
-                  </Table>
-                </Card>
-              </div>
+                      {activeLeases.length === 0 && (
+                        <div className="col-span-full py-24 text-center bg-card border border-dashed border-border rounded-[3rem]">
+                           <FileText className="mx-auto h-12 w-12 text-foreground/10 mb-4" />
+                           <p className="text-foreground/40">No active leases found. Approve some from the queue.</p>
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </SidebarInset>
         </div>
 
+        {/* Sector Details Dialog */}
         <Dialog open={!!selectedSector} onOpenChange={() => setSelectedSector(null)}>
           <DialogContent className="rounded-[2.5rem] p-8 max-w-md border-primary/20 bg-card/95 backdrop-blur-xl">
             <DialogHeader className="space-y-4">
@@ -474,25 +513,6 @@ export default function DashboardPage() {
                   </div>
                 </div>
               </div>
-
-              <div className="pt-4 border-t border-border">
-                <div className="flex justify-between text-xs mb-2">
-                   <span className="text-foreground/40 uppercase font-bold tracking-tighter">MOISTURE_CONTENT (WATER_LEVEL)</span>
-                   <span className={`font-bold ${selectedSector?.moisture && selectedSector.moisture < 20 ? 'text-red-500' : 'text-foreground'}`}>
-                    {selectedSector?.moisture}%
-                   </span>
-                </div>
-                <div className="w-full bg-muted h-1 rounded-full overflow-hidden">
-                   <motion.div 
-                    initial={{ width: 0 }}
-                    animate={{ width: `${selectedSector?.moisture}%` }}
-                    className={`h-full ${
-                      selectedSector?.moisture && selectedSector.moisture < 20 ? 'bg-red-500' :
-                      selectedSector?.moisture && selectedSector.moisture < 35 ? 'bg-krishi-amber' : 'bg-krishi-lime'
-                    }`} 
-                   />
-                </div>
-              </div>
             </div>
             
             <Button onClick={() => setSelectedSector(null)} className="w-full mt-6 rounded-full py-6 font-bold bg-foreground text-background">
@@ -501,8 +521,85 @@ export default function DashboardPage() {
           </DialogContent>
         </Dialog>
 
+        {/* Lease Deep-Dive Dialog */}
+        <Dialog open={!!selectedLease} onOpenChange={() => setSelectedLease(null)}>
+           <DialogContent className="rounded-[3rem] p-0 max-w-2xl border-border bg-card overflow-hidden">
+              <div className="h-32 bg-primary relative overflow-hidden">
+                 <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/leaf.png')]" />
+                 <div className="absolute bottom-6 left-8">
+                    <h2 className="text-2xl font-display text-white">Digital Lease #KRAI-{selectedLease?.id.slice(0, 5).toUpperCase()}</h2>
+                 </div>
+              </div>
+
+              <div className="p-8 space-y-8">
+                 <div className="grid grid-cols-3 gap-6">
+                    <div className="space-y-1">
+                       <p className="text-[10px] font-bold text-foreground/40 uppercase">Land Owner</p>
+                       <p className="font-bold">{selectedLease?.aadharName}</p>
+                    </div>
+                    <div className="space-y-1">
+                       <p className="text-[10px] font-bold text-foreground/40 uppercase">Cluster Zone</p>
+                       <p className="font-bold">{selectedLease?.district}, UP</p>
+                    </div>
+                    <div className="space-y-1">
+                       <p className="text-[10px] font-bold text-foreground/40 uppercase">Area Size</p>
+                       <p className="font-bold">{selectedLease?.fieldSize} {selectedLease?.fieldUnit}</p>
+                    </div>
+                 </div>
+
+                 <div className="bg-primary/5 rounded-[2rem] p-8 border border-primary/10">
+                    <div className="flex items-center justify-between mb-6">
+                       <div className="flex items-center gap-3">
+                          <div className="p-3 bg-primary text-white rounded-xl">
+                             <CreditCard size={20} />
+                          </div>
+                          <div>
+                             <h4 className="font-bold">{t.details.payout}</h4>
+                             <p className="text-[10px] text-foreground/40 uppercase">Recurring Monthly</p>
+                          </div>
+                       </div>
+                       <p className="text-3xl font-display font-bold">₹{(selectedLease?.fieldSize * 4500).toLocaleString()}</p>
+                    </div>
+                    <div className="space-y-3">
+                       <p className="text-xs font-bold text-foreground/40 uppercase tracking-widest">Payout History</p>
+                       <div className="flex items-center justify-between text-sm py-2 border-b border-border/50">
+                          <span className="flex items-center gap-2 font-medium">
+                             <CalendarDays size={14} className="text-primary" /> Jan 2024
+                          </span>
+                          <span className="text-krishi-lime font-bold">Processed</span>
+                       </div>
+                       <div className="flex items-center justify-between text-sm py-2">
+                          <span className="flex items-center gap-2 font-medium">
+                             <CalendarDays size={14} className="text-primary" /> Feb 2024 (Upcoming)
+                          </span>
+                          <span className="text-krishi-amber font-bold">Scheduled</span>
+                       </div>
+                    </div>
+                 </div>
+
+                 <div className="space-y-4">
+                    <h4 className="font-headline font-bold flex items-center gap-2">
+                       <FileText size={18} className="text-primary" />
+                       Lease Agreement Summary
+                    </h4>
+                    <div className="p-6 bg-muted/30 rounded-2xl border border-border text-xs leading-relaxed text-foreground/60 space-y-4 max-h-40 overflow-y-auto">
+                       <p>1. This digital agreement is executed between KrishiAI Intelligence and {selectedLease?.aadharName} for agricultural land operations in {selectedLease?.village}.</p>
+                       <p>2. The lease term is set for 24 months, starting from {selectedLease?.createdAt?.toDate().toLocaleDateString()}.</p>
+                       <p>3. KrishiAI guarantees a fixed monthly payout based on precision yield projections and soil health carbon credits.</p>
+                       <p>4. The owner grants KrishiAI full rights to install IOT sensors and conduct automated farming operations for the duration of the lease.</p>
+                    </div>
+                 </div>
+
+                 <Button onClick={() => setSelectedLease(null)} className="w-full rounded-full py-8 text-lg font-bold">
+                    Close Document
+                 </Button>
+              </div>
+           </DialogContent>
+        </Dialog>
+
         <Footer />
       </div>
     </SidebarProvider>
   );
 }
+
