@@ -80,6 +80,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
 import { collection, query, orderBy, doc, updateDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
 import { useMemoFirebase } from "@/firebase/firestore/use-collection";
 import { useToast } from "@/hooks/use-toast";
@@ -133,10 +134,24 @@ export default function DashboardPage() {
     [registrations]
   );
   
-  const activeLeases = useMemo(() => 
-    registrations?.filter(r => r.status === 'reviewed') || [], 
-    [registrations]
-  );
+  const activeLeases = useMemo(() => {
+    const realLeases = registrations?.filter(r => r.status === 'reviewed') || [];
+    // Ensure at least one demo lease for prototyping
+    if (realLeases.length === 0) {
+      return [{
+        id: "demo-lease-1",
+        aadharName: "Rajesh Kumar (Varanasi Cluster)",
+        district: "Varanasi",
+        village: "Sarnath",
+        fieldSize: 12.5,
+        fieldUnit: "Bigha",
+        status: "reviewed",
+        mobile: "9876543210",
+        isDemo: true
+      }];
+    }
+    return realLeases;
+  }, [registrations]);
 
   // Generate 50 Grid Sectors mapping to real leases where available
   const gridData: GridItem[] = useMemo(() => {
