@@ -1,11 +1,14 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Moon, Sun, Globe } from "lucide-react";
+import { Menu, X, Moon, Sun, Globe, ShoppingCart, User } from "lucide-react";
 import Link from "next/link";
 import { useSettings } from "@/context/settings-context";
+import { useCart } from "@/context/cart-context";
+import { useUser } from "@/firebase";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,6 +20,8 @@ export const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { theme, setTheme, lang, setLang } = useSettings();
+  const { totalItems } = useCart();
+  const { user } = useUser();
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -28,16 +33,14 @@ export const Navbar = () => {
     features: lang === 'en' ? 'Features' : 'विशेषताएं',
     store: lang === 'en' ? 'Harit Store' : 'हरित स्टोर',
     lease: lang === 'en' ? 'Land Lease' : 'जमीन पट्टा',
-    about: lang === 'en' ? 'About' : 'हमारे बारे में',
     login: lang === 'en' ? 'Login' : 'लॉगिन',
-    startFree: lang === 'en' ? 'Start Free' : 'मुफ्त शुरू करें',
+    profile: lang === 'en' ? 'Profile' : 'प्रोफ़ाइल',
   };
 
   const navLinks = [
-    { name: t.features, href: "#features" },
-    { name: t.store, href: "#store" },
-    { name: t.lease, href: "#lease" },
-    { name: t.about, href: "#about" },
+    { name: t.features, href: "/#features" },
+    { name: t.store, href: "/#store" },
+    { name: t.lease, href: "/#lease" },
   ];
 
   return (
@@ -68,6 +71,16 @@ export const Navbar = () => {
         </div>
 
         <div className="hidden lg:flex items-center gap-4">
+          {/* Cart Icon */}
+          <Link href="/checkout" className="relative p-2 text-foreground hover:text-primary transition-colors">
+            <ShoppingCart className="h-5 w-5" />
+            {totalItems > 0 && (
+              <span className="absolute top-0 right-0 bg-primary text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                {totalItems}
+              </span>
+            )}
+          </Link>
+
           {/* Language Switcher */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -91,24 +104,32 @@ export const Navbar = () => {
             {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Button>
 
-          <Button variant="ghost" className="text-foreground hover:text-krishi-gold font-medium">
-            {t.login}
-          </Button>
-          <Button className="bg-krishi-amber hover:bg-krishi-amber/90 text-white rounded-full px-6 font-semibold">
-            {t.startFree}
-          </Button>
+          {user ? (
+            <Link href="/profile">
+              <Button variant="ghost" className="flex items-center gap-2 text-foreground font-medium">
+                <User className="h-4 w-4" />
+                {t.profile}
+              </Button>
+            </Link>
+          ) : (
+            <Link href="/login">
+              <Button className="bg-krishi-amber hover:bg-krishi-amber/90 text-white rounded-full px-6 font-semibold">
+                {t.login}
+              </Button>
+            </Link>
+          )}
         </div>
 
         {/* Mobile Toggle */}
-        <div className="flex items-center gap-2 lg:hidden">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-foreground"
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            >
-              {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            </Button>
+        <div className="flex items-center gap-4 lg:hidden">
+            <Link href="/checkout" className="relative p-2 text-foreground">
+              <ShoppingCart className="h-5 w-5" />
+              {totalItems > 0 && (
+                <span className="absolute top-0 right-0 bg-primary text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                  {totalItems}
+                </span>
+              )}
+            </Link>
             <button
               className="text-foreground"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -127,13 +148,6 @@ export const Navbar = () => {
             exit={{ opacity: 0, y: -20 }}
             className="absolute top-full left-0 right-0 bg-background border-b border-krishi-gold/10 p-6 flex flex-col gap-6 lg:hidden shadow-2xl"
           >
-            <div className="flex justify-between items-center pb-4 border-b border-border">
-               <span className="text-sm font-bold uppercase tracking-widest text-krishi-gold">Language</span>
-               <div className="flex gap-4">
-                  <button onClick={() => setLang('en')} className={`text-sm ${lang === 'en' ? 'text-krishi-gold font-bold' : 'text-foreground/60'}`}>English</button>
-                  <button onClick={() => setLang('hi')} className={`text-sm ${lang === 'hi' ? 'text-krishi-gold font-bold' : 'text-foreground/60'}`}>हिन्दी</button>
-               </div>
-            </div>
             {navLinks.map((link) => (
               <Link
                 key={link.name}
@@ -145,12 +159,19 @@ export const Navbar = () => {
               </Link>
             ))}
             <div className="flex flex-col gap-3 pt-4 border-t border-border">
-              <Button variant="ghost" className="text-foreground justify-start text-lg">
-                {t.login}
-              </Button>
-              <Button className="bg-krishi-amber hover:bg-krishi-amber/90 text-white rounded-full w-full py-6 text-lg">
-                {t.startFree}
-              </Button>
+              {user ? (
+                <Link href="/profile">
+                  <Button variant="ghost" className="text-foreground justify-start text-lg">
+                    {t.profile}
+                  </Button>
+                </Link>
+              ) : (
+                <Link href="/login">
+                  <Button className="bg-krishi-amber hover:bg-krishi-amber/90 text-white rounded-full w-full py-6 text-lg">
+                    {t.login}
+                  </Button>
+                </Link>
+              )}
             </div>
           </motion.div>
         )}

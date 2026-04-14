@@ -1,6 +1,10 @@
+
 import type {Metadata} from 'next';
 import './globals.css';
 import { SettingsProvider } from '@/context/settings-context';
+import { CartProvider } from '@/context/cart-context';
+import { Toaster } from '@/components/ui/toaster';
+import { FirebaseClientProvider } from '@/firebase';
 
 export const metadata: Metadata = {
   title: 'KrishiAI | Farming at the speed of light.',
@@ -20,9 +24,14 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Syne:wght@400..800&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased">
-        <SettingsProvider>
-          {children}
-        </SettingsProvider>
+        <FirebaseClientProvider>
+          <SettingsProvider>
+            <CartProvider>
+              {children}
+              <Toaster />
+            </CartProvider>
+          </SettingsProvider>
+        </FirebaseClientProvider>
       </body>
     </html>
   );

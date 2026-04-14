@@ -51,6 +51,19 @@
         }
       },
       "required": ["aadharName", "village", "state", "district", "mobile", "fieldSize", "fieldUnit"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Details of a customer purchase.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "items": { "type": "array" },
+        "total": { "type": "number" },
+        "paymentMethod": { "type": "string", "enum": ["cod", "card"] },
+        "status": { "type": "string", "enum": ["pending", "confirmed", "shipped", "delivered"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
     }
   },
   "auth": {
@@ -60,6 +73,10 @@
     "/landLeaseRegistrations/{registrationId}": {
       "schema": "#/entities/LandLeaseRegistration",
       "description": "Collection of land lease registration applications."
+    },
+    "/orders/{orderId}": {
+      "schema": "#/entities/Order",
+      "description": "Collection of customer orders."
     }
   }
 }

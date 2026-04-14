@@ -5,8 +5,10 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Leaf } from "lucide-react";
 import Link from "next/link";
+import { useSettings } from "@/context/settings-context";
 
 export const LandLease = () => {
+  const { lang } = useSettings();
   return (
     <section id="lease" className="py-24 bg-secondary/30 overflow-hidden grain">
       <div className="container mx-auto px-6">
@@ -21,30 +23,34 @@ export const LandLease = () => {
               className="space-y-4"
             >
               <h2 className="text-5xl md:text-6xl font-display text-foreground leading-[1.1]">
-                Apni khaali zameen se <br />
-                <span className="text-krishi-gold">Guaranteed Income</span> pao.
+                {lang === 'en' ? "Lease Your Land in" : "अपनी जमीन"} <br />
+                <span className="text-primary italic">{lang === 'en' ? "Uttar Pradesh" : "उत्तर प्रदेश में पट्टे पर दें"}</span>
               </h2>
-              <p className="text-xl text-foreground/60 font-body">We lease your fallow land, deploy AI-managed organic farming, and pay you monthly credits above market rate.</p>
+              <p className="text-xl text-foreground/60 font-body">
+                {lang === 'en' 
+                  ? "We operate in Varanasi, Mirzapur, Prayagraj, and Sonbhadra. Guaranteed monthly income for your fallow land." 
+                  : "हम वाराणसी, मिर्जापुर, प्रयागराज और सोनभद्र में कार्यरत हैं। आपकी खाली जमीन के लिए मासिक आय।"}
+              </p>
             </motion.div>
 
             <div className="grid grid-cols-2 gap-4">
-              {["Zero Work", "Soil Health", "Legal Safety", "Advance Payment"].map((feat, i) => (
+              {["Varanasi", "Mirzapur", "Prayagraj", "Sonbhadra"].map((feat, i) => (
                 <motion.div
                   key={feat}
                   initial={{ opacity: 0, scale: 0.9 }}
                   whileInView={{ opacity: 1, scale: 1 }}
                   transition={{ delay: i * 0.1 }}
                   viewport={{ once: true }}
-                  className="bg-card border border-border py-4 px-6 rounded-xl text-sm font-headline font-bold uppercase tracking-wider text-krishi-gold flex items-center justify-center text-center"
+                  className="bg-card border border-border py-4 px-6 rounded-xl text-sm font-headline font-bold uppercase tracking-wider text-primary flex items-center justify-center text-center"
                 >
-                  {feat}
+                  {feat} Cluster
                 </motion.div>
               ))}
             </div>
 
             <Link href="/lease-registration">
               <Button className="bg-krishi-amber hover:bg-krishi-amber/90 text-white rounded-full px-10 h-16 text-lg font-bold w-full sm:w-auto shadow-lg shadow-krishi-amber/20">
-                Lease My Land Now →
+                {lang === 'en' ? "Lease My Land Now →" : "अपनी जमीन अभी पट्टे पर दें →"}
               </Button>
             </Link>
           </div>
@@ -59,27 +65,27 @@ export const LandLease = () => {
              >
                 <div className="flex items-center gap-3 mb-6">
                    <div className="w-3 h-3 bg-krishi-lime rounded-full animate-pulse" />
-                   <span className="text-xs font-headline font-bold text-krishi-lime uppercase tracking-widest">Active Lease Cluster</span>
+                   <span className="text-xs font-headline font-bold text-krishi-lime uppercase tracking-widest">Active UP Cluster</span>
                 </div>
                 
-                <h3 className="text-2xl font-headline font-bold mb-2">Wardha Cluster #04</h3>
-                <p className="text-foreground/60 text-sm mb-6">Growing Organic Cherry Tomatoes for Global Export</p>
+                <h3 className="text-2xl font-headline font-bold mb-2">Varanasi Cluster #09</h3>
+                <p className="text-foreground/60 text-sm mb-6">Growing Organic Banarasi Mangoes for Global Export</p>
                 
                 <div className="space-y-6">
                    <div>
                       <div className="flex justify-between text-xs mb-2 text-foreground/40 font-code">
                          <span>SEASON PROGRESS</span>
-                         <span>60%</span>
+                         <span>72%</span>
                       </div>
                       <div className="w-full bg-foreground/5 h-1.5 rounded-full overflow-hidden">
-                         <div className="bg-krishi-gold w-[60%] h-full rounded-full" />
+                         <div className="bg-primary w-[72%] h-full rounded-full" />
                       </div>
                    </div>
 
                    <div className="grid grid-cols-2 gap-4 pt-4">
                       <div className="bg-muted/50 p-4 rounded-xl border border-border">
                          <p className="text-[10px] text-foreground/40 mb-1">AREA SIZE</p>
-                         <p className="text-sm font-bold">12.5 Acres</p>
+                         <p className="text-sm font-bold">18.2 Acres</p>
                       </div>
                       <div className="bg-muted/50 p-4 rounded-xl border border-border">
                          <p className="text-[10px] text-foreground/40 mb-1">SOIL_STATUS</p>
@@ -88,8 +94,6 @@ export const LandLease = () => {
                    </div>
                 </div>
              </motion.div>
-             
-             {/* Decorative leaf floating */}
              <div className="absolute -top-12 -right-12 w-32 h-32 text-krishi-lime opacity-10 rotate-45">
                 <Leaf size={128} />
              </div>

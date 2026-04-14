@@ -1,16 +1,17 @@
+
 "use client";
 
 export const SocialProofBar = () => {
   const locations = [
-    "Wardha", "Nagpur", "Amravati", "Vidarbha", "Marathwada", "Rajasthan", "Punjab", "Andhra Pradesh",
-    "Wardha", "Nagpur", "Amravati", "Vidarbha", "Marathwada", "Rajasthan", "Punjab", "Andhra Pradesh"
+    "Varanasi", "Mirzapur", "Prayagraj", "Lalganj", "Madihan", "Sonbhadra", "Jaunpur", "Ghazipur",
+    "Varanasi", "Mirzapur", "Prayagraj", "Lalganj", "Madihan", "Sonbhadra", "Jaunpur", "Ghazipur"
   ];
 
   return (
     <div className="py-8 border-y border-border overflow-hidden whitespace-nowrap bg-muted/30">
       <div className="inline-flex animate-marquee-scroll items-center gap-8">
         <span className="text-foreground/30 uppercase tracking-[0.3em] font-headline text-[10px] px-8">
-          Trusted by farmers in
+          Trusted by farmers in Uttar Pradesh
         </span>
         {locations.map((loc, i) => (
           <div key={i} className="flex items-center gap-8">
