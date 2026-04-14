@@ -6,7 +6,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase';
 
 export const metadata: Metadata = {
-  title: 'KrishiAI | Farming at the speed of light. Your Farm, Fully Connected.',
+  title: 'KrishiAI | Your Farm, Fully Connected.',
   description: 'AI-powered precision for Bharat. Increase yield by 40%, diagnose diseases in seconds, and unlock carbon credit revenue.',
 };
 

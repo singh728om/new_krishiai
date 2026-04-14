@@ -95,7 +95,7 @@ export const Hero = () => {
   
   const content = {
     badge: lang === 'en' ? 'Smart AI Agriculture for Bharat' : 'भारत के लिए स्मार्ट एआई कृषि',
-    headline: lang === 'en' ? 'Farming at the speed of light. Your Farm, Fully Connected.' : 'प्रकाश की गति से खेती। आपका खेत, पूरी तरह से जुड़ा हुआ।',
+    headline: lang === 'en' ? 'Your Farm, Fully Connected.' : 'आपका खेत, पूरी तरह से जुड़ा हुआ।',
     subline: lang === 'en' 
       ? 'AI-powered precision for Bharat. Increase yield by 40%, diagnose diseases in seconds, and unlock carbon credit revenue.' 
       : 'भारत के लिए एआई-संचालित सटीक खेती। पैदावार में 40% की वृद्धि करें, सेकंडों में रोगों का निदान करें।',
