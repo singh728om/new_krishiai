@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -8,6 +7,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { useFirestore } from "@/firebase";
+import { errorEmitter } from "@/firebase/error-emitter";
+import { FirestorePermissionError } from "@/firebase/errors";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -66,24 +67,36 @@ export default function LeaseRegistrationPage() {
     },
   });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  function onSubmit(values: z.infer<typeof formSchema>) {
     if (!firestore) return;
+    
+    // Set submitting briefly to show action, then transition optimistically
     setIsSubmitting(true);
 
-    try {
-      await addDoc(collection(firestore, "landLeaseRegistrations"), {
-        ...values,
-        fieldSize: parseFloat(values.fieldSize),
-        hasIrrigation: values.hasIrrigation === "yes",
-        status: "pending",
-        createdAt: serverTimestamp(),
+    const docData = {
+      ...values,
+      fieldSize: parseFloat(values.fieldSize),
+      hasIrrigation: values.hasIrrigation === "yes",
+      status: "pending",
+      createdAt: serverTimestamp(),
+    };
+
+    const colRef = collection(firestore, "landLeaseRegistrations");
+
+    // Initiate write without await for instant UX
+    addDoc(colRef, docData)
+      .catch(async (error) => {
+        const permissionError = new FirestorePermissionError({
+          path: colRef.path,
+          operation: 'create',
+          requestResourceData: docData,
+        });
+        errorEmitter.emit('permission-error', permissionError);
       });
-      setIsSubmitted(true);
-    } catch (error) {
-      console.error("Error submitting form:", error);
-    } finally {
-      setIsSubmitting(false);
-    }
+
+    // Instant UI transition
+    setIsSubmitted(true);
+    setIsSubmitting(false);
   }
 
   return (

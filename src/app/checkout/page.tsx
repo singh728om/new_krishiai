@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -13,6 +12,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
+import { errorEmitter } from "@/firebase/error-emitter";
+import { FirestorePermissionError } from "@/firebase/errors";
 import { Trash2, ShoppingBag, ArrowRight } from "lucide-react";
 import Image from "next/image";
 
@@ -34,32 +35,39 @@ export default function CheckoutPage() {
 
   if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
 
-  const handlePlaceOrder = async () => {
+  const handlePlaceOrder = () => {
     if (!firestore || !user || cart.length === 0) return;
     setIsProcessing(true);
 
-    try {
-      await addDoc(collection(firestore, "orders"), {
-        userId: user.uid,
-        items: cart,
-        total: totalPrice,
-        paymentMethod,
-        status: "pending",
-        createdAt: serverTimestamp(),
+    const orderData = {
+      userId: user.uid,
+      items: cart,
+      total: totalPrice,
+      paymentMethod,
+      status: "pending",
+      createdAt: serverTimestamp(),
+    };
+
+    const colRef = collection(firestore, "orders");
+
+    // Optimistic write
+    addDoc(colRef, orderData)
+      .catch(async (error) => {
+        const permissionError = new FirestorePermissionError({
+          path: colRef.path,
+          operation: 'create',
+          requestResourceData: orderData,
+        });
+        errorEmitter.emit('permission-error', permissionError);
       });
 
-      toast({
-        title: lang === 'en' ? "Order Placed!" : "ऑर्डर दिया गया!",
-        description: lang === 'en' ? "Your order will be delivered soon." : "आपका ऑर्डर जल्द ही पहुँचा दिया जाएगा।",
-      });
+    toast({
+      title: lang === 'en' ? "Order Placed!" : "ऑर्डर दिया गया!",
+      description: lang === 'en' ? "Your order will be delivered soon." : "आपका ऑर्डर जल्द ही पहुँचा दिया जाएगा।",
+    });
 
-      clearCart();
-      router.push("/profile");
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setIsProcessing(false);
-    }
+    clearCart();
+    router.push("/profile");
   };
 
   return (
