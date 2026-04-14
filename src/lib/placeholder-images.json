@@ -3,56 +3,74 @@
     {
       "id": "tomato",
       "description": "Organic Cherry Tomatoes",
-      "imageUrl": "https://picsum.photos/seed/fresh-tomatoes/600/400",
+      "imageUrl": "https://picsum.photos/seed/agri-tomato/600/400",
       "imageHint": "cherry tomatoes"
     },
     {
       "id": "rice",
       "description": "Premium Basmati Rice",
-      "imageUrl": "https://picsum.photos/seed/basmati-rice/600/400",
+      "imageUrl": "https://picsum.photos/seed/agri-rice/600/400",
       "imageHint": "basmati rice"
     },
     {
       "id": "turmeric",
       "description": "Pure Turmeric Powder",
-      "imageUrl": "https://picsum.photos/seed/turmeric-powder/600/400",
+      "imageUrl": "https://picsum.photos/seed/agri-turmeric/600/400",
       "imageHint": "turmeric powder"
     },
     {
       "id": "wheat",
       "description": "Sun-dried Wheat",
-      "imageUrl": "https://picsum.photos/seed/wheat-harvest-gold/600/400",
+      "imageUrl": "https://picsum.photos/seed/agri-wheat/600/400",
       "imageHint": "wheat grain"
     },
     {
       "id": "mango",
       "description": "Alphonso Mangoes",
-      "imageUrl": "https://picsum.photos/seed/alphonso-mango/600/400",
+      "imageUrl": "https://picsum.photos/seed/agri-mango/600/400",
       "imageHint": "mango fruit"
     },
     {
       "id": "oil",
       "description": "Cold-pressed Mustard Oil",
-      "imageUrl": "https://picsum.photos/seed/mustard-oil-bottle/600/400",
+      "imageUrl": "https://picsum.photos/seed/agri-oil/600/400",
       "imageHint": "mustard oil"
     },
     {
       "id": "honey",
       "description": "Wild Forest Honey",
-      "imageUrl": "https://picsum.photos/seed/organic-honey-jar/600/400",
+      "imageUrl": "https://picsum.photos/seed/agri-honey/600/400",
       "imageHint": "honey jar"
     },
     {
       "id": "dal",
       "description": "Organic Toor Dal",
-      "imageUrl": "https://picsum.photos/seed/yellow-lentils/600/400",
+      "imageUrl": "https://picsum.photos/seed/agri-dal/600/400",
       "imageHint": "pulses lentils"
     },
     {
       "id": "ghee",
       "description": "A2 Desi Cow Ghee",
-      "imageUrl": "https://picsum.photos/seed/desi-ghee-pot/600/400",
+      "imageUrl": "https://picsum.photos/seed/agri-ghee/600/400",
       "imageHint": "cow ghee"
+    },
+    {
+      "id": "corn",
+      "description": "Sweet Yellow Corn",
+      "imageUrl": "https://picsum.photos/seed/agri-corn/600/400",
+      "imageHint": "sweet corn"
+    },
+    {
+      "id": "potato",
+      "description": "Organic Potatoes",
+      "imageUrl": "https://picsum.photos/seed/agri-potato/600/400",
+      "imageHint": "fresh potato"
+    },
+    {
+      "id": "chili",
+      "description": "Dried Red Chilies",
+      "imageUrl": "https://picsum.photos/seed/agri-chili/600/400",
+      "imageHint": "red chili"
     }
   ]
 }

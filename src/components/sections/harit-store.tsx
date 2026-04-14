@@ -68,9 +68,9 @@ export const HaritStore = () => {
            </Link>
         </div>
 
-        <div className="flex gap-8 overflow-x-auto pb-12 snap-x scrollbar-hide">
+        <div className="flex gap-8 overflow-x-auto pb-12 snap-x scrollbar-hide no-scrollbar">
           {products.map((product) => {
-            const imageData = PlaceHolderImages.find(img => img.id === product.id);
+            const imageData = PlaceHolderImages.find(img => img.id === product.id) || PlaceHolderImages[0];
             return (
               <motion.div
                 key={product.id}
@@ -78,15 +78,13 @@ export const HaritStore = () => {
                 className="min-w-[320px] snap-center group bg-card rounded-[2rem] border border-border overflow-hidden transition-all hover:border-primary/40 shadow-sm hover:shadow-xl"
               >
                  <div className="h-64 relative overflow-hidden bg-muted">
-                    {imageData && (
-                      <Image
-                        src={imageData.imageUrl}
-                        alt={product.name}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-700"
-                        data-ai-hint={imageData.imageHint}
-                      />
-                    )}
+                    <Image
+                      src={imageData.imageUrl}
+                      alt={product.name}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-700"
+                      data-ai-hint={imageData.imageHint}
+                    />
                     <div className="absolute top-4 left-4 bg-background/90 backdrop-blur-md border border-border px-4 py-1.5 rounded-full text-[10px] font-headline font-bold text-primary uppercase tracking-widest shadow-sm">
                        {product.cluster} {labels.cluster}
                     </div>

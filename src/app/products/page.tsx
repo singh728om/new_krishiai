@@ -2,7 +2,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Star, ShoppingCart, ArrowLeft } from "lucide-react";
+import { Star, ShoppingCart, ArrowLeft, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
@@ -18,19 +18,22 @@ const CATEGORIES = [
   { id: "fruits", nameEn: "Fruits", nameHi: "फल" },
   { id: "grains", nameEn: "Grains & Pulses", nameHi: "अनाज और दालें" },
   { id: "oils", nameEn: "Oils & Ghee", nameHi: "तेल और घी" },
-  { id: "honey", nameEn: "Honey", nameHi: "शहद" },
+  { id: "pantry", nameEn: "Pantry Staples", nameHi: "किचन सामग्री" },
 ];
 
 const ALL_PRODUCTS = [
   { id: "tomato", cat: "veggies", nameEn: "Organic Cherry Tomatoes", nameHi: "ऑर्गेनिक चेरी टमाटर", price: 180, rating: 4.9, cluster: "Wardha" },
+  { id: "potato", cat: "veggies", nameEn: "Farm Fresh Potatoes", nameHi: "ताजा आलू", price: 45, rating: 4.7, cluster: "Rajasthan" },
   { id: "mango", cat: "fruits", nameEn: "Alphonso Mangoes", nameHi: "हापुस आम", price: 1200, rating: 5.0, cluster: "Ratnagiri" },
   { id: "rice", cat: "grains", nameEn: "Premium Basmati Rice", nameHi: "प्रीमियम बासमती चावल", price: 245, rating: 4.8, cluster: "Nagpur" },
   { id: "wheat", cat: "grains", nameEn: "Sun-dried Wheat", nameHi: "धूप में सुखाया गया गेहूं", price: 120, rating: 4.7, cluster: "Rajasthan" },
+  { id: "corn", cat: "veggies", nameEn: "Sweet Yellow Corn", nameHi: "मीठी मकई", price: 60, rating: 4.8, cluster: "Punjab" },
   { id: "oil", cat: "oils", nameEn: "Cold-pressed Mustard Oil", nameHi: "कोल्ड-प्रेस्ड सरसों का तेल", price: 320, rating: 4.9, cluster: "Punjab" },
-  { id: "honey", cat: "honey", nameEn: "Wild Forest Honey", nameHi: "जंगल का शहद", price: 450, rating: 4.8, cluster: "Vidarbha" },
+  { id: "honey", cat: "pantry", nameEn: "Wild Forest Honey", nameHi: "जंगल का शहद", price: 450, rating: 4.8, cluster: "Vidarbha" },
   { id: "dal", cat: "grains", nameEn: "Organic Toor Dal", nameHi: "ऑर्गेनिक अरहर दाल", price: 210, rating: 4.6, cluster: "Amravati" },
   { id: "ghee", cat: "oils", nameEn: "A2 Desi Cow Ghee", nameHi: "ए2 देसी गाय का घी", price: 850, rating: 4.9, cluster: "Nagpur" },
-  { id: "turmeric", cat: "grains", nameEn: "Pure Turmeric Powder", nameHi: "शुद्ध हल्दी पाउडर", price: 150, rating: 5.0, cluster: "Wardha" },
+  { id: "turmeric", cat: "pantry", nameEn: "Pure Turmeric Powder", nameHi: "शुद्ध हल्दी पाउडर", price: 150, rating: 5.0, cluster: "Wardha" },
+  { id: "chili", cat: "pantry", nameEn: "Dried Red Chilies", nameHi: "सूखी लाल मिर्च", price: 280, rating: 4.9, cluster: "Andhra" },
 ];
 
 export default function ProductsPage() {
@@ -61,7 +64,7 @@ export default function ProductsPage() {
           </div>
         </div>
 
-        <div className="flex gap-4 overflow-x-auto pb-8 mb-8 no-scrollbar">
+        <div className="flex gap-4 overflow-x-auto pb-8 mb-8 no-scrollbar scroll-smooth">
           {CATEGORIES.map((cat) => (
             <button
               key={cat.id}
@@ -79,7 +82,7 @@ export default function ProductsPage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
           {filteredProducts.map((product) => {
-            const imageData = PlaceHolderImages.find(img => img.id === product.id);
+            const imageData = PlaceHolderImages.find(img => img.id === product.id) || PlaceHolderImages[0];
             return (
               <motion.div
                 layout
@@ -89,15 +92,13 @@ export default function ProductsPage() {
                 className="bg-card rounded-[2rem] border border-border overflow-hidden transition-all hover:border-primary/40 shadow-sm hover:shadow-xl group"
               >
                 <div className="h-56 relative overflow-hidden bg-muted">
-                  {imageData && (
-                    <Image
-                      src={imageData.imageUrl}
-                      alt={lang === 'en' ? product.nameEn : product.nameHi}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-700"
-                      data-ai-hint={imageData.imageHint}
-                    />
-                  )}
+                  <Image
+                    src={imageData.imageUrl}
+                    alt={lang === 'en' ? product.nameEn : product.nameHi}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-700"
+                    data-ai-hint={imageData.imageHint}
+                  />
                   <div className="absolute top-4 left-4 bg-background/90 backdrop-blur-md border border-border px-4 py-1.5 rounded-full text-[10px] font-headline font-bold text-primary uppercase tracking-widest shadow-sm">
                     {product.cluster} Cluster
                   </div>
