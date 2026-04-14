@@ -1,3 +1,4 @@
+
 "use client";
 
 import { CustomCursor } from "@/components/ui/custom-cursor";
@@ -16,20 +17,22 @@ import { Footer } from "@/components/sections/footer";
 
 export default function LandingPage() {
   return (
-    <main className="relative min-h-screen">
+    <main className="relative min-h-screen flex flex-col">
       <CustomCursor />
       <Navbar />
       
-      <Hero />
-      <SocialProofBar />
-      <FeatureGrid />
-      <WeatherIntelligence />
-      <DiagnosticsDemo />
-      <LandLease />
-      <HaritStore />
-      <Stats />
-      <Testimonials />
-      <CtaSection />
+      <div className="flex-1">
+        <Hero />
+        <SocialProofBar />
+        <FeatureGrid />
+        <WeatherIntelligence />
+        <DiagnosticsDemo />
+        <LandLease />
+        <HaritStore />
+        <Stats />
+        <Testimonials />
+        <CtaSection />
+      </div>
       
       <Footer />
     </main>

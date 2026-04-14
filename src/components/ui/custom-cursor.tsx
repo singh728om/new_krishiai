@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -20,7 +21,7 @@ export const CustomCursor = () => {
 
   return (
     <motion.div
-      className="custom-cursor hidden md:block"
+      className="custom-cursor hidden md:block fixed top-0 left-0 w-3 h-3 bg-primary rounded-full pointer-events-none z-[9999] mix-blend-difference"
       animate={{
         x: mousePosition.x - 6,
         y: mousePosition.y - 6,
