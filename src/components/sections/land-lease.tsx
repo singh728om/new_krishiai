@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { Leaf } from "lucide-react";
 
 export const LandLease = () => {
   return (
