@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Sprout, 
@@ -31,7 +31,8 @@ import {
   Save,
   Check,
   X,
-  Lock
+  Lock,
+  ArrowUpRight
 } from "lucide-react";
 import { Navbar } from "@/components/sections/navbar";
 import { Footer } from "@/components/sections/footer";
@@ -76,7 +77,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { collection, query, orderBy, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { collection, query, orderBy, doc, updateDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
 import { useMemoFirebase } from "@/firebase/firestore/use-collection";
 import { useToast } from "@/hooks/use-toast";
 
@@ -85,7 +86,9 @@ interface GridItem {
   fieldId: string;
   isLeased: boolean;
   leaseData?: any;
-  produced: string;
+  produced: number;
+  rate: number;
+  crop: string;
   nutrients: { n: number; p: number; k: number };
   moisture: number;
   statusColor: "healthy" | "warning" | "critical" | "inactive";
@@ -103,6 +106,14 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState("overview");
   const [selectedSector, setSelectedSector] = useState<GridItem | null>(null);
   const [selectedLease, setSelectedLease] = useState<any | null>(null);
+
+  // Editable fields for the selected sector
+  const [editCrop, setEditCrop] = useState("");
+  const [editProduced, setEditProduced] = useState(0);
+  const [editRate, setEditRate] = useState(0);
+  const [editIrrigation, setEditIrrigation] = useState(true);
+  const [editSoil, setEditSoil] = useState(true);
+  const [editHealth, setEditHealth] = useState(true);
 
   // Fetch all registrations
   const registrationsQuery = useMemoFirebase(() => {
@@ -128,7 +139,6 @@ export default function DashboardPage() {
       const lease = activeLeases[i];
       const isLeased = !!lease;
       
-      // Mocked sensor data for leased fields
       const moisture = isLeased ? (Math.floor(Math.random() * 40) + 20) : 0;
       const nutrients = isLeased ? {
         n: Math.floor(Math.random() * 60) + 10,
@@ -136,11 +146,15 @@ export default function DashboardPage() {
         k: Math.floor(Math.random() * 50) + 10,
       } : { n: 0, p: 0, k: 0 };
 
+      // Simplified logic for simulation; real logic would use stored field monitoring data
+      const irrigationPass = moisture > 30;
+      const soilTestPass = (nutrients.n + nutrients.p + nutrients.k) > 60;
+      const cropHealthPass = irrigationPass && soilTestPass;
+
       let statusColor: GridItem['statusColor'] = "inactive";
       if (isLeased) {
-        const avgN = (nutrients.n + nutrients.p + nutrients.k) / 3;
-        if (moisture < 25 || avgN < 20) statusColor = "critical";
-        else if (moisture < 35 || avgN < 35) statusColor = "warning";
+        if (!irrigationPass || !soilTestPass) statusColor = "critical";
+        else if (moisture < 35) statusColor = "warning";
         else statusColor = "healthy";
       }
 
@@ -149,17 +163,30 @@ export default function DashboardPage() {
         fieldId: `FLD-${2000 + i}`,
         isLeased,
         leaseData: lease,
-        produced: isLeased ? (Math.random() * 3 + 1).toFixed(1) + " Tons" : "0",
+        produced: isLeased ? Math.floor(Math.random() * 10) + 2 : 0,
+        rate: isLeased ? 24000 : 0,
+        crop: isLeased ? "Basmati Rice" : "N/A",
         nutrients,
         moisture,
         statusColor,
         status: !isLeased ? "Unleased Asset" : statusColor === "healthy" ? "Optimal" : statusColor === "warning" ? "Needs Attention" : "Action Required",
-        irrigationPass: isLeased && moisture > 30,
-        soilTestPass: isLeased && (nutrients.n + nutrients.p + nutrients.k) > 60,
-        cropHealthPass: isLeased && statusColor === "healthy",
+        irrigationPass,
+        soilTestPass,
+        cropHealthPass,
       };
     });
   }, [activeLeases]);
+
+  useEffect(() => {
+    if (selectedSector) {
+      setEditCrop(selectedSector.crop);
+      setEditProduced(selectedSector.produced);
+      setEditRate(selectedSector.rate);
+      setEditIrrigation(selectedSector.irrigationPass);
+      setEditSoil(selectedSector.soilTestPass);
+      setEditHealth(selectedSector.cropHealthPass);
+    }
+  }, [selectedSector]);
 
   const handleApprove = (regId: string) => {
     if (!firestore) return;
@@ -177,9 +204,10 @@ export default function DashboardPage() {
   };
 
   const handleSaveFieldReport = () => {
+    // In a real app, we would update a 'fieldMonitoring' sub-collection
     toast({
-      title: "Field Intelligence Synced",
-      description: `Sector ${selectedSector?.fieldId} monitoring logs updated.`,
+      title: "Intelligence Synced",
+      description: `Sector ${selectedSector?.fieldId} updated with crop ${editCrop}. Revenue: ₹${(editProduced * editRate).toLocaleString()}`,
     });
     setSelectedSector(null);
   };
@@ -190,8 +218,9 @@ export default function DashboardPage() {
     heatmapTitle: lang === 'en' ? "Field Monitor" : "फील्ड मॉनिटर",
     details: {
       owner: lang === 'en' ? "Land Owner" : "ज़मीन मालिक",
-      crop: lang === 'en' ? "Current Crop" : "वर्तमान फसल",
-      produced: lang === 'en' ? "Yield Produced" : "उत्पादित पैदावार",
+      crop: lang === 'en' ? "Cultivated Crop" : "वर्तमान फसल",
+      produced: lang === 'en' ? "Yield (Tons)" : "उत्पादित पैदावार",
+      rate: lang === 'en' ? "Market Rate (₹/Ton)" : "बाजार दर (₹/टन)",
       nutrients: lang === 'en' ? "Soil Nutrients (N-P-K)" : "मिट्टी के पोषक तत्व",
       payout: lang === 'en' ? "Monthly Payout" : "मासिक भुगतान",
     }
@@ -260,7 +289,7 @@ export default function DashboardPage() {
                   <div className="flex items-center gap-3">
                     <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 px-3 py-1 font-code">
                       <ShieldCheck size={14} className="mr-2" />
-                      STAFF_PRIVILEGE_ACTIVE
+                      FIELD_MASTER_ACTIVE
                     </Badge>
                   </div>
                   <h1 className="text-4xl md:text-6xl font-display">
@@ -283,7 +312,7 @@ export default function DashboardPage() {
                         <div className="flex justify-between items-center">
                           <div>
                             <CardTitle className="text-2xl font-headline font-bold">{t.heatmapTitle}</CardTitle>
-                            <CardDescription>Live Verification & Diagnostic Heatmap</CardDescription>
+                            <CardDescription>Live Field Monitoring Heatmap</CardDescription>
                           </div>
                           <div className="flex gap-4 text-[10px] font-bold">
                             <div className="flex items-center gap-1.5">
@@ -325,28 +354,23 @@ export default function DashboardPage() {
                             </motion.div>
                           ))}
                         </div>
-                        {!activeLeases.length && (
-                          <div className="mt-8 p-6 bg-primary/5 rounded-2xl border border-dashed border-primary/20 text-center">
-                            <p className="text-sm text-primary font-medium italic">All sectors currently unleased. Approve applications in the Lease Queue to activate field monitoring.</p>
-                          </div>
-                        )}
                       </CardContent>
                     </Card>
 
                     <div className="space-y-8">
                       <Card className="rounded-[2rem] bg-krishi-black text-white p-8 relative overflow-hidden">
                         <div className="absolute top-0 right-0 p-4 opacity-10">
-                            <Database size={80} />
+                            <TrendingUp size={80} />
                         </div>
-                        <p className="text-krishi-gold text-[10px] font-bold uppercase tracking-[0.2em] mb-4">Verification Stats</p>
+                        <p className="text-krishi-gold text-[10px] font-bold uppercase tracking-[0.2em] mb-4">Network Yield</p>
                         <div className="grid grid-cols-2 gap-4">
                            <div>
-                              <h4 className="text-3xl font-display">{activeLeases.length}</h4>
-                              <p className="text-[10px] text-white/40 uppercase">Active</p>
+                              <h4 className="text-3xl font-display">{activeLeases.length * 12}T</h4>
+                              <p className="text-[10px] text-white/40 uppercase">Total Est. Yield</p>
                            </div>
                            <div>
-                              <h4 className="text-3xl font-display">{pendingRegistrations.length}</h4>
-                              <p className="text-[10px] text-white/40 uppercase">Queue</p>
+                              <h4 className="text-3xl font-display">₹{(activeLeases.length * 280000).toLocaleString()}</h4>
+                              <p className="text-[10px] text-white/40 uppercase">Projected Rev</p>
                            </div>
                         </div>
                       </Card>
@@ -441,11 +465,6 @@ export default function DashboardPage() {
                          </div>
                       </Card>
                     ))}
-                    {activeLeases.length === 0 && (
-                      <div className="col-span-full py-24 text-center bg-card border border-dashed border-border rounded-[3rem] opacity-40 italic">
-                         No active leases managed. Approve land from the queue to start.
-                      </div>
-                    )}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -453,73 +472,154 @@ export default function DashboardPage() {
           </SidebarInset>
         </div>
 
-        {/* Sector Details Dialog */}
+        {/* Sector Details Dialog - Field Master Mode */}
         <Dialog open={!!selectedSector} onOpenChange={() => setSelectedSector(null)}>
-          <DialogContent className="rounded-[2.5rem] p-8 max-w-lg border-primary/20 bg-card/95 backdrop-blur-xl">
+          <DialogContent className="rounded-[2.5rem] p-8 max-w-2xl border-primary/20 bg-card/95 backdrop-blur-xl">
             <DialogHeader className="space-y-4">
               <div className="flex justify-between items-start">
                 <Badge className={`${
                   selectedSector?.statusColor === 'healthy' ? 'bg-krishi-lime' :
                   selectedSector?.statusColor === 'warning' ? 'bg-krishi-amber' : 'bg-red-500'
                 } text-white uppercase tracking-widest px-3 py-1`}>
-                  Field ID: {selectedSector?.fieldId}
+                  Field Master Diagnostic: {selectedSector?.fieldId}
                 </Badge>
               </div>
-              <DialogTitle className="text-3xl font-display">Sector Diagnostic Report</DialogTitle>
+              <DialogTitle className="text-3xl font-display">Sector Intelligence Report</DialogTitle>
               <DialogDescription className="font-code text-foreground/60">
-                Linked Lease Record: #KR-{selectedSector?.leaseData?.id?.slice(0, 4).toUpperCase()}
+                Land Owner: {selectedSector?.leaseData?.aadharName} | Cluster: {selectedSector?.leaseData?.district}
               </DialogDescription>
             </DialogHeader>
 
-            <div className="grid gap-6 mt-6">
-              <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-2xl border border-border">
-                <div className="p-3 bg-primary/10 text-primary rounded-xl">
-                  <Users size={20} />
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold text-foreground/40 uppercase tracking-widest">{t.details.owner}</p>
-                  <p className="font-bold text-lg">{selectedSector?.leaseData?.aadharName}</p>
-                </div>
-              </div>
-
-              <div className="p-6 bg-muted/30 rounded-3xl border border-border space-y-6">
-                <h4 className="text-xs font-bold uppercase tracking-widest text-foreground/40 mb-2">Field Status Check</h4>
+            <div className="grid md:grid-cols-2 gap-8 mt-8">
+              {/* Left Column: Diagnostics (Pass/Fail) */}
+              <div className="space-y-6">
+                <h4 className="text-xs font-bold uppercase tracking-widest text-foreground/40 mb-2">Field Diagnostics</h4>
                 
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between p-4 bg-muted/30 rounded-2xl border border-border">
                   <div className="flex items-center gap-3 text-sm font-medium">
                     <Droplets size={18} className="text-primary" /> Irrigation Log
                   </div>
-                  <Badge variant={selectedSector?.moisture! > 30 ? "default" : "destructive"}>
-                    {selectedSector?.moisture! > 30 ? "PASS" : "LOW_MOISTURE"}
-                  </Badge>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => setEditIrrigation(true)}
+                      className={`p-1.5 rounded-lg transition-all ${editIrrigation ? 'bg-krishi-lime text-white' : 'bg-muted text-foreground/20'}`}
+                    >
+                      <Check size={16} />
+                    </button>
+                    <button 
+                      onClick={() => setEditIrrigation(false)}
+                      className={`p-1.5 rounded-lg transition-all ${!editIrrigation ? 'bg-red-500 text-white' : 'bg-muted text-foreground/20'}`}
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
                 </div>
 
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between p-4 bg-muted/30 rounded-2xl border border-border">
                   <div className="flex items-center gap-3 text-sm font-medium">
                     <Beaker size={18} className="text-primary" /> Soil Nutrient Test
                   </div>
-                  <Badge variant={selectedSector?.soilTestPass ? "default" : "destructive"}>
-                    {selectedSector?.soilTestPass ? "OPTIMAL" : "DEPLETED"}
-                  </Badge>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => setEditSoil(true)}
+                      className={`p-1.5 rounded-lg transition-all ${editSoil ? 'bg-krishi-lime text-white' : 'bg-muted text-foreground/20'}`}
+                    >
+                      <Check size={16} />
+                    </button>
+                    <button 
+                      onClick={() => setEditSoil(false)}
+                      className={`p-1.5 rounded-lg transition-all ${!editSoil ? 'bg-red-500 text-white' : 'bg-muted text-foreground/20'}`}
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-muted/30 rounded-2xl border border-border">
+                  <div className="flex items-center gap-3 text-sm font-medium">
+                    <Leaf size={18} className="text-primary" /> Crop Health Pass
+                  </div>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => setEditHealth(true)}
+                      className={`p-1.5 rounded-lg transition-all ${editHealth ? 'bg-krishi-lime text-white' : 'bg-muted text-foreground/20'}`}
+                    >
+                      <Check size={16} />
+                    </button>
+                    <button 
+                      onClick={() => setEditHealth(false)}
+                      className={`p-1.5 rounded-lg transition-all ${!editHealth ? 'bg-red-500 text-white' : 'bg-muted text-foreground/20'}`}
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="p-6 bg-krishi-black text-white rounded-2xl border border-border">
+                   <p className="text-[10px] text-white/40 uppercase mb-4 tracking-widest">Calculated Revenue</p>
+                   <div className="flex items-end gap-2">
+                      <span className="text-3xl font-display text-krishi-gold">₹{(editProduced * editRate).toLocaleString()}</span>
+                      <Badge className="bg-krishi-lime/20 text-krishi-lime mb-1">PROFIT_LOCKED</Badge>
+                   </div>
                 </div>
               </div>
 
-              <div className="p-6 bg-krishi-black text-white rounded-2xl border border-border">
+              {/* Right Column: Crop Data Entry */}
+              <div className="space-y-6">
+                <h4 className="text-xs font-bold uppercase tracking-widest text-foreground/40 mb-2">Crop Management</h4>
+                
+                <div className="space-y-2">
+                  <Label className="text-[10px] uppercase text-foreground/40">{t.details.crop}</Label>
+                  <Input 
+                    value={editCrop} 
+                    onChange={(e) => setEditCrop(e.target.value)}
+                    className="rounded-xl h-12 bg-muted/30 border-border"
+                  />
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-[10px] text-white/40 uppercase mb-1">{t.details.produced}</p>
-                    <p className="text-lg font-bold">{selectedSector?.produced}</p>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] uppercase text-foreground/40">{t.details.produced}</Label>
+                    <Input 
+                      type="number" 
+                      value={editProduced} 
+                      onChange={(e) => setEditProduced(Number(e.target.value))}
+                      className="rounded-xl h-12 bg-muted/30 border-border"
+                    />
                   </div>
-                  <div>
-                    <p className="text-[10px] text-white/40 uppercase mb-1">Moisture Level</p>
-                    <p className="text-lg font-bold">{selectedSector?.moisture}%</p>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] uppercase text-foreground/40">{t.details.rate}</Label>
+                    <Input 
+                      type="number" 
+                      value={editRate} 
+                      onChange={(e) => setEditRate(Number(e.target.value))}
+                      className="rounded-xl h-12 bg-muted/30 border-border"
+                    />
+                  </div>
+                </div>
+
+                <div className="p-6 bg-muted/30 rounded-2xl border border-border">
+                  <p className="text-[10px] text-foreground/40 uppercase mb-3">Live N-P-K Sensors</p>
+                  <div className="flex gap-4">
+                     <div className="flex-1 text-center">
+                        <div className="text-xl font-bold text-primary">{selectedSector?.nutrients.n}</div>
+                        <div className="text-[8px] uppercase">Nitrogen</div>
+                     </div>
+                     <div className="flex-1 text-center">
+                        <div className="text-xl font-bold text-krishi-amber">{selectedSector?.nutrients.p}</div>
+                        <div className="text-[8px] uppercase">Phosphorus</div>
+                     </div>
+                     <div className="flex-1 text-center">
+                        <div className="text-xl font-bold text-krishi-gold">{selectedSector?.nutrients.k}</div>
+                        <div className="text-[8px] uppercase">Potassium</div>
+                     </div>
                   </div>
                 </div>
               </div>
             </div>
             
-            <Button onClick={handleSaveFieldReport} className="w-full rounded-full py-8 mt-8 font-bold bg-primary text-white">
-              Sync Diagnostic Report
+            <Button onClick={handleSaveFieldReport} className="w-full rounded-full py-8 mt-8 font-bold bg-primary text-white text-lg">
+              <Save className="mr-2 h-5 w-5" /> Sync Diagnostic Intelligence
             </Button>
           </DialogContent>
         </Dialog>
