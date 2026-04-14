@@ -1,6 +1,23 @@
 
 {
   "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Extended information for a registered user.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { 
+          "type": "string", 
+          "enum": ["buyer", "land_owner", "farmer", "staff"],
+          "description": "User's primary role in the ecosystem."
+        },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "name", "email", "role"]
+    },
     "LandLeaseRegistration": {
       "title": "Land Lease Registration",
       "description": "Details of farmers interested in leasing their land.",
@@ -70,6 +87,10 @@
     "providers": ["google.com", "password"]
   },
   "firestore": {
+    "/users/{userId}": {
+      "schema": "#/entities/UserProfile",
+      "description": "User account and role data."
+    },
     "/landLeaseRegistrations/{registrationId}": {
       "schema": "#/entities/LandLeaseRegistration",
       "description": "Collection of land lease registration applications."

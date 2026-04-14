@@ -22,6 +22,13 @@ import {
   DialogTrigger,
   DialogFooter
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function LoginPage() {
   const { 
@@ -40,6 +47,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [role, setRole] = useState("buyer");
   const [resetEmail, setResetEmail] = useState("");
   const [isPending, setIsPending] = useState(false);
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
@@ -80,7 +88,7 @@ export default function LoginPage() {
     e.preventDefault();
     setIsPending(true);
     try {
-      await signUpWithEmail(email, password, name);
+      await signUpWithEmail(email, password, name, role);
       toast({ title: lang === 'en' ? "Account created!" : "खाता बनाया गया!" });
     } catch (error: any) {
       toast({ 
@@ -120,11 +128,18 @@ export default function LoginPage() {
     email: lang === 'en' ? "Email / Username" : "ईमेल / यूजरनेम",
     password: lang === 'en' ? "Password" : "पासवर्ड",
     name: lang === 'en' ? "Full Name" : "पूरा नाम",
+    role: lang === 'en' ? "I am a..." : "मैं एक हूँ...",
     forgot: lang === 'en' ? "Forgot Password?" : "पासवर्ड भूल गए?",
     resetTitle: lang === 'en' ? "Reset Password" : "पासवर्ड बदलें",
     resetDesc: lang === 'en' ? "Enter your email to receive a reset link." : "रीसेट लिंक प्राप्त करने के लिए अपना ईमेल दर्ज करें।",
     send: lang === 'en' ? "Send Link" : "लिंक भेजें",
     demoHint: lang === 'en' ? "Try 'demo' as username and password" : "यूजरनेम और पासवर्ड के रूप में 'demo' आजमाएं",
+    roles: {
+      buyer: lang === 'en' ? "Buyer (Store Customer)" : "खरीददार (स्टोर ग्राहक)",
+      land_owner: lang === 'en' ? "Land Owner (Leasing Land)" : "ज़मीन मालिक (ज़मीन पट्टे पर देना)",
+      farmer: lang === 'en' ? "Farmer (Using AI Services)" : "किसान (एआई सेवाओं का उपयोग)",
+      staff: lang === 'en' ? "Employee (Field Monitoring)" : "कर्मचारी (क्षेत्र निगरानी)",
+    }
   };
 
   return (
@@ -226,6 +241,20 @@ export default function LoginPage() {
                     required 
                     className="rounded-xl h-12"
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-role">{t.role}</Label>
+                  <Select value={role} onValueChange={setRole}>
+                    <SelectTrigger className="rounded-xl h-12">
+                      <SelectValue placeholder="Select role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="buyer">{t.roles.buyer}</SelectItem>
+                      <SelectItem value="land_owner">{t.roles.land_owner}</SelectItem>
+                      <SelectItem value="farmer">{t.roles.farmer}</SelectItem>
+                      <SelectItem value="staff">{t.roles.staff}</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-email">{t.email}</Label>

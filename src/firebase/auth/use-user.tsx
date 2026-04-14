@@ -13,10 +13,12 @@ import {
   sendPasswordResetEmail,
   updateProfile
 } from 'firebase/auth';
-import { useAuth } from '../provider';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { useAuth, useFirestore } from '../provider';
 
 export function useUser() {
   const auth = useAuth();
+  const firestore = useFirestore();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -31,7 +33,16 @@ export function useUser() {
   const loginWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+      // Optional: Update/Create profile on Google login too
+      const userRef = doc(firestore, 'users', result.user.uid);
+      await setDoc(userRef, {
+        uid: result.user.uid,
+        name: result.user.displayName,
+        email: result.user.email,
+        role: 'buyer', // Default role for Google login
+        updatedAt: serverTimestamp(),
+      }, { merge: true });
     } catch (error) {
       console.error("Error signing in with Google", error);
       throw error;
@@ -47,10 +58,21 @@ export function useUser() {
     }
   };
 
-  const signUpWithEmail = async (email: string, pass: string, name: string) => {
+  const signUpWithEmail = async (email: string, pass: string, name: string, role: string) => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
       await updateProfile(userCredential.user, { displayName: name });
+      
+      // Save profile to Firestore
+      const userRef = doc(firestore, 'users', userCredential.user.uid);
+      await setDoc(userRef, {
+        uid: userCredential.user.uid,
+        name: name,
+        email: email,
+        role: role,
+        createdAt: serverTimestamp(),
+      });
+
     } catch (error) {
       console.error("Error signing up with email", error);
       throw error;
