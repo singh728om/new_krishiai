@@ -27,7 +27,10 @@ import {
   FileText,
   CreditCard,
   CalendarDays,
-  ChevronRight
+  ChevronRight,
+  Save,
+  Check,
+  X
 } from "lucide-react";
 import { Navbar } from "@/components/sections/navbar";
 import { Footer } from "@/components/sections/footer";
@@ -70,8 +73,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { collection, query, orderBy, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { useMemoFirebase } from "@/firebase/firestore/use-collection";
+import { useToast } from "@/hooks/use-toast";
 
 // Enhanced Mock data for the 50-grid heatmap
 const crops = ["Banarasi Mango", "Organic Tomato", "Basmati Rice", "Wheat", "Mustard", "Corn"];
@@ -89,6 +95,9 @@ interface GridItem {
   revenue: number;
   status: string;
   pincode: string;
+  irrigationPass: boolean;
+  soilTestPass: boolean;
+  cropHealthPass: boolean;
 }
 
 const generateGridData = (): GridItem[] => {
@@ -121,6 +130,9 @@ const generateGridData = (): GridItem[] => {
       revenue: Math.floor(Math.random() * 45000) + 15000,
       status: statusColor === "healthy" ? "Optimal Health" : statusColor === "warning" ? "Needs Attention" : "Action Required",
       pincode: "22100" + (i % 10),
+      irrigationPass: Math.random() > 0.2,
+      soilTestPass: Math.random() > 0.15,
+      cropHealthPass: statusColor === "healthy",
     };
   });
 };
@@ -129,7 +141,8 @@ export default function DashboardPage() {
   const { lang } = useSettings();
   const { user } = useUser();
   const firestore = useFirestore();
-  const [gridData] = useState<GridItem[]>(generateGridData());
+  const { toast } = useToast();
+  const [gridData, setGridData] = useState<GridItem[]>(generateGridData());
   const [activeTab, setActiveTab] = useState("overview");
   const [selectedSector, setSelectedSector] = useState<GridItem | null>(null);
   const [selectedLease, setSelectedLease] = useState<any | null>(null);
@@ -151,8 +164,22 @@ export default function DashboardPage() {
   const handleReject = (regId: string) => {
     if (!firestore) return;
     const docRef = doc(firestore, "landLeaseRegistrations", regId);
-    // In a real app we might update status to 'rejected', but for the prototype we can delete or update
     updateDoc(docRef, { status: "rejected" });
+  };
+
+  const updateFieldData = (id: number, updates: Partial<GridItem>) => {
+    setGridData(prev => prev.map(item => item.id === id ? { ...item, ...updates } : item));
+    if (selectedSector && selectedSector.id === id) {
+      setSelectedSector(prev => prev ? { ...prev, ...updates } : null);
+    }
+  };
+
+  const handleSaveFieldReport = () => {
+    toast({
+      title: "Field Report Updated",
+      description: `Sector ${selectedSector?.fieldId} has been successfully synchronized with the IOT network.`,
+    });
+    setSelectedSector(null);
   };
 
   const t = {
@@ -256,7 +283,7 @@ export default function DashboardPage() {
               </header>
 
               <AnimatePresence mode="wait">
-                {activeTab === "overview" && (
+                {(activeTab === "overview" || activeTab === "heatmap") && (
                   <motion.div
                     key="overview"
                     initial={{ opacity: 0, y: 20 }}
@@ -284,7 +311,7 @@ export default function DashboardPage() {
                                 <div className="w-3 h-3 rounded-full bg-red-500" />
                                 <span className="text-red-500">CRITICAL</span>
                             </div>
-                          </div>
+                        </div>
                         </div>
                       </CardHeader>
                       <CardContent className="p-8">
@@ -437,9 +464,9 @@ export default function DashboardPage() {
           </SidebarInset>
         </div>
 
-        {/* Sector Details Dialog */}
+        {/* Sector Details & Edit Dialog */}
         <Dialog open={!!selectedSector} onOpenChange={() => setSelectedSector(null)}>
-          <DialogContent className="rounded-[2.5rem] p-8 max-w-md border-primary/20 bg-card/95 backdrop-blur-xl">
+          <DialogContent className="rounded-[2.5rem] p-8 max-w-lg border-primary/20 bg-card/95 backdrop-blur-xl overflow-y-auto max-h-[90vh]">
             <DialogHeader className="space-y-4">
               <div className="flex justify-between items-start">
                 <Badge className={`${
@@ -450,16 +477,14 @@ export default function DashboardPage() {
                 </Badge>
                 <div className="text-[10px] font-code text-foreground/40">PIN: {selectedSector?.pincode}</div>
               </div>
-              <DialogTitle className="text-3xl font-display">{selectedSector?.crop}</DialogTitle>
-              <DialogDescription className={`font-code font-bold uppercase ${
-                selectedSector?.statusColor === 'healthy' ? 'text-krishi-lime' :
-                selectedSector?.statusColor === 'warning' ? 'text-krishi-amber' : 'text-red-500'
-              }`}>
-                {selectedSector?.status}
+              <DialogTitle className="text-3xl font-display">Field Intelligence Report</DialogTitle>
+              <DialogDescription className="font-code text-foreground/60">
+                Live Monitoring & Diagnostics
               </DialogDescription>
             </DialogHeader>
 
             <div className="grid gap-6 mt-6">
+              {/* Field Owner Info */}
               <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-2xl border border-border">
                 <div className="p-3 bg-primary/10 text-primary rounded-xl">
                   <Users size={20} />
@@ -470,54 +495,138 @@ export default function DashboardPage() {
                 </div>
               </div>
 
+              {/* Editable Fields: Crop & Yield */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 bg-krishi-gold/5 rounded-2xl border border-krishi-gold/20">
-                  <div className="flex items-center gap-2 mb-2 text-krishi-gold">
-                    <IndianRupee size={14} />
-                    <span className="text-[10px] font-bold uppercase tracking-widest">{t.details.revenue}</span>
-                  </div>
-                  <p className="text-xl font-display font-bold">₹{selectedSector?.revenue?.toLocaleString()}</p>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">{t.details.crop}</Label>
+                  <Input 
+                    value={selectedSector?.crop || ""} 
+                    onChange={(e) => selectedSector && updateFieldData(selectedSector.id, { crop: e.target.value })}
+                    className="rounded-xl bg-muted/20 border-border"
+                  />
                 </div>
-                <div className="p-4 bg-krishi-lime/5 rounded-2xl border border-krishi-lime/20">
-                  <div className="flex items-center gap-2 mb-2 text-krishi-lime">
-                    <TrendingUp size={14} />
-                    <span className="text-[10px] font-bold uppercase tracking-widest">{t.details.produced}</span>
-                  </div>
-                  <p className="text-xl font-headline font-bold">{selectedSector?.produced}</p>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">{t.details.produced}</Label>
+                  <Input 
+                    value={selectedSector?.produced || ""} 
+                    onChange={(e) => selectedSector && updateFieldData(selectedSector.id, { produced: e.target.value })}
+                    className="rounded-xl bg-muted/20 border-border"
+                  />
                 </div>
               </div>
 
-              <div className="p-6 bg-muted/30 rounded-2xl border border-border">
+              {/* Pass/Fail Checklists */}
+              <div className="p-6 bg-muted/30 rounded-3xl border border-border space-y-6">
+                <h4 className="text-xs font-bold uppercase tracking-widest text-foreground/40 mb-2">Diagnostic Checklists</h4>
+                
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Droplets size={18} className="text-primary" />
+                    <span className="text-sm font-medium">Irrigation System</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button 
+                      size="icon" 
+                      variant={selectedSector?.irrigationPass ? "default" : "outline"}
+                      className={`h-8 w-8 rounded-lg ${selectedSector?.irrigationPass ? 'bg-krishi-lime' : ''}`}
+                      onClick={() => selectedSector && updateFieldData(selectedSector.id, { irrigationPass: true })}
+                    >
+                      <Check size={16} />
+                    </Button>
+                    <Button 
+                      size="icon" 
+                      variant={!selectedSector?.irrigationPass ? "destructive" : "outline"}
+                      className="h-8 w-8 rounded-lg"
+                      onClick={() => selectedSector && updateFieldData(selectedSector.id, { irrigationPass: false })}
+                    >
+                      <X size={16} />
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Beaker size={18} className="text-primary" />
+                    <span className="text-sm font-medium">Soil Quality Test</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button 
+                      size="icon" 
+                      variant={selectedSector?.soilTestPass ? "default" : "outline"}
+                      className={`h-8 w-8 rounded-lg ${selectedSector?.soilTestPass ? 'bg-krishi-lime' : ''}`}
+                      onClick={() => selectedSector && updateFieldData(selectedSector.id, { soilTestPass: true })}
+                    >
+                      <Check size={16} />
+                    </Button>
+                    <Button 
+                      size="icon" 
+                      variant={!selectedSector?.soilTestPass ? "destructive" : "outline"}
+                      className="h-8 w-8 rounded-lg"
+                      onClick={() => selectedSector && updateFieldData(selectedSector.id, { soilTestPass: false })}
+                    >
+                      <X size={16} />
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Activity size={18} className="text-primary" />
+                    <span className="text-sm font-medium">Crop Health Scan</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button 
+                      size="icon" 
+                      variant={selectedSector?.cropHealthPass ? "default" : "outline"}
+                      className={`h-8 w-8 rounded-lg ${selectedSector?.cropHealthPass ? 'bg-krishi-lime' : ''}`}
+                      onClick={() => selectedSector && updateFieldData(selectedSector.id, { cropHealthPass: true })}
+                    >
+                      <Check size={16} />
+                    </Button>
+                    <Button 
+                      size="icon" 
+                      variant={!selectedSector?.cropHealthPass ? "destructive" : "outline"}
+                      className="h-8 w-8 rounded-lg"
+                      onClick={() => selectedSector && updateFieldData(selectedSector.id, { cropHealthPass: false })}
+                    >
+                      <X size={16} />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Nutrients Display */}
+              <div className="p-6 bg-krishi-black/5 rounded-2xl border border-border">
                 <div className="flex items-center gap-2 mb-4">
                   <Beaker size={16} className="text-primary" />
                   <span className="text-[10px] font-bold uppercase tracking-widest">{t.details.nutrients}</span>
                 </div>
                 <div className="grid grid-cols-3 gap-4 text-center">
                   <div className="space-y-1">
-                    <p className="text-[10px] font-bold text-foreground/40">NITROGEN (N)</p>
-                    <p className={`font-code font-bold ${selectedSector?.nutrients.n && selectedSector.nutrients.n < 20 ? 'text-red-500' : 'text-primary'}`}>
-                      {selectedSector?.nutrients.n} mg/kg
-                    </p>
+                    <p className="text-[10px] font-bold text-foreground/40">NITROGEN</p>
+                    <p className="font-code font-bold text-primary">{selectedSector?.nutrients.n} mg/kg</p>
                   </div>
                   <div className="space-y-1">
-                    <p className="text-[10px] font-bold text-foreground/40">PHOSPHORUS (P)</p>
-                    <p className={`font-code font-bold ${selectedSector?.nutrients.p && selectedSector.nutrients.p < 15 ? 'text-red-500' : 'text-primary'}`}>
-                      {selectedSector?.nutrients.p} mg/kg
-                    </p>
+                    <p className="text-[10px] font-bold text-foreground/40">PHOSPHORUS</p>
+                    <p className="font-code font-bold text-primary">{selectedSector?.nutrients.p} mg/kg</p>
                   </div>
                   <div className="space-y-1">
-                    <p className="text-[10px] font-bold text-foreground/40">POTASSIUM (K)</p>
-                    <p className={`font-code font-bold ${selectedSector?.nutrients.k && selectedSector.nutrients.k < 20 ? 'text-red-500' : 'text-primary'}`}>
-                      {selectedSector?.nutrients.k} mg/kg
-                    </p>
+                    <p className="text-[10px] font-bold text-foreground/40">POTASSIUM</p>
+                    <p className="font-code font-bold text-primary">{selectedSector?.nutrients.k} mg/kg</p>
                   </div>
                 </div>
               </div>
             </div>
             
-            <Button onClick={() => setSelectedSector(null)} className="w-full mt-6 rounded-full py-6 font-bold bg-foreground text-background">
-              Close Report
-            </Button>
+            <div className="grid grid-cols-2 gap-4 mt-8">
+              <Button variant="outline" onClick={() => setSelectedSector(null)} className="rounded-full py-6 font-bold">
+                Dismiss
+              </Button>
+              <Button onClick={handleSaveFieldReport} className="rounded-full py-6 font-bold bg-primary text-white flex gap-2">
+                <Save size={18} />
+                Sync Report
+              </Button>
+            </div>
           </DialogContent>
         </Dialog>
 
@@ -602,4 +711,3 @@ export default function DashboardPage() {
     </SidebarProvider>
   );
 }
-
