@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Sprout, Microscope, TrendingUp, CloudSun, Leaf, ShieldCheck } from "lucide-react";
+import { Sprout, Microscope, TrendingUp, CloudSun, Leaf } from "lucide-react";
 
 const FeatureCard = ({
   title,
@@ -100,13 +100,6 @@ export const FeatureGrid = () => {
             title="FPO Connect"
             description="Connect with local Farmer Producer Organizations for better bargaining power."
             icon={<Sprout size={32} />}
-          />
-
-          {/* Card 6 - Secure Data */}
-          <FeatureCard
-            title="Certified Safe"
-            description="End-to-end encrypted. Your field data belongs only to you."
-            icon={<ShieldCheck size={32} />}
           />
         </div>
       </div>
