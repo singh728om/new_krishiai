@@ -12,7 +12,7 @@ import {
   sendPasswordResetEmail,
   updateProfile
 } from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { useAuth, useFirestore } from '../provider';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -47,8 +47,8 @@ export function useUser() {
           email: result.user.email,
           firstName: result.user.displayName?.split(' ')[0] || 'User',
           lastName: result.user.displayName?.split(' ').slice(1).join(' ') || '',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
         };
 
         setDoc(userRef, userData).catch(err => {
@@ -101,8 +101,8 @@ export function useUser() {
         email: email,
         firstName: name.split(' ')[0] || name,
         lastName: name.split(' ').slice(1).join(' ') || '',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
       };
 
       setDoc(userRef, userData).catch(err => {
