@@ -27,6 +27,10 @@
           "type": "string",
           "description": "Full name as per Aadhar card."
         },
+        "aadharNumber": {
+          "type": "string",
+          "description": "12-digit Aadhar number."
+        },
         "village": {
           "type": "string",
           "description": "Village name."
@@ -38,6 +42,10 @@
         "district": {
           "type": "string",
           "description": "District."
+        },
+        "pincode": {
+          "type": "string",
+          "description": "6-digit postal code."
         },
         "mobile": {
           "type": "string",
@@ -67,7 +75,7 @@
           "description": "Timestamp of registration."
         }
       },
-      "required": ["aadharName", "village", "state", "district", "mobile", "fieldSize", "fieldUnit"]
+      "required": ["aadharName", "aadharNumber", "village", "state", "district", "pincode", "mobile", "fieldSize", "fieldUnit"]
     },
     "Order": {
       "title": "Order",

@@ -29,14 +29,16 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Navbar } from "@/components/sections/navbar";
 import { Footer } from "@/components/sections/footer";
-import { Sprout, CheckCircle2, ArrowLeft } from "lucide-react";
+import { CheckCircle2, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
 const formSchema = z.object({
   aadharName: z.string().min(2, "Full name as per Aadhar is required"),
+  aadharNumber: z.string().regex(/^[0-9]{12}$/, "Enter a valid 12-digit Aadhar number"),
   village: z.string().min(2, "Village name is required"),
   state: z.string().min(2, "State is required"),
   district: z.string().min(2, "District is required"),
+  pincode: z.string().regex(/^[0-9]{6}$/, "Enter a valid 6-digit Pincode"),
   mobile: z.string().regex(/^[0-9]{10}$/, "Enter a valid 10-digit mobile number"),
   fieldSize: z.string().min(1, "Field size is required"),
   fieldUnit: z.enum(["Biswa", "Bigha"]),
@@ -52,9 +54,11 @@ export default function LeaseRegistrationPage() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       aadharName: "",
+      aadharNumber: "",
       village: "",
       state: "",
       district: "",
+      pincode: "",
       mobile: "",
       fieldSize: "",
       fieldUnit: "Bigha",
@@ -127,12 +131,41 @@ export default function LeaseRegistrationPage() {
                     />
                     <FormField
                       control={form.control}
+                      name="aadharNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Aadhar Number</FormLabel>
+                          <FormControl>
+                            <Input placeholder="12-digit number" {...field} className="rounded-xl h-12" maxLength={12} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
                       name="mobile"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Mobile Number</FormLabel>
                           <FormControl>
-                            <Input placeholder="10-digit number" {...field} className="rounded-xl h-12" />
+                            <Input placeholder="10-digit number" {...field} className="rounded-xl h-12" maxLength={10} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="pincode"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Pincode</FormLabel>
+                          <FormControl>
+                            <Input placeholder="6-digit PIN" {...field} className="rounded-xl h-12" maxLength={6} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
