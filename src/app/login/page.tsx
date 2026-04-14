@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Navbar } from "@/components/sections/navbar";
 import { Footer } from "@/components/sections/footer";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Dialog, 
@@ -35,7 +35,7 @@ export default function LoginPage() {
   const { toast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirect = searchParams.get("redirect") || "/profile";
+  const redirect = searchParams.get("redirect") || "/dashboard";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -50,6 +50,17 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Demo Login Logic
+    if (email.toLowerCase() === "demo" && password.toLowerCase() === "demo") {
+      toast({ 
+        title: lang === 'en' ? "Demo Access Granted" : "डेमो एक्सेस दिया गया",
+        description: lang === 'en' ? "Redirecting to your farm dashboard..." : "आपके फार्म डैशबोर्ड पर रीडायरेक्ट किया जा रहा है..."
+      });
+      router.push("/dashboard");
+      return;
+    }
+
     setIsPending(true);
     try {
       await loginWithEmail(email, password);
@@ -106,13 +117,14 @@ export default function LoginPage() {
     google: lang === 'en' ? "Continue with Google" : "गूगल के साथ जारी रखें",
     login: lang === 'en' ? "Login" : "लॉगिन",
     create: lang === 'en' ? "Create Account" : "खाता बनाएं",
-    email: lang === 'en' ? "Email" : "ईमेल",
+    email: lang === 'en' ? "Email / Username" : "ईमेल / यूजरनेम",
     password: lang === 'en' ? "Password" : "पासवर्ड",
     name: lang === 'en' ? "Full Name" : "पूरा नाम",
     forgot: lang === 'en' ? "Forgot Password?" : "पासवर्ड भूल गए?",
     resetTitle: lang === 'en' ? "Reset Password" : "पासवर्ड बदलें",
     resetDesc: lang === 'en' ? "Enter your email to receive a reset link." : "रीसेट लिंक प्राप्त करने के लिए अपना ईमेल दर्ज करें।",
     send: lang === 'en' ? "Send Link" : "लिंक भेजें",
+    demoHint: lang === 'en' ? "Try 'demo' as username and password" : "यूजरनेम और पासवर्ड के रूप में 'demo' आजमाएं",
   };
 
   return (
@@ -150,13 +162,15 @@ export default function LoginPage() {
                   <Label htmlFor="email">{t.email}</Label>
                   <Input 
                     id="email" 
-                    type="email" 
-                    placeholder="name@example.com" 
+                    placeholder="demo@example.com" 
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required 
                     className="rounded-xl h-12"
                   />
+                  <p className="text-[10px] text-primary font-bold uppercase tracking-wider text-center pt-1">
+                    {t.demoHint}
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
