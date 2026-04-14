@@ -23,6 +23,36 @@
       "description": "Sun-dried Wheat",
       "imageUrl": "https://picsum.photos/seed/wheat-harvest/600/400",
       "imageHint": "wheat grain"
+    },
+    {
+      "id": "mango",
+      "description": "Alphonso Mangoes",
+      "imageUrl": "https://picsum.photos/seed/mango-fruit/600/400",
+      "imageHint": "mango fruit"
+    },
+    {
+      "id": "oil",
+      "description": "Cold-pressed Mustard Oil",
+      "imageUrl": "https://picsum.photos/seed/mustard-oil/600/400",
+      "imageHint": "mustard oil"
+    },
+    {
+      "id": "honey",
+      "description": "Wild Forest Honey",
+      "imageUrl": "https://picsum.photos/seed/honey-jar/600/400",
+      "imageHint": "honey"
+    },
+    {
+      "id": "dal",
+      "description": "Organic Toor Dal",
+      "imageUrl": "https://picsum.photos/seed/lentils-dal/600/400",
+      "imageHint": "pulses lentils"
+    },
+    {
+      "id": "ghee",
+      "description": "A2 Desi Cow Ghee",
+      "imageUrl": "https://picsum.photos/seed/cow-ghee/600/400",
+      "imageHint": "cow ghee"
     }
   ]
 }

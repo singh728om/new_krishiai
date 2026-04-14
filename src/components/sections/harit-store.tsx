@@ -1,3 +1,4 @@
+
 "use client";
 
 import { motion } from "framer-motion";
@@ -6,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { useSettings } from "@/context/settings-context";
+import Link from "next/link";
 
 export const HaritStore = () => {
   const { lang } = useSettings();
@@ -29,25 +31,25 @@ export const HaritStore = () => {
       cluster: "Wardha"
     },
     { 
-      id: "rice",
-      name: lang === 'en' ? "Premium Basmati Rice" : "प्रीमियम बासमती चावल", 
-      price: 245, 
-      rating: 4.8, 
+      id: "mango",
+      name: lang === 'en' ? "Alphonso Mangoes" : "हापुस आम", 
+      price: 1200, 
+      rating: 5.0, 
+      cluster: "Ratnagiri" 
+    },
+    { 
+      id: "ghee",
+      name: lang === 'en' ? "A2 Desi Cow Ghee" : "ए2 देसी गाय का घी", 
+      price: 850, 
+      rating: 4.9, 
       cluster: "Nagpur" 
     },
     { 
-      id: "turmeric",
-      name: lang === 'en' ? "Pure Turmeric Powder" : "शुद्ध हल्दी पाउडर", 
-      price: 320, 
-      rating: 5.0, 
+      id: "honey",
+      name: lang === 'en' ? "Wild Forest Honey" : "जंगल का शहद", 
+      price: 450, 
+      rating: 4.8, 
       cluster: "Vidarbha" 
-    },
-    { 
-      id: "wheat",
-      name: lang === 'en' ? "Sun-dried Wheat" : "धूप में सुखाया गया गेहूं", 
-      price: 120, 
-      rating: 4.7, 
-      cluster: "Rajasthan" 
     },
   ];
 
@@ -59,9 +61,11 @@ export const HaritStore = () => {
               <h2 className="text-4xl md:text-6xl font-display text-foreground">{labels.title}</h2>
               <p className="text-xl text-foreground/60 font-body">{labels.subtitle}</p>
            </div>
-           <Button variant="link" className="text-primary font-headline font-bold text-lg p-0 hover:no-underline hover:text-primary/80">
-              {labels.viewAll}
-           </Button>
+           <Link href="/products">
+             <Button variant="link" className="text-primary font-headline font-bold text-lg p-0 hover:no-underline hover:text-primary/80">
+                {labels.viewAll}
+             </Button>
+           </Link>
         </div>
 
         <div className="flex gap-8 overflow-x-auto pb-12 snap-x scrollbar-hide">
