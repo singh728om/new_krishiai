@@ -6,22 +6,6 @@
  * maintaining public visibility for marketplace products and approved testimonials. Access 
  * control is primarily driven by path-based variables and denormalized ownership fields to 
  * ensure high performance and authorization independence.
- * 
- * Data Structure:
- * - /users/{userId}: Root user profiles, where {userId} matches the Firebase Auth UID.
- * - /users/{userId}/farms/...: Nested agricultural data (farms, crop cycles).
- * - /users/{userId}/diagnosticReports/...: Personal AI diagnostic history.
- * - /products/{productId}: Global marketplace entities.
- * - /testimonials/{testimonialId}: Global marketing content.
- * 
- * Key Security Decisions:
- * - Denormalization for Authorization: Ownership IDs (userId, ownerId) are enforced on 
- *   documents to allow rules to validate access without costly cross-document lookups.
- * - Path-Based Security: All data nested under /users/{userId} is restricted to the 
- *   authenticated user matching that ID.
- * - Visibility Flags: Testimonials use the 'isApproved' field to control public visibility.
- * - Prototyping Mode: Logic focuses on strict authorization (who can access) rather than 
- *   strict schema validation (data types/shapes), facilitating rapid iteration.
  */
 
 rules_version = '2';
@@ -30,40 +14,28 @@ service cloud.firestore {
 
     // --- GLOBAL HELPER FUNCTIONS ---
 
-    /** Checks if the request is from a signed-in user. */
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /** Checks if the provided UID matches the authenticated user's UID. */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    /** Checks if the document belongs to the user and exists (for updates/deletes). */
     function isExistingOwner(userId) {
       return resource != null && isOwner(userId);
     }
 
-    /** Validates that a field in the incoming data matches the authenticated user. */
     function dataMatchesAuth(field) {
       return request.resource.data[field] == request.auth.uid;
     }
 
-    /** Validates that a field is not being changed during an update. */
     function isImmutable(field) {
       return request.resource.data[field] == resource.data[field];
     }
 
     // --- COLLECTION RULES ---
 
-    /**
-     * @description Rules for User Profiles. Ensures users can only manage their own profile.
-     * @path /users/{userId}
-     * @allow (create) Signed-in user where UID matches document ID and internal 'id' field.
-     * @deny (read/write) Accessing or modifying a different user's profile.
-     * @principle Ownership, Path-based security, and Relational integrity.
-     */
     match /users/{userId} {
       allow get: if isOwner(userId);
       allow list: if isOwner(userId);
@@ -71,13 +43,6 @@ service cloud.firestore {
       allow update: if isExistingOwner(userId) && isImmutable('id');
       allow delete: if isExistingOwner(userId);
 
-      /**
-       * @description Rules for Farm records. Nested under users for automatic scoping.
-       * @path /users/{userId}/farms/{farmId}
-       * @allow (list) Owner listing their own farms.
-       * @deny (create) Mismatched userId field in document data.
-       * @principle Authorization independence via denormalized userId.
-       */
       match /farms/{farmId} {
         allow get: if isOwner(userId);
         allow list: if isOwner(userId);
@@ -85,13 +50,6 @@ service cloud.firestore {
         allow update: if isExistingOwner(userId) && isImmutable('userId');
         allow delete: if isExistingOwner(userId);
 
-        /**
-         * @description Rules for Crop Cycles. Deeply nested under specific farms.
-         * @path /users/{userId}/farms/{farmId}/cropCycles/{cropCycleId}
-         * @allow (update) Owner updating their own crop cycle progress.
-         * @deny (get) Access by a different user.
-         * @principle Path-based ownership inheritance.
-         */
         match /cropCycles/{cropCycleId} {
           allow get: if isOwner(userId);
           allow list: if isOwner(userId);
@@ -101,13 +59,6 @@ service cloud.firestore {
         }
       }
 
-      /**
-       * @description Rules for Diagnostic Reports initiated by the user.
-       * @path /users/{userId}/diagnosticReports/{reportId}
-       * @allow (create) Authenticated user creating a report for themselves.
-       * @deny (list) Anonymous access to personal diagnostic history.
-       * @principle User-scoped private data.
-       */
       match /diagnosticReports/{reportId} {
         allow get: if isOwner(userId);
         allow list: if isOwner(userId);
@@ -117,39 +68,44 @@ service cloud.firestore {
       }
     }
 
-    /**
-     * @description Rules for Store Products. Publicly readable, owner-managed.
-     * @path /products/{productId}
-     * @allow (get) Public read access for all users.
-     * @deny (write) Non-owners attempting to modify product details.
-     * @principle Public Read with Owner-Only Writes.
-     */
     match /products/{productId} {
       allow get, list: if true;
-      
-      // CRITICAL: The 'Product' entity is missing a clear 'ownerId' field in the schema properties.
-      // Reasoning suggests ownerId (userId of the farm owner) must be present for security.
       allow create: if isSignedIn() && dataMatchesAuth('ownerId'); 
       allow update: if isSignedIn() && resource.data.ownerId == request.auth.uid && isImmutable('ownerId');
       allow delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
-      // TODO: Ensure the frontend includes 'ownerId' in Product documents.
     }
 
-    /**
-     * @description Rules for Testimonials. Publicly visible only if approved.
-     * @path /testimonials/{testimonialId}
-     * @allow (list) Public users seeing approved content (isApproved == true).
-     * @deny (write) General users modifying or approving testimonials.
-     * @principle State-based visibility (QAP) and administrative write restriction.
-     */
     match /testimonials/{testimonialId} {
       allow get: if resource.data.isApproved == true;
       allow list: if resource.data.isApproved == true;
-      
-      // Management restricted to system/admin. Default to false for users in prototype.
       allow create, update, delete: if false; 
-      // TODO: Implement 'isAdmin()' check if administrative roles are added to IR.
     }
 
+    // Role-based collections
+    match /user_roles_buyer/{userId} {
+      allow get: if isOwner(userId);
+      allow create: if isOwner(userId);
+    }
+    match /user_roles_landowner/{userId} {
+      allow get: if isOwner(userId);
+      allow create: if isOwner(userId);
+    }
+    match /user_roles_staff/{userId} {
+      allow get: if isOwner(userId);
+      allow create: if isOwner(userId);
+    }
+
+    // Land Lease Registrations
+    match /landLeaseRegistrations/{regId} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || exists(/databases/$(database)/documents/user_roles_staff/$(request.auth.uid)));
+      allow create: if isSignedIn();
+      allow update, delete: if exists(/databases/$(database)/documents/user_roles_staff/$(request.auth.uid));
+    }
+
+    // Orders
+    match /orders/{orderId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+    }
   }
 }

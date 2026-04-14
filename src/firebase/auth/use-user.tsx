@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -13,8 +12,10 @@ import {
   sendPasswordResetEmail,
   updateProfile
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { useAuth, useFirestore } from '../provider';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 export function useUser() {
   const auth = useAuth();
@@ -36,12 +37,11 @@ export function useUser() {
       const result = await signInWithPopup(auth, provider);
       const userId = result.user.uid;
       
-      // Check if profile exists, if not create as buyer
       const userRef = doc(firestore, 'users', userId);
       const userSnap = await getDoc(userRef);
       
       if (!userSnap.exists()) {
-        await setDoc(userRef, {
+        const userData = {
           id: userId,
           externalAuthId: userId,
           email: result.user.email,
@@ -49,13 +49,28 @@ export function useUser() {
           lastName: result.user.displayName?.split(' ').slice(1).join(' ') || '',
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
+        };
+
+        setDoc(userRef, userData).catch(err => {
+          errorEmitter.emit('permission-error', new FirestorePermissionError({
+            path: userRef.path,
+            operation: 'create',
+            requestResourceData: userData
+          }));
         });
 
-        // Set default role as buyer
-        await setDoc(doc(firestore, 'user_roles_buyer', userId), {
+        const roleRef = doc(firestore, 'user_roles_buyer', userId);
+        const roleData = {
           id: userId,
           userId: userId,
           roleId: 'buyer'
+        };
+        setDoc(roleRef, roleData).catch(err => {
+           errorEmitter.emit('permission-error', new FirestorePermissionError({
+            path: roleRef.path,
+            operation: 'create',
+            requestResourceData: roleData
+          }));
         });
       }
     } catch (error) {
@@ -79,9 +94,8 @@ export function useUser() {
       const userId = userCredential.user.uid;
       await updateProfile(userCredential.user, { displayName: name });
       
-      // Save profile to Firestore
       const userRef = doc(firestore, 'users', userId);
-      await setDoc(userRef, {
+      const userData = {
         id: userId,
         externalAuthId: userId,
         email: email,
@@ -89,14 +103,30 @@ export function useUser() {
         lastName: name.split(' ').slice(1).join(' ') || '',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+      };
+
+      setDoc(userRef, userData).catch(err => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: userRef.path,
+          operation: 'create',
+          requestResourceData: userData
+        }));
       });
 
-      // Save role mapping
       const roleCollection = `user_roles_${role.toLowerCase().replace(/\s/g, '')}`;
-      await setDoc(doc(firestore, roleCollection, userId), {
+      const roleRef = doc(firestore, roleCollection, userId);
+      const roleData = {
         id: userId,
         userId: userId,
         roleId: role
+      };
+
+      setDoc(roleRef, roleData).catch(err => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: roleRef.path,
+          operation: 'create',
+          requestResourceData: roleData
+        }));
       });
 
       return userCredential;
