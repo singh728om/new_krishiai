@@ -164,11 +164,11 @@ export default function DashboardPage() {
               </div>
               <div className="space-y-2 relative z-10">
                 <p className="text-krishi-gold text-[10px] font-bold uppercase tracking-widest">Alpha Prediction</p>
-                <h3 className="text-3xl font-display">Wheat Surge Expected.</h3>
-                <p className="text-sm text-white/40 font-body">Global supply chains indicate a price peak in Wardha Cluster within 18 days.</p>
+                <h3 className="text-3xl font-display text-white">Wheat Surge Expected.</h3>
+                <p className="text-sm text-white/60 font-body">Global supply chains indicate a price peak in Wardha Cluster within 18 days.</p>
               </div>
-              <div className="pt-6 border-t border-white/10 space-y-4 relative z-10">
-                <div className="flex justify-between items-center">
+              <div className="pt-6 border-t border-white/20 space-y-4 relative z-10">
+                <div className="flex justify-between items-center text-white/90">
                   <span className="text-sm font-headline">Current Market</span>
                   <span className="font-bold">₹2,450 / Quintal</span>
                 </div>
@@ -176,7 +176,7 @@ export default function DashboardPage() {
                   <span className="text-sm font-headline">Target (18d)</span>
                   <span className="font-bold">₹2,820 / Quintal</span>
                 </div>
-                <Badge className="w-full bg-krishi-gold hover:bg-krishi-gold text-black font-bold py-2 flex justify-center">
+                <Badge className="w-full bg-krishi-gold hover:bg-krishi-gold text-black font-bold py-2 flex justify-center border-none">
                   RECOMMENDATION: HOLD HARVEST
                 </Badge>
               </div>

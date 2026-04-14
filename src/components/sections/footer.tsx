@@ -28,17 +28,17 @@ export const Footer = () => {
   };
 
   return (
-    <footer className="bg-krishi-black pt-24 pb-12 border-t border-krishi-cream/10 relative z-20">
+    <footer className="bg-krishi-black pt-24 pb-12 border-t border-krishi-cream/10 relative z-20 w-full mt-auto">
       <div className="container mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
           <div className="md:col-span-2 space-y-6">
-            <Link href="/" className="text-2xl font-headline font-semibold text-krishi-cream">
+            <Link href="/" className="text-2xl font-headline font-bold text-white">
               KrishiAI<span className="text-krishi-gold">.</span>
             </Link>
-            <p className="text-krishi-cream/60 font-body max-w-sm leading-relaxed">
+            <p className="text-white/80 font-body max-w-sm leading-relaxed">
               {t.tagline}
             </p>
-            <p className="text-xs text-krishi-cream/30 uppercase tracking-[0.2em] font-headline">
+            <p className="text-xs text-white/40 uppercase tracking-[0.2em] font-headline">
               {t.copyright}
             </p>
           </div>
@@ -50,7 +50,7 @@ export const Footer = () => {
             <ul className="space-y-3">
               {t.products.map(link => (
                 <li key={link.name}>
-                  <Link href={link.href} className="text-sm text-krishi-cream/60 hover:text-krishi-gold transition-colors font-body">
+                  <Link href={link.href} className="text-sm text-white/70 hover:text-krishi-gold transition-colors font-body">
                     {link.name}
                   </Link>
                 </li>
@@ -65,7 +65,7 @@ export const Footer = () => {
             <ul className="space-y-3">
               {t.companies.map(link => (
                 <li key={link.name}>
-                  <Link href={link.href} className="text-sm text-krishi-cream/60 hover:text-krishi-gold transition-colors font-body">
+                  <Link href={link.href} className="text-sm text-white/70 hover:text-krishi-gold transition-colors font-body">
                     {link.name}
                   </Link>
                 </li>
@@ -74,8 +74,8 @@ export const Footer = () => {
           </div>
         </div>
 
-        <div className="pt-8 border-t border-krishi-cream/5 flex flex-col md:flex-row justify-between items-center gap-6">
-           <div className="flex flex-wrap justify-center gap-6 text-krishi-cream/40 text-xs font-medium uppercase tracking-widest">
+        <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-6">
+           <div className="flex flex-wrap justify-center gap-6 text-white/50 text-xs font-medium uppercase tracking-widest">
               <span>English</span>
               <span>हिन्दी</span>
               <span>मराठी</span>
@@ -83,7 +83,7 @@ export const Footer = () => {
            </div>
            <div className="flex gap-4">
               {[1, 2, 3].map(i => (
-                <div key={i} className="w-10 h-10 rounded-full border border-krishi-cream/10 flex items-center justify-center text-krishi-cream/40 hover:text-krishi-gold hover:border-krishi-gold/30 hover:bg-white/5 transition-all cursor-pointer">
+                <div key={i} className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-white/40 hover:text-krishi-gold hover:border-krishi-gold/30 hover:bg-white/5 transition-all cursor-pointer">
                    <span className="text-xs font-headline">X</span>
                 </div>
               ))}
