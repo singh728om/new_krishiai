@@ -1,3 +1,28 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "tomato",
+      "description": "Organic Cherry Tomatoes",
+      "imageUrl": "https://picsum.photos/seed/tomato-farm/600/400",
+      "imageHint": "cherry tomatoes"
+    },
+    {
+      "id": "rice",
+      "description": "Premium Basmati Rice",
+      "imageUrl": "https://picsum.photos/seed/rice-field/600/400",
+      "imageHint": "basmati rice"
+    },
+    {
+      "id": "turmeric",
+      "description": "Pure Turmeric Powder",
+      "imageUrl": "https://picsum.photos/seed/turmeric-root/600/400",
+      "imageHint": "turmeric powder"
+    },
+    {
+      "id": "wheat",
+      "description": "Sun-dried Wheat",
+      "imageUrl": "https://picsum.photos/seed/wheat-harvest/600/400",
+      "imageHint": "wheat grain"
+    }
+  ]
 }

@@ -1,67 +1,119 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Star } from "lucide-react";
+import { Star, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-const PRODUCTS = [
-  { name: "Organic Cherry Tomatoes", price: 180, rating: 4.9, cluster: "Wardha", color: "from-red-600/10 to-orange-600/10" },
-  { name: "Premium Basmati Rice", price: 245, rating: 4.8, cluster: "Nagpur", color: "from-yellow-600/10 to-krishi-gold/10" },
-  { name: "Pure Turmeric Powder", price: 320, rating: 5.0, cluster: "Vidarbha", color: "from-amber-600/10 to-krishi-gold/10" },
-  { name: "Sun-dried Wheat", price: 120, rating: 4.7, cluster: "Rajasthan", color: "from-orange-600/10 to-krishi-soil/10" },
-];
+import Image from "next/image";
+import { PlaceHolderImages } from "@/lib/placeholder-images";
+import { useSettings } from "@/context/settings-context";
 
 export const HaritStore = () => {
+  const { lang } = useSettings();
+
+  const labels = {
+    title: lang === 'en' ? 'Harit Store.' : 'हरित स्टोर।',
+    subtitle: lang === 'en' 
+      ? "Fresh from leased farms. Traceable. Organic. Delivered directly from Bharat's heartland."
+      : "लीज़ पर लिए गए खेतों से ताज़ा। ऑर्गेनिक। सीधे भारत के हृदय स्थल से पहुँचाया गया।",
+    viewAll: lang === 'en' ? 'View All Products →' : 'सभी उत्पाद देखें →',
+    buyNow: lang === 'en' ? 'Buy Now' : 'अभी खरीदें',
+    cluster: lang === 'en' ? 'Cluster' : 'क्लस्टर'
+  };
+
+  const products = [
+    { 
+      id: "tomato",
+      name: lang === 'en' ? "Organic Cherry Tomatoes" : "ऑर्गेनिक चेरी टमाटर", 
+      price: 180, 
+      rating: 4.9, 
+      cluster: "Wardha"
+    },
+    { 
+      id: "rice",
+      name: lang === 'en' ? "Premium Basmati Rice" : "प्रीमियम बासमती चावल", 
+      price: 245, 
+      rating: 4.8, 
+      cluster: "Nagpur" 
+    },
+    { 
+      id: "turmeric",
+      name: lang === 'en' ? "Pure Turmeric Powder" : "शुद्ध हल्दी पाउडर", 
+      price: 320, 
+      rating: 5.0, 
+      cluster: "Vidarbha" 
+    },
+    { 
+      id: "wheat",
+      name: lang === 'en' ? "Sun-dried Wheat" : "धूप में सुखाया गया गेहूं", 
+      price: 120, 
+      rating: 4.7, 
+      cluster: "Rajasthan" 
+    },
+  ];
+
   return (
-    <section id="store" className="py-24 bg-background">
+    <section id="store" className="py-24 bg-background overflow-hidden">
       <div className="container mx-auto px-6">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-8">
            <div className="max-w-xl space-y-4">
-              <h2 className="text-4xl md:text-5xl font-display text-foreground">Harit Store.</h2>
-              <p className="text-xl text-foreground/60 font-body">Fresh from leased farms. Traceable. Organic. Delivered directly from Bharat's heartland.</p>
+              <h2 className="text-4xl md:text-6xl font-display text-foreground">{labels.title}</h2>
+              <p className="text-xl text-foreground/60 font-body">{labels.subtitle}</p>
            </div>
-           <Button variant="link" className="text-krishi-gold font-headline font-bold text-lg p-0 hover:no-underline hover:text-krishi-gold/80">
-              View All Products →
+           <Button variant="link" className="text-primary font-headline font-bold text-lg p-0 hover:no-underline hover:text-primary/80">
+              {labels.viewAll}
            </Button>
         </div>
 
-        <div className="flex gap-6 overflow-x-auto pb-8 scrollbar-hide">
-          {PRODUCTS.map((product, i) => (
-            <motion.div
-              key={i}
-              whileHover={{ y: -8 }}
-              className="min-w-[300px] flex-1 group bg-card rounded-3xl border border-border overflow-hidden transition-all hover:border-krishi-gold/30 shadow-sm"
-            >
-               <div className={`h-48 bg-gradient-to-br ${product.color} relative overflow-hidden`}>
-                  <div className="absolute top-4 left-4 bg-background/80 backdrop-blur-md border border-border px-3 py-1 rounded-full text-[10px] font-headline font-bold text-krishi-gold uppercase tracking-widest">
-                     {product.cluster} Cluster
-                  </div>
-                  {/* Abstract SVG patterns instead of images */}
-                  <svg className="absolute bottom-0 right-0 w-2/3 h-2/3 opacity-20 text-foreground" viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="40" stroke="currentColor" fill="none" strokeWidth="0.5" />
-                    <circle cx="50" cy="50" r="30" stroke="currentColor" fill="none" strokeWidth="0.5" />
-                    <path d="M50 10V90M10 50H90" stroke="currentColor" strokeWidth="0.5" />
-                  </svg>
-               </div>
-               
-               <div className="p-6 space-y-4">
-                  <div className="flex justify-between items-start">
-                    <h3 className="font-headline font-bold text-lg leading-tight group-hover:text-krishi-gold transition-colors">{product.name}</h3>
-                    <div className="flex items-center gap-1 text-krishi-gold">
-                      <Star size={14} fill="currentColor" />
-                      <span className="text-xs font-bold">{product.rating}</span>
+        <div className="flex gap-8 overflow-x-auto pb-12 snap-x scrollbar-hide">
+          {products.map((product) => {
+            const imageData = PlaceHolderImages.find(img => img.id === product.id);
+            return (
+              <motion.div
+                key={product.id}
+                whileHover={{ y: -10 }}
+                className="min-w-[320px] snap-center group bg-card rounded-[2rem] border border-border overflow-hidden transition-all hover:border-primary/40 shadow-sm hover:shadow-xl"
+              >
+                 <div className="h-64 relative overflow-hidden bg-muted">
+                    {imageData && (
+                      <Image
+                        src={imageData.imageUrl}
+                        alt={product.name}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-700"
+                        data-ai-hint={imageData.imageHint}
+                      />
+                    )}
+                    <div className="absolute top-4 left-4 bg-background/90 backdrop-blur-md border border-border px-4 py-1.5 rounded-full text-[10px] font-headline font-bold text-primary uppercase tracking-widest shadow-sm">
+                       {product.cluster} {labels.cluster}
                     </div>
-                  </div>
-                  
-                  <div className="flex items-center justify-between pt-2">
-                    <span className="text-2xl font-display text-foreground">₹{product.price}</span>
-                    <Button className="bg-krishi-lime hover:bg-krishi-lime/90 text-white rounded-full px-6 font-bold shadow-md shadow-krishi-lime/20">
-                       Buy Now
-                    </Button>
-                  </div>
-               </div>
-            </motion.div>
-          ))}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
+                 </div>
+                 
+                 <div className="p-8 space-y-6">
+                    <div className="flex justify-between items-start">
+                      <h3 className="font-headline font-bold text-xl leading-tight text-foreground group-hover:text-primary transition-colors">
+                        {product.name}
+                      </h3>
+                      <div className="flex items-center gap-1.5 text-krishi-gold bg-krishi-gold/5 px-2 py-1 rounded-lg">
+                        <Star size={16} fill="currentColor" />
+                        <span className="text-sm font-bold">{product.rating}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="flex flex-col">
+                        <span className="text-xs text-foreground/40 font-medium">Price</span>
+                        <span className="text-3xl font-display text-foreground">₹{product.price}</span>
+                      </div>
+                      <Button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-8 py-6 h-auto font-bold shadow-lg shadow-primary/20 flex gap-2">
+                         <ShoppingCart size={18} />
+                         {labels.buyNow}
+                      </Button>
+                    </div>
+                 </div>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </section>
