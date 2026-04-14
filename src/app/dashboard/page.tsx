@@ -14,18 +14,16 @@ import {
   History, 
   Leaf,
   Settings,
-  Bell,
-  CheckCircle2,
-  XCircle,
   Activity,
   Cpu,
   Database,
   ShieldCheck,
-  Search,
   Users,
   IndianRupee,
-  Info,
-  Beaker
+  Beaker,
+  CheckCircle2,
+  XCircle,
+  AlertTriangle
 } from "lucide-react";
 import { Navbar } from "@/components/sections/navbar";
 import { Footer } from "@/components/sections/footer";
@@ -80,7 +78,7 @@ interface GridItem {
   produced: string;
   nutrients: { n: number; p: number; k: number };
   moisture: number;
-  isAnomalous: boolean;
+  statusColor: "healthy" | "warning" | "critical";
   ownerName: string;
   crop: string;
   revenue: number;
@@ -89,22 +87,41 @@ interface GridItem {
 }
 
 const generateGridData = (): GridItem[] => {
-  return Array.from({ length: 50 }, (_, i) => ({
-    id: i,
-    produced: (Math.random() * 5 + 1).toFixed(1) + " Tons",
-    nutrients: {
-      n: Math.floor(Math.random() * 50) + 20,
-      p: Math.floor(Math.random() * 30) + 10,
-      k: Math.floor(Math.random() * 40) + 15,
-    },
-    moisture: Math.floor(Math.random() * 30) + 40,
-    isAnomalous: Math.random() > 0.92,
-    ownerName: owners[Math.floor(Math.random() * owners.length)],
-    crop: crops[Math.floor(Math.random() * crops.length)],
-    revenue: Math.floor(Math.random() * 45000) + 15000,
-    status: "Reviewed & Active",
-    pincode: "22100" + (i % 10),
-  }));
+  return Array.from({ length: 50 }, (_, i) => {
+    // Generate randomized but realistic values
+    const moisture = Math.floor(Math.random() * 60) + 5; // 5% to 65%
+    const nutrients = {
+      n: Math.floor(Math.random() * 60) + 5,
+      p: Math.floor(Math.random() * 40) + 5,
+      k: Math.floor(Math.random() * 50) + 5,
+    };
+
+    // Logical Status Determination
+    // Healthy: Balanced nutrients and moisture
+    // Warning: Low moisture OR one nutrient dropping
+    // Critical: Very low moisture OR multiple nutrients low
+    let statusColor: "healthy" | "warning" | "critical" = "healthy";
+    const avgN = (nutrients.n + nutrients.p + nutrients.k) / 3;
+
+    if (moisture < 15 || avgN < 18) {
+      statusColor = "critical";
+    } else if (moisture < 30 || avgN < 30) {
+      statusColor = "warning";
+    }
+
+    return {
+      id: i,
+      produced: (Math.random() * 5 + 1).toFixed(1) + " Tons",
+      nutrients,
+      moisture,
+      statusColor,
+      ownerName: owners[Math.floor(Math.random() * owners.length)],
+      crop: crops[Math.floor(Math.random() * crops.length)],
+      revenue: Math.floor(Math.random() * 45000) + 15000,
+      status: statusColor === "healthy" ? "Optimal Health" : statusColor === "warning" ? "Needs Attention" : "Action Required",
+      pincode: "22100" + (i % 10),
+    };
+  });
 };
 
 export default function DashboardPage() {
@@ -132,7 +149,7 @@ export default function DashboardPage() {
   const t = {
     title: lang === 'en' ? "Dashboard" : "डैशबोर्ड",
     subtitle: lang === 'en' ? "Staff Intelligence Dashboard - Uttar Pradesh Clusters" : "स्टाफ इंटेलिजेंस डैशबोर्ड - उत्तर प्रदेश क्लस्टर",
-    heatmapTitle: lang === 'en' ? "Field Heatmap" : "फील्ड हीटमैप",
+    heatmapTitle: lang === 'en' ? "Field Monitor Heatmap" : "फील्ड मॉनिटर हीटमैप",
     iotTitle: lang === 'en' ? "IOT Sensor Network" : "आईओटी सेंसर नेटवर्क",
     approvalTitle: lang === 'en' ? "Lease Approval Queue" : "लीज अनुमोदन कतार",
     details: {
@@ -235,16 +252,20 @@ export default function DashboardPage() {
                     <div className="flex justify-between items-center">
                       <div>
                         <CardTitle className="text-2xl font-headline font-bold">{t.heatmapTitle}</CardTitle>
-                        <CardDescription>Varanasi Cluster #09 • Sector Level Monitoring</CardDescription>
+                        <CardDescription>Visual Diagnostic • Grid-based Sensor Intelligence</CardDescription>
                       </div>
-                      <div className="flex gap-2 text-[10px] font-bold text-foreground/40">
+                      <div className="flex gap-4 text-[10px] font-bold">
                         <div className="flex items-center gap-1.5">
-                            <div className="w-2 h-2 rounded-full bg-krishi-lime" />
-                            <span>STABLE</span>
+                            <div className="w-3 h-3 rounded-full bg-krishi-lime" />
+                            <span className="text-krishi-lime">HEALTHY</span>
                         </div>
                         <div className="flex items-center gap-1.5">
-                            <div className="w-2 h-2 rounded-full bg-krishi-amber" />
-                            <span>ANOMALY</span>
+                            <div className="w-3 h-3 rounded-full bg-krishi-amber" />
+                            <span className="text-krishi-amber">WARNING</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                            <div className="w-3 h-3 rounded-full bg-red-500" />
+                            <span className="text-red-500">CRITICAL</span>
                         </div>
                       </div>
                     </div>
@@ -257,17 +278,18 @@ export default function DashboardPage() {
                           whileHover={{ scale: 1.1, zIndex: 10 }}
                           onClick={() => setSelectedSector(grid)}
                           className={`aspect-square rounded-lg flex items-center justify-center cursor-pointer transition-all border border-black/5 hover:shadow-lg ${
-                            grid.isAnomalous 
-                            ? "bg-krishi-amber" 
-                            : "bg-krishi-lime"
+                            grid.statusColor === "healthy" ? "bg-krishi-lime" :
+                            grid.statusColor === "warning" ? "bg-krishi-amber" :
+                            "bg-red-500"
                           }`}
                         >
-                          {grid.isAnomalous && <Activity size={12} className="text-white animate-pulse" />}
+                          {grid.statusColor === "critical" && <AlertTriangle size={12} className="text-white animate-pulse" />}
+                          {grid.statusColor === "warning" && <Activity size={12} className="text-white/80" />}
                         </motion.div>
                       ))}
                     </div>
                     <p className="mt-4 text-[10px] text-foreground/30 font-code text-center uppercase tracking-widest">
-                      Click any sector grid for detailed ownership and economic intelligence
+                      Color codes derived from real-time N-P-K and moisture sensor payloads
                     </p>
                   </CardContent>
                 </Card>
@@ -381,13 +403,19 @@ export default function DashboardPage() {
           <DialogContent className="rounded-[2.5rem] p-8 max-w-md border-primary/20 bg-card/95 backdrop-blur-xl">
             <DialogHeader className="space-y-4">
               <div className="flex justify-between items-start">
-                <Badge className="bg-primary text-white">
-                  Sector #{selectedSector?.id} Analysis
+                <Badge className={`${
+                  selectedSector?.statusColor === 'healthy' ? 'bg-krishi-lime' :
+                  selectedSector?.statusColor === 'warning' ? 'bg-krishi-amber' : 'bg-red-500'
+                } text-white`}>
+                  Sector #{selectedSector?.id} Intelligence
                 </Badge>
                 <div className="text-[10px] font-code text-foreground/40">PIN: {selectedSector?.pincode}</div>
               </div>
               <DialogTitle className="text-3xl font-display">{selectedSector?.crop}</DialogTitle>
-              <DialogDescription className="font-code text-primary font-bold">
+              <DialogDescription className={`font-code font-bold uppercase ${
+                selectedSector?.statusColor === 'healthy' ? 'text-krishi-lime' :
+                selectedSector?.statusColor === 'warning' ? 'text-krishi-amber' : 'text-red-500'
+              }`}>
                 {selectedSector?.status}
               </DialogDescription>
             </DialogHeader>
@@ -428,29 +456,40 @@ export default function DashboardPage() {
                 <div className="grid grid-cols-3 gap-4 text-center">
                   <div className="space-y-1">
                     <p className="text-[10px] font-bold text-foreground/40">NITROGEN (N)</p>
-                    <p className="font-code font-bold text-primary">{selectedSector?.nutrients.n} mg/kg</p>
+                    <p className={`font-code font-bold ${selectedSector?.nutrients.n && selectedSector.nutrients.n < 20 ? 'text-red-500' : 'text-primary'}`}>
+                      {selectedSector?.nutrients.n} mg/kg
+                    </p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-[10px] font-bold text-foreground/40">PHOSPHORUS (P)</p>
-                    <p className="font-code font-bold text-primary">{selectedSector?.nutrients.p} mg/kg</p>
+                    <p className={`font-code font-bold ${selectedSector?.nutrients.p && selectedSector.nutrients.p < 15 ? 'text-red-500' : 'text-primary'}`}>
+                      {selectedSector?.nutrients.p} mg/kg
+                    </p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-[10px] font-bold text-foreground/40">POTASSIUM (K)</p>
-                    <p className="font-code font-bold text-primary">{selectedSector?.nutrients.k} mg/kg</p>
+                    <p className={`font-code font-bold ${selectedSector?.nutrients.k && selectedSector.nutrients.k < 20 ? 'text-red-500' : 'text-primary'}`}>
+                      {selectedSector?.nutrients.k} mg/kg
+                    </p>
                   </div>
                 </div>
               </div>
 
               <div className="pt-4 border-t border-border">
                 <div className="flex justify-between text-xs mb-2">
-                   <span className="text-foreground/40">MOISTURE_CONTENT</span>
-                   <span className="font-bold">{selectedSector?.moisture}%</span>
+                   <span className="text-foreground/40 uppercase font-bold tracking-tighter">MOISTURE_CONTENT (WATER_LEVEL)</span>
+                   <span className={`font-bold ${selectedSector?.moisture && selectedSector.moisture < 20 ? 'text-red-500' : 'text-foreground'}`}>
+                    {selectedSector?.moisture}%
+                   </span>
                 </div>
                 <div className="w-full bg-muted h-1 rounded-full overflow-hidden">
                    <motion.div 
                     initial={{ width: 0 }}
                     animate={{ width: `${selectedSector?.moisture}%` }}
-                    className="bg-blue-500 h-full" 
+                    className={`h-full ${
+                      selectedSector?.moisture && selectedSector.moisture < 20 ? 'bg-red-500' :
+                      selectedSector?.moisture && selectedSector.moisture < 35 ? 'bg-krishi-amber' : 'bg-krishi-lime'
+                    }`} 
                    />
                 </div>
               </div>
@@ -467,3 +506,4 @@ export default function DashboardPage() {
     </SidebarProvider>
   );
 }
+
