@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -31,6 +30,9 @@ export const Navbar = () => {
 
   const t = {
     features: lang === 'en' ? 'Features' : 'विशेषताएं',
+    services: lang === 'en' ? 'Services' : 'सेवाएं',
+    about: lang === 'en' ? 'About' : 'बारे में',
+    contact: lang === 'en' ? 'Contact' : 'संपर्क',
     store: lang === 'en' ? 'Harit Store' : 'हरित स्टोर',
     lease: lang === 'en' ? 'Land Lease' : 'जमीन पट्टा',
     login: lang === 'en' ? 'Login' : 'लॉगिन',
@@ -38,9 +40,11 @@ export const Navbar = () => {
   };
 
   const navLinks = [
-    { name: t.features, href: "/#features" },
-    { name: t.store, href: "/#store" },
-    { name: t.lease, href: "/#lease" },
+    { name: t.about, href: "/about" },
+    { name: t.services, href: "/services" },
+    { name: t.store, href: "/products" },
+    { name: t.lease, href: "/lease-registration" },
+    { name: t.contact, href: "/contact" },
   ];
 
   return (
@@ -58,7 +62,7 @@ export const Navbar = () => {
         </Link>
 
         {/* Desktop Nav */}
-        <div className="hidden lg:flex items-center gap-8">
+        <div className="hidden lg:flex items-center gap-6">
           {navLinks.map((link) => (
             <Link
               key={link.name}
