@@ -7,10 +7,16 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { useSettings } from "@/context/settings-context";
+import { useCart } from "@/context/cart-context";
+import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export const HaritStore = () => {
   const { lang } = useSettings();
+  const { addToCart } = useCart();
+  const { toast } = useToast();
+  const router = useRouter();
 
   const labels = {
     title: lang === 'en' ? 'Harit Store.' : 'हरित स्टोर।',
@@ -52,6 +58,24 @@ export const HaritStore = () => {
       cluster: "Vidarbha" 
     },
   ];
+
+  const handleBuyNow = (product: any) => {
+    const imageData = PlaceHolderImages.find(img => img.id === product.id) || PlaceHolderImages[0];
+    addToCart({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      quantity: 1,
+      imageUrl: imageData.imageUrl
+    });
+    
+    toast({
+      title: lang === 'en' ? "Added to Cart" : "कार्ट में जोड़ा गया",
+      description: lang === 'en' ? "Redirecting to checkout..." : "चेकआउट पर पुनर्निर्देशित किया जा रहा है...",
+    });
+
+    router.push("/checkout");
+  };
 
   return (
     <section id="store" className="py-24 bg-background overflow-hidden">
@@ -107,7 +131,10 @@ export const HaritStore = () => {
                         <span className="text-xs text-foreground/40 font-medium">Price</span>
                         <span className="text-3xl font-display text-foreground">₹{product.price}</span>
                       </div>
-                      <Button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-8 py-6 h-auto font-bold shadow-lg shadow-primary/20 flex gap-2">
+                      <Button 
+                        onClick={() => handleBuyNow(product)}
+                        className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-8 py-6 h-auto font-bold shadow-lg shadow-primary/20 flex gap-2"
+                      >
                          <ShoppingCart size={18} />
                          {labels.buyNow}
                       </Button>
