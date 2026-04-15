@@ -2,23 +2,87 @@
 
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, CloudSun, Sprout, Wind } from "lucide-react";
+import { ArrowRight, CloudRain, Sprout, Wind, Cloud } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useSettings } from "@/context/settings-context";
 import Link from "next/link";
 
-const VillageHorizon = () => (
-  <div className="absolute bottom-0 left-0 w-full h-32 opacity-10 pointer-events-none overflow-hidden">
+const AgricultureScene = () => (
+  <div className="absolute bottom-0 left-0 w-full h-48 opacity-15 pointer-events-none overflow-hidden z-0">
     <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full h-full fill-primary">
+      {/* Rolling Hills */}
       <path d="M0,120 L1200,120 L1200,80 C1100,60 1000,100 900,80 C800,60 700,90 600,70 C500,50 400,100 300,80 C200,60 100,90 0,70 Z" />
-      <rect x="50" y="40" width="20" height="30" />
-      <rect x="80" y="50" width="15" height="20" />
-      <circle cx="150" cy="30" r="10" />
-      <path d="M400,20 L420,60 L380,60 Z" />
-      <path d="M450,30 L470,70 L430,70 Z" />
-      <rect x="800" y="40" width="25" height="40" />
-      <circle cx="950" cy="20" r="15" />
+      
+      {/* Farm House */}
+      <rect x="50" y="40" width="30" height="30" className="fill-krishi-soil" />
+      <path d="M45,40 L65,15 L85,40 Z" className="fill-krishi-amber" />
+      
+      {/* Crops Rows */}
+      <g className="fill-krishi-lime">
+        {Array.from({ length: 15 }).map((_, i) => (
+          <circle key={i} cx={200 + i * 20} cy={95} r="3" />
+        ))}
+        {Array.from({ length: 12 }).map((_, i) => (
+          <circle key={i} cx={210 + i * 20} cy={105} r="3" />
+        ))}
+      </g>
+
+      {/* Cows */}
+      <g className="fill-krishi-soil">
+        <motion.path 
+          animate={{ x: [0, 10, 0] }}
+          transition={{ duration: 10, repeat: Infinity }}
+          d="M850,70 h15 v8 h-15 Z M862,70 v-5 h3 v5 Z" 
+        />
+        <motion.path 
+          animate={{ x: [0, -8, 0] }}
+          transition={{ duration: 12, repeat: Infinity }}
+          d="M920,75 h15 v8 h-15 Z M932,75 v-5 h3 v5 Z" 
+        />
+      </g>
+
+      {/* Farmer */}
+      <circle cx="450" cy="65" r="4" className="fill-krishi-soil" />
+      <rect x="448" y="69" width="4" height="8" className="fill-krishi-soil" />
+
+      {/* Tractor - Moving Animation */}
+      <motion.g
+        initial={{ x: -100 }}
+        animate={{ x: 1300 }}
+        transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
+      >
+        <rect x="0" y="80" width="20" height="12" rx="2" className="fill-krishi-amber" />
+        <rect x="12" y="70" width="10" height="10" rx="1" className="fill-krishi-soil" />
+        <circle cx="4" cy="92" r="4" className="fill-black" />
+        <circle cx="16" cy="92" r="4" className="fill-black" />
+      </motion.g>
     </svg>
+  </div>
+);
+
+const SkyElements = () => (
+  <div className="absolute top-20 right-10 w-64 h-64 pointer-events-none z-0 hidden md:block">
+    <motion.div
+      animate={{ y: [0, -10, 0], x: [0, 5, 0] }}
+      transition={{ duration: 5, repeat: Infinity }}
+      className="absolute top-0 right-0 text-primary/10"
+    >
+      <Cloud size={80} />
+    </motion.div>
+    <motion.div
+      animate={{ y: [0, -15, 0], x: [0, -10, 0] }}
+      transition={{ duration: 7, repeat: Infinity, delay: 1 }}
+      className="absolute top-10 right-20 text-primary/5"
+    >
+      <Cloud size={120} />
+    </motion.div>
+    <motion.div
+      animate={{ opacity: [0, 1, 0] }}
+      transition={{ duration: 2, repeat: Infinity }}
+      className="absolute top-32 right-12 text-primary/20"
+    >
+      <CloudRain size={40} />
+    </motion.div>
   </div>
 );
 
@@ -110,7 +174,8 @@ export const Hero = () => {
 
   return (
     <section className="relative min-h-[90vh] flex items-center overflow-hidden pt-20 grain bg-background">
-      <VillageHorizon />
+      <AgricultureScene />
+      <SkyElements />
       
       <div className="container mx-auto px-6 grid lg:grid-cols-12 gap-12 items-center relative z-10">
         
@@ -176,7 +241,7 @@ export const Hero = () => {
               <Sprout size={18} className="animate-bounce" /> {content.stat1}
             </div>
             <div className="flex items-center gap-2 text-xs font-headline font-bold uppercase tracking-widest text-primary">
-              <CloudSun size={18} /> {content.stat2}
+              <CloudRain size={18} /> {content.stat2}
             </div>
             <div className="flex items-center gap-2 text-xs font-headline font-bold uppercase tracking-widest text-primary">
               <Wind size={18} /> {content.stat3}
