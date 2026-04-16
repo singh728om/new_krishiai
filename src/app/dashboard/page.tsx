@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -32,7 +31,6 @@ import {
   CloudRain,
   CloudSun,
   Wind,
-  Thermometer,
   Cloud
 } from "lucide-react";
 import { Navbar } from "@/components/sections/navbar";
@@ -127,6 +125,7 @@ export default function DashboardPage() {
 
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [isWeatherLoading, setIsWeatherLoading] = useState(false);
+  const [gridData, setGridData] = useState<GridItem[]>([]);
 
   const WEATHER_API_KEY = "bbd6d9e679a4ff28be7bb2e21988b866";
 
@@ -146,7 +145,8 @@ export default function DashboardPage() {
     return registrations?.filter(r => r.status === 'reviewed') || [];
   }, [registrations]);
 
-  const gridData: GridItem[] = useMemo(() => {
+  // Generate grid data on the client only to avoid hydration mismatch
+  useEffect(() => {
     const data = Array.from({ length: 50 }, (_, i) => {
       const lease = activeLeases[i];
       const isLeased = !!lease;
@@ -199,12 +199,12 @@ export default function DashboardPage() {
     });
 
     // DEMO LEASE FALLBACK: Always keep sector #0 leased for demo
-    if (!activeLeases.length) {
+    if (data.length > 0) {
       data[0] = {
         ...data[0],
         isLeased: true,
         fieldId: "FLD-2000 (DEMO)",
-        leaseData: { aadharName: "Ramesh Patel", district: "Varanasi", village: "Kashi" },
+        leaseData: data[0].leaseData || { aadharName: "Ramesh Patel", district: "Varanasi", village: "Kashi" },
         crop: "Organic Wheat",
         produced: 8.5,
         rate: 22000,
@@ -215,7 +215,7 @@ export default function DashboardPage() {
       };
     }
 
-    return data;
+    setGridData(data);
   }, [activeLeases]);
 
   const fetchWeather = async (city: string) => {
@@ -287,7 +287,7 @@ export default function DashboardPage() {
     details: {
       owner: lang === 'en' ? "Land Owner" : "ज़मीन मालिक",
       crop: lang === 'en' ? "Cultivated Crop" : "वर्तमान फसल",
-      produced: lang === 'en' ? "Yield (Tons)" : "उत्पादित पैदावार",
+      produced: lang === 'en' ? "Yield (Tons)" : "उपयोग (टन)",
       rate: lang === 'en' ? "Market Rate (₹/Ton)" : "बाजार दर (₹/टन)",
       nutrients: lang === 'en' ? "Soil Nutrients (N-P-K)" : "मिट्टी के पोषक तत्व",
       payout: lang === 'en' ? "Monthly Payout" : "मासिक भुगतान",
@@ -397,24 +397,6 @@ export default function DashboardPage() {
                             <CardTitle className="text-2xl font-headline font-bold">{t.heatmapTitle}</CardTitle>
                             <CardDescription>Live Field Monitoring Heatmap</CardDescription>
                           </div>
-                          <div className="flex gap-4 text-[10px] font-bold">
-                            <div className="flex items-center gap-1.5">
-                                <div className="w-3 h-3 rounded-full bg-krishi-lime" />
-                                <span className="text-krishi-lime">HEALTHY</span>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                                <div className="w-3 h-3 rounded-full bg-krishi-amber" />
-                                <span className="text-krishi-amber">WARNING</span>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                                <div className="w-3 h-3 rounded-full bg-red-500" />
-                                <span className="text-red-500">CRITICAL</span>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                                <div className="w-3 h-3 rounded-full bg-muted" />
-                                <span className="text-foreground/20">UNLEASED</span>
-                            </div>
-                        </div>
                         </div>
                       </CardHeader>
                       <CardContent className="p-8">
@@ -632,16 +614,6 @@ export default function DashboardPage() {
                               </TableCell>
                             </TableRow>
                           ))}
-                          {pendingRegistrations.length === 0 && (
-                            <TableRow>
-                              <TableCell colSpan={5} className="text-center py-24">
-                                <div className="space-y-4 opacity-30">
-                                   <History size={48} className="mx-auto" />
-                                   <p className="font-medium italic">No pending land lease applications in queue.</p>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          )}
                         </TableBody>
                       </Table>
                     </Card>

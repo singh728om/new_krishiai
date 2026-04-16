@@ -37,7 +37,6 @@ export default function LoginPage() {
     loginWithGoogle, 
     loginWithEmail, 
     signUpWithEmail, 
-    resetPassword 
   } = useUser();
   const { lang } = useSettings();
   const { toast } = useToast();
@@ -55,16 +54,18 @@ export default function LoginPage() {
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
 
   useEffect(() => {
-    if (user && !isPending) {
+    if (user && !isPending && firestore) {
       handleRedirect(user.uid);
     }
-  }, [user, isPending]);
+  }, [user, isPending, firestore]);
 
   const handleRedirect = async (uid: string) => {
     if (redirect) {
       router.push(redirect);
       return;
     }
+
+    if (!firestore) return;
 
     try {
       const staffRef = doc(firestore, 'user_roles_staff', uid);
@@ -123,8 +124,6 @@ export default function LoginPage() {
 
   const handleDemoLogin = async (demoRole: 'staff' | 'landowner' | 'buyer') => {
     setIsPending(true);
-    // Note: In a real app, these accounts should exist in Firebase Auth.
-    // For "Demo Login" testing, we use standard placeholder credentials.
     const demoEmail = `${demoRole}@krishiai.com`;
     const demoPass = "password123";
 
@@ -132,7 +131,6 @@ export default function LoginPage() {
       await loginWithEmail(demoEmail, demoPass);
       toast({ title: `Logged in as Demo ${demoRole.toUpperCase()}` });
     } catch (error: any) {
-      // If the account doesn't exist, we'll try to sign up as a demo user
       try {
         await signUpWithEmail(demoEmail, demoPass, `Demo ${demoRole}`, demoRole);
         toast({ title: `Demo ${demoRole.toUpperCase()} account created and logged in.` });
@@ -159,9 +157,6 @@ export default function LoginPage() {
     name: lang === 'en' ? "Full Name" : "पूरा नाम",
     role: lang === 'en' ? "I am a..." : "मैं एक हूँ...",
     forgot: lang === 'en' ? "Forgot Password?" : "पासवर्ड भूल गए?",
-    resetTitle: lang === 'en' ? "Reset Password" : "पासवर्ड बदलें",
-    resetDesc: lang === 'en' ? "Enter your email to receive a reset link." : "रीसेट लिंक प्राप्त करने के लिए अपना ईमेल दर्ज करें।",
-    send: lang === 'en' ? "Send Link" : "लिंक भेजें",
     roles: {
       buyer: lang === 'en' ? "Buyer (Customer)" : "खरीददार (ग्राहक)",
       landowner: lang === 'en' ? "Land Owner (Leasing)" : "ज़मीन मालिक",
@@ -180,7 +175,7 @@ export default function LoginPage() {
             className="p-8 md:p-12 bg-card rounded-[3rem] border border-border shadow-2xl space-y-8"
           >
             <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto text-primary text-2xl">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto text-2xl">
                 🌱
               </div>
               <div className="space-y-2">
@@ -220,30 +215,6 @@ export default function LoginPage() {
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
                       <Label htmlFor="password">{t.password}</Label>
-                      <Dialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
-                        <DialogTrigger asChild>
-                          <button type="button" className="text-xs text-primary hover:underline">
-                            {t.forgot}
-                          </button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>{t.resetTitle}</DialogTitle>
-                            <DialogDescription>{t.resetDesc}</DialogDescription>
-                          </DialogHeader>
-                          <Input 
-                            placeholder="email@example.com" 
-                            value={resetEmail}
-                            onChange={(e) => setResetEmail(e.target.value)}
-                            className="rounded-xl h-12"
-                          />
-                          <DialogFooter>
-                            <Button onClick={handleResetPassword} className="w-full">
-                              {t.send}
-                            </Button>
-                          </DialogFooter>
-                        </DialogContent>
-                      </Dialog>
                     </div>
                     <Input 
                       id="password" 
@@ -343,7 +314,6 @@ export default function LoginPage() {
             </Button>
           </motion.div>
 
-          {/* Quick Demo Access Section */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
