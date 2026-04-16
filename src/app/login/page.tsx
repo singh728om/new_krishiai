@@ -12,7 +12,7 @@ import { Navbar } from "@/components/sections/navbar";
 import { Footer } from "@/components/sections/footer";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, ShieldAlert, User, MapPin, ShoppingBag } from "lucide-react";
 import { 
   Dialog, 
   DialogContent, 
@@ -67,7 +67,6 @@ export default function LoginPage() {
     }
 
     try {
-      // Check roles in order of priority: Staff -> LandOwner -> Buyer
       const staffRef = doc(firestore, 'user_roles_staff', uid);
       const landownerRef = doc(firestore, 'user_roles_landowner', uid);
       
@@ -122,21 +121,30 @@ export default function LoginPage() {
     }
   };
 
-  const handleResetPassword = async () => {
-    if (!resetEmail) return;
+  const handleDemoLogin = async (demoRole: 'staff' | 'landowner' | 'buyer') => {
+    setIsPending(true);
+    // Note: In a real app, these accounts should exist in Firebase Auth.
+    // For "Demo Login" testing, we use standard placeholder credentials.
+    const demoEmail = `${demoRole}@krishiai.com`;
+    const demoPass = "password123";
+
     try {
-      await resetPassword(resetEmail);
-      toast({ 
-        title: lang === 'en' ? "Email sent!" : "ईमेल भेजा गया!", 
-        description: lang === 'en' ? "Check your inbox for instructions." : "निर्देशों के लिए अपना इनबॉक्स देखें।" 
-      });
-      setIsResetDialogOpen(false);
+      await loginWithEmail(demoEmail, demoPass);
+      toast({ title: `Logged in as Demo ${demoRole.toUpperCase()}` });
     } catch (error: any) {
-      toast({ 
-        variant: "destructive", 
-        title: lang === 'en' ? "Error" : "त्रुटि",
-        description: error.message 
-      });
+      // If the account doesn't exist, we'll try to sign up as a demo user
+      try {
+        await signUpWithEmail(demoEmail, demoPass, `Demo ${demoRole}`, demoRole);
+        toast({ title: `Demo ${demoRole.toUpperCase()} account created and logged in.` });
+      } catch (signupError: any) {
+        toast({ 
+          variant: "destructive", 
+          title: "Demo access failed",
+          description: "Please create an account manually or try again." 
+        });
+      }
+    } finally {
+      setIsPending(false);
     }
   };
 
@@ -165,174 +173,218 @@ export default function LoginPage() {
     <main className="min-h-screen bg-background flex flex-col">
       <Navbar />
       <section className="flex-1 flex items-center justify-center p-6 pt-32 pb-24">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="max-w-md w-full p-8 md:p-12 bg-card rounded-[3rem] border border-border shadow-2xl space-y-8"
-        >
-          <div className="text-center space-y-4">
-            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto text-primary text-2xl">
-              🌱
-            </div>
-            <div className="space-y-2">
-              <h1 className="text-3xl font-display">
-                {t.welcome} <span className="text-primary">KrishiAI</span>
-              </h1>
-              <p className="text-sm text-foreground/60">
-                {t.join}
-              </p>
-            </div>
-          </div>
-
-          <Tabs defaultValue="login" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 rounded-full mb-8 bg-muted/50 p-1">
-              <TabsTrigger value="login" className="rounded-full data-[state=active]:bg-primary data-[state=active]:text-white">
-                {t.login}
-              </TabsTrigger>
-              <TabsTrigger value="signup" className="rounded-full data-[state=active]:bg-primary data-[state=active]:text-white">
-                {t.create}
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="login">
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">{t.email}</Label>
-                  <Input 
-                    id="email" 
-                    type="email"
-                    placeholder="email@example.com" 
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required 
-                    className="rounded-xl h-12"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <Label htmlFor="password">{t.password}</Label>
-                    <Dialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
-                      <DialogTrigger asChild>
-                        <button type="button" className="text-xs text-primary hover:underline">
-                          {t.forgot}
-                        </button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>{t.resetTitle}</DialogTitle>
-                          <DialogDescription>{t.resetDesc}</DialogDescription>
-                        </DialogHeader>
-                        <Input 
-                          placeholder="email@example.com" 
-                          value={resetEmail}
-                          onChange={(e) => setResetEmail(e.target.value)}
-                          className="rounded-xl h-12"
-                        />
-                        <DialogFooter>
-                          <Button onClick={handleResetPassword} className="w-full">
-                            {t.send}
-                          </Button>
-                        </DialogFooter>
-                      </DialogContent>
-                    </Dialog>
-                  </div>
-                  <Input 
-                    id="password" 
-                    type="password" 
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required 
-                    className="rounded-xl h-12"
-                  />
-                </div>
-                <Button 
-                  disabled={isPending}
-                  className="w-full h-14 rounded-full font-bold"
-                >
-                  {isPending ? <Loader2 className="animate-spin" /> : t.login}
-                </Button>
-              </form>
-            </TabsContent>
-
-            <TabsContent value="signup">
-              <form onSubmit={handleSignUp} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="signup-name">{t.name}</Label>
-                  <Input 
-                    id="signup-name" 
-                    placeholder="Full Name" 
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required 
-                    className="rounded-xl h-12"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-email">{t.email}</Label>
-                  <Input 
-                    id="signup-email" 
-                    type="email"
-                    placeholder="email@example.com" 
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required 
-                    className="rounded-xl h-12"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-password">{t.password}</Label>
-                  <Input 
-                    id="signup-password" 
-                    type="password" 
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required 
-                    className="rounded-xl h-12"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>{t.role}</Label>
-                  <Select value={role} onValueChange={setRole}>
-                    <SelectTrigger className="rounded-xl h-12">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="buyer">{t.roles.buyer}</SelectItem>
-                      <SelectItem value="landowner">{t.roles.landowner}</SelectItem>
-                      <SelectItem value="staff">{t.roles.staff}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button 
-                  disabled={isPending}
-                  className="w-full h-14 rounded-full font-bold"
-                >
-                  {isPending ? <Loader2 className="animate-spin" /> : t.create}
-                </Button>
-              </form>
-            </TabsContent>
-          </Tabs>
-
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-border" />
-            </div>
-            <div className="relative flex justify-center text-[10px] uppercase font-bold tracking-widest text-foreground/20">
-              <span className="bg-card px-4">Social Access</span>
-            </div>
-          </div>
-
-          <Button 
-            variant="outline"
-            onClick={() => loginWithGoogle()}
-            className="w-full rounded-full h-14 font-bold flex gap-3"
+        <div className="max-w-md w-full space-y-8">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-8 md:p-12 bg-card rounded-[3rem] border border-border shadow-2xl space-y-8"
           >
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
-            {t.google}
-          </Button>
-        </motion.div>
+            <div className="text-center space-y-4">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto text-primary text-2xl">
+                🌱
+              </div>
+              <div className="space-y-2">
+                <h1 className="text-3xl font-display">
+                  {t.welcome} <span className="text-primary">KrishiAI</span>
+                </h1>
+                <p className="text-sm text-foreground/60">
+                  {t.join}
+                </p>
+              </div>
+            </div>
+
+            <Tabs defaultValue="login" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 rounded-full mb-8 bg-muted/50 p-1">
+                <TabsTrigger value="login" className="rounded-full data-[state=active]:bg-primary data-[state=active]:text-white">
+                  {t.login}
+                </TabsTrigger>
+                <TabsTrigger value="signup" className="rounded-full data-[state=active]:bg-primary data-[state=active]:text-white">
+                  {t.create}
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="login">
+                <form onSubmit={handleLogin} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email">{t.email}</Label>
+                    <Input 
+                      id="email" 
+                      type="email"
+                      placeholder="email@example.com" 
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required 
+                      className="rounded-xl h-12"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <Label htmlFor="password">{t.password}</Label>
+                      <Dialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
+                        <DialogTrigger asChild>
+                          <button type="button" className="text-xs text-primary hover:underline">
+                            {t.forgot}
+                          </button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>{t.resetTitle}</DialogTitle>
+                            <DialogDescription>{t.resetDesc}</DialogDescription>
+                          </DialogHeader>
+                          <Input 
+                            placeholder="email@example.com" 
+                            value={resetEmail}
+                            onChange={(e) => setResetEmail(e.target.value)}
+                            className="rounded-xl h-12"
+                          />
+                          <DialogFooter>
+                            <Button onClick={handleResetPassword} className="w-full">
+                              {t.send}
+                            </Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
+                    <Input 
+                      id="password" 
+                      type="password" 
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required 
+                      className="rounded-xl h-12"
+                    />
+                  </div>
+                  <Button 
+                    disabled={isPending}
+                    className="w-full h-14 rounded-full font-bold"
+                  >
+                    {isPending ? <Loader2 className="animate-spin" /> : t.login}
+                  </Button>
+                </form>
+              </TabsContent>
+
+              <TabsContent value="signup">
+                <form onSubmit={handleSignUp} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-name">{t.name}</Label>
+                    <Input 
+                      id="signup-name" 
+                      placeholder="Full Name" 
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      required 
+                      className="rounded-xl h-12"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-email">{t.email}</Label>
+                    <Input 
+                      id="signup-email" 
+                      type="email"
+                      placeholder="email@example.com" 
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required 
+                      className="rounded-xl h-12"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-password">{t.password}</Label>
+                    <Input 
+                      id="signup-password" 
+                      type="password" 
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required 
+                      className="rounded-xl h-12"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{t.role}</Label>
+                    <Select value={role} onValueChange={setRole}>
+                      <SelectTrigger className="rounded-xl h-12">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="buyer">{t.roles.buyer}</SelectItem>
+                        <SelectItem value="landowner">{t.roles.landowner}</SelectItem>
+                        <SelectItem value="staff">{t.roles.staff}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button 
+                    disabled={isPending}
+                    className="w-full h-14 rounded-full font-bold"
+                  >
+                    {isPending ? <Loader2 className="animate-spin" /> : t.create}
+                  </Button>
+                </form>
+              </TabsContent>
+            </Tabs>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-border" />
+              </div>
+              <div className="relative flex justify-center text-[10px] uppercase font-bold tracking-widest text-foreground/20">
+                <span className="bg-card px-4">Social Access</span>
+              </div>
+            </div>
+
+            <Button 
+              variant="outline"
+              onClick={() => loginWithGoogle()}
+              className="w-full rounded-full h-14 font-bold flex gap-3"
+            >
+              <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
+              {t.google}
+            </Button>
+          </motion.div>
+
+          {/* Quick Demo Access Section */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="p-8 bg-primary/5 rounded-[2rem] border border-primary/10 space-y-4"
+          >
+            <div className="flex items-center gap-2 text-primary font-bold text-xs uppercase tracking-widest mb-2">
+              <ShieldAlert size={14} />
+              Quick Demo Access (Testing)
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => handleDemoLogin('staff')}
+                className="flex flex-col gap-1 h-auto py-3 bg-white/50 hover:bg-primary/10 rounded-xl"
+              >
+                <ShieldAlert size={16} className="text-primary" />
+                <span className="text-[10px] font-bold">Staff</span>
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => handleDemoLogin('landowner')}
+                className="flex flex-col gap-1 h-auto py-3 bg-white/50 hover:bg-primary/10 rounded-xl"
+              >
+                <MapPin size={16} className="text-krishi-amber" />
+                <span className="text-[10px] font-bold">Owner</span>
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => handleDemoLogin('buyer')}
+                className="flex flex-col gap-1 h-auto py-3 bg-white/50 hover:bg-primary/10 rounded-xl"
+              >
+                <ShoppingBag size={16} className="text-blue-500" />
+                <span className="text-[10px] font-bold">Buyer</span>
+              </Button>
+            </div>
+          </motion.div>
+        </div>
       </section>
       <Footer />
     </main>
