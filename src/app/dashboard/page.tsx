@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -26,7 +27,13 @@ import {
   X,
   Lock,
   Wifi,
-  Signal
+  Signal,
+  Sun,
+  CloudRain,
+  CloudSun,
+  Wind,
+  Thermometer,
+  Cloud
 } from "lucide-react";
 import { Navbar } from "@/components/sections/navbar";
 import { Footer } from "@/components/sections/footer";
@@ -94,6 +101,14 @@ interface GridItem {
   sensorSignal: "excellent" | "good" | "weak";
 }
 
+interface WeatherData {
+  temp: number;
+  humidity: number;
+  wind: number;
+  condition: string;
+  location: string;
+}
+
 export default function DashboardPage() {
   const { lang } = useSettings();
   const { user } = useUser();
@@ -109,6 +124,11 @@ export default function DashboardPage() {
   const [editIrrigation, setEditIrrigation] = useState(true);
   const [editSoil, setEditSoil] = useState(true);
   const [editHealth, setEditHealth] = useState(true);
+
+  const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [isWeatherLoading, setIsWeatherLoading] = useState(false);
+
+  const WEATHER_API_KEY = "bbd6d9e679a4ff28be7bb2e21988b866";
 
   const registrationsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -127,7 +147,7 @@ export default function DashboardPage() {
   }, [registrations]);
 
   const gridData: GridItem[] = useMemo(() => {
-    return Array.from({ length: 50 }, (_, i) => {
+    const data = Array.from({ length: 50 }, (_, i) => {
       const lease = activeLeases[i];
       const isLeased = !!lease;
       
@@ -175,9 +195,51 @@ export default function DashboardPage() {
         cropHealthPass,
         recommendedCrop,
         sensorSignal: Math.random() > 0.8 ? "weak" : Math.random() > 0.4 ? "good" : "excellent"
-      };
+      } as GridItem;
     });
+
+    // DEMO LEASE FALLBACK: Always keep sector #0 leased for demo
+    if (!activeLeases.length) {
+      data[0] = {
+        ...data[0],
+        isLeased: true,
+        fieldId: "FLD-2000 (DEMO)",
+        leaseData: { aadharName: "Ramesh Patel", district: "Varanasi", village: "Kashi" },
+        crop: "Organic Wheat",
+        produced: 8.5,
+        rate: 22000,
+        statusColor: "healthy",
+        status: "Optimal",
+        moisture: 42,
+        nutrients: { n: 55, p: 32, k: 44 }
+      };
+    }
+
+    return data;
   }, [activeLeases]);
+
+  const fetchWeather = async (city: string) => {
+    setIsWeatherLoading(true);
+    try {
+      const response = await fetch(
+        `https://api.openweathermap.org/data/2.5/weather?q=${city},UP,IN&appid=${WEATHER_API_KEY}&units=metric`
+      );
+      const data = await response.json();
+      if (data.main) {
+        setWeather({
+          temp: data.main.temp,
+          humidity: data.main.humidity,
+          wind: data.wind.speed,
+          condition: data.weather[0].main,
+          location: data.name
+        });
+      }
+    } catch (error) {
+      console.error("Weather fetch error:", error);
+    } finally {
+      setIsWeatherLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (selectedSector) {
@@ -187,6 +249,11 @@ export default function DashboardPage() {
       setEditIrrigation(selectedSector.irrigationPass);
       setEditSoil(selectedSector.soilTestPass);
       setEditHealth(selectedSector.cropHealthPass);
+      
+      const city = selectedSector.leaseData?.district || "Varanasi";
+      fetchWeather(city);
+    } else {
+      fetchWeather("Varanasi");
     }
   }, [selectedSector]);
 
@@ -234,6 +301,15 @@ export default function DashboardPage() {
     { id: "approvals", label: lang === 'en' ? "Lease Queue" : "लीज कतार", icon: History },
     { id: "active_leases", label: lang === 'en' ? "Active Leases" : "सक्रिय लीज", icon: FileText },
   ];
+
+  const WeatherIcon = ({ condition }: { condition: string }) => {
+    switch (condition) {
+      case 'Clear': return <Sun className="text-krishi-gold" />;
+      case 'Rain': return <CloudRain className="text-primary" />;
+      case 'Clouds': return <CloudSun className="text-foreground/40" />;
+      default: return <Cloud className="text-foreground/20" />;
+    }
+  };
 
   return (
     <SidebarProvider>
@@ -292,6 +368,12 @@ export default function DashboardPage() {
                       <ShieldCheck size={14} className="mr-2" />
                       FIELD_MASTER_ACTIVE
                     </Badge>
+                    {weather && (
+                      <Badge variant="outline" className="bg-krishi-gold/5 text-krishi-gold border-krishi-gold/20 px-3 py-1 font-code flex items-center gap-2">
+                        <WeatherIcon condition={weather.condition} />
+                        {weather.temp}°C in {weather.location}
+                      </Badge>
+                    )}
                   </div>
                   <h1 className="text-4xl md:text-6xl font-display">
                     {navItems.find(n => n.id === activeTab)?.label}
@@ -375,6 +457,31 @@ export default function DashboardPage() {
                            </div>
                         </div>
                       </Card>
+
+                      {weather && (
+                        <Card className="rounded-[2rem] bg-card border-border p-8 relative overflow-hidden shadow-xl">
+                          <p className="text-primary text-[10px] font-bold uppercase tracking-[0.2em] mb-4">Live Weather Report</p>
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h4 className="text-4xl font-display">{weather.temp}°C</h4>
+                              <p className="text-xs text-foreground/60 uppercase font-bold tracking-widest">{weather.condition} in {weather.location}</p>
+                            </div>
+                            <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center">
+                              <WeatherIcon condition={weather.condition} />
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4 mt-6 pt-6 border-t border-border">
+                            <div className="flex items-center gap-2">
+                              <Droplets size={14} className="text-primary" />
+                              <span className="text-xs font-bold">{weather.humidity}% Humid</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Wind size={14} className="text-krishi-amber" />
+                              <span className="text-xs font-bold">{weather.wind} km/h</span>
+                            </div>
+                          </div>
+                        </Card>
+                      )}
                     </div>
                   </motion.div>
                 )}
@@ -572,7 +679,7 @@ export default function DashboardPage() {
         </div>
 
         <Dialog open={!!selectedSector} onOpenChange={() => setSelectedSector(null)}>
-          <DialogContent className="rounded-[2.5rem] p-8 max-w-2xl border-primary/20 bg-card/95 backdrop-blur-xl">
+          <DialogContent className="rounded-[2.5rem] p-8 max-w-2xl border-primary/20 bg-card/95 backdrop-blur-xl max-h-[90vh] overflow-y-auto">
             <DialogHeader className="space-y-4">
               <div className="flex justify-between items-start">
                 <Badge className={`${
@@ -587,6 +694,19 @@ export default function DashboardPage() {
                 Land Owner: {selectedSector?.leaseData?.aadharName} | Cluster: {selectedSector?.leaseData?.district}
               </DialogDescription>
             </DialogHeader>
+
+            {weather && (
+              <div className="mt-6 p-6 bg-primary/5 rounded-2xl border border-primary/10 flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] text-foreground/40 uppercase font-bold tracking-widest mb-1">Local Weather Guard</p>
+                  <p className="text-xl font-bold">{weather.temp}°C, {weather.condition}</p>
+                  <p className="text-xs text-foreground/60">{weather.humidity}% Humidity | {weather.wind} km/h Wind</p>
+                </div>
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                   <WeatherIcon condition={weather.condition} />
+                </div>
+              </div>
+            )}
 
             <div className="grid md:grid-cols-2 gap-8 mt-8">
               <div className="space-y-6">

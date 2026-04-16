@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { useSettings } from "@/context/settings-context";
@@ -10,14 +11,25 @@ import { collection, query, where, orderBy } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Sprout, FileText, IndianRupee, MapPin, Clock } from "lucide-react";
+import { Sprout, FileText, IndianRupee, MapPin, Clock, Sun, CloudRain, CloudSun, Cloud, Wind, Droplets } from "lucide-react";
 import Link from "next/link";
+
+interface WeatherData {
+  temp: number;
+  humidity: number;
+  wind: number;
+  condition: string;
+  location: string;
+}
 
 export default function LandOwnerDashboard() {
   const { user, loading } = useUser();
   const { lang } = useSettings();
   const router = useRouter();
   const firestore = useFirestore();
+  const [weather, setWeather] = useState<WeatherData | null>(null);
+
+  const WEATHER_API_KEY = "bbd6d9e679a4ff28be7bb2e21988b866";
 
   useEffect(() => {
     if (!loading && !user) router.push("/login");
@@ -34,6 +46,32 @@ export default function LandOwnerDashboard() {
 
   const { data: leases } = useCollection(leaseQuery);
 
+  const fetchWeather = async (city: string) => {
+    try {
+      const response = await fetch(
+        `https://api.openweathermap.org/data/2.5/weather?q=${city},UP,IN&appid=${WEATHER_API_KEY}&units=metric`
+      );
+      const data = await response.json();
+      if (data.main) {
+        setWeather({
+          temp: data.main.temp,
+          humidity: data.main.humidity,
+          wind: data.wind.speed,
+          condition: data.weather[0].main,
+          location: data.name
+        });
+      }
+    } catch (error) {
+      console.error("Weather fetch error:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (leases && leases.length > 0) {
+      fetchWeather(leases[0].district || "Varanasi");
+    }
+  }, [leases]);
+
   if (loading || !user) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
 
   const t = {
@@ -45,6 +83,15 @@ export default function LandOwnerDashboard() {
       pending: lang === 'en' ? "Verification Pending" : "सत्यापन लंबित",
       reviewed: lang === 'en' ? "Active & Verified" : "सक्रिय और सत्यापित",
       rejected: lang === 'en' ? "Review Failed" : "सत्यापन विफल",
+    }
+  };
+
+  const WeatherIcon = ({ condition }: { condition: string }) => {
+    switch (condition) {
+      case 'Clear': return <Sun className="text-krishi-gold" />;
+      case 'Rain': return <CloudRain className="text-primary" />;
+      case 'Clouds': return <CloudSun className="text-foreground/40" />;
+      default: return <Cloud className="text-foreground/20" />;
     }
   };
 
@@ -124,6 +171,28 @@ export default function LandOwnerDashboard() {
           </div>
 
           <div className="space-y-8">
+             {weather && (
+               <Card className="rounded-[2.5rem] bg-card border border-border p-8 relative overflow-hidden shadow-xl">
+                  <div className="flex items-center justify-between mb-6">
+                    <p className="text-[10px] font-bold text-primary uppercase tracking-widest">Plot Weather Guard</p>
+                    <WeatherIcon condition={weather.condition} />
+                  </div>
+                  <h3 className="text-4xl font-display mb-1">{weather.temp}°C</h3>
+                  <p className="text-xs text-foreground/40 font-bold uppercase tracking-widest">{weather.condition} in {weather.location}</p>
+                  
+                  <div className="grid grid-cols-2 gap-4 mt-8 pt-8 border-t border-border">
+                    <div className="flex items-center gap-2">
+                       <Droplets size={16} className="text-primary" />
+                       <span className="text-xs font-bold">{weather.humidity}% Humidity</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                       <Wind size={16} className="text-krishi-amber" />
+                       <span className="text-xs font-bold">{weather.wind} km/h</span>
+                    </div>
+                  </div>
+               </Card>
+             )}
+
              <Card className="rounded-[2.5rem] bg-krishi-black text-white p-8 border-none overflow-hidden relative">
                 <div className="absolute top-0 right-0 p-4 opacity-10">
                    <IndianRupee size={120} />
