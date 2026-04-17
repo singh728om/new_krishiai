@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -12,8 +11,7 @@ import {
   CloudSun,
   ShieldCheck,
   ArrowRight,
-  CheckCircle2,
-  X
+  CheckCircle2
 } from "lucide-react";
 import { Navbar } from "@/components/sections/navbar";
 import { Footer } from "@/components/sections/footer";
@@ -87,7 +85,7 @@ const serviceHighlights = [
     titleEn: "Carbon Monetization",
     titleHi: "कार्बन मुद्रीकरण",
     descriptionEn: "Earn revenue by adopting sustainable farming. We help you measure and sell carbon credits globally.",
-    descriptionHi: "सतत कृषि अपनाकर राजस्व अर्जित करें। हम आपको विश्व स्तर पर कार्बन क्रेडिट मापने और बेचने में मदद करते हैं।",
+    descriptionHi: "सतत कृषि अपनाकर राजस्व अर्जित करें। हम आपको विश्व स्तर पर कार्बन क्रेडिट मापने और बेचने में मदद करेंगे।",
     detailedEn: "Monetize your sustainability. By using KrishiAI's suggested regenerative practices—like minimal till and cover cropping—you sequester carbon in your soil. We handle the verification and listing of these credits on global markets, providing you with a new, passive revenue stream.",
     detailedHi: "अपनी स्थिरता का मुद्रीकरण करें। कृषि एआई की सुझाई गई पुनर्योजी प्रथाओं का उपयोग करके आप अपनी मिट्टी में कार्बन को जमा करते हैं। हम वैश्विक बाजारों में इन क्रेडिटों के सत्यापन और लिस्टिंग को संभालते हैं, जिससे आपको एक नया निष्क्रिय राजस्व मिलता है।",
     icon: Leaf,
@@ -188,7 +186,7 @@ export default function ServicesPage() {
 
       {/* Detailed Service View Dialog */}
       <Dialog open={!!selectedService} onOpenChange={() => setSelectedService(null)}>
-        <DialogContent className="max-w-3xl rounded-[3rem] p-0 overflow-hidden border-none bg-card shadow-2xl">
+        <DialogContent className="max-w-3xl rounded-[3rem] p-0 overflow-hidden border-none bg-card shadow-2xl [&>button]:hidden">
           <div className={`h-40 ${selectedService?.bgColor} relative`}>
              <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/leaf.png')]" />
              <div className="absolute bottom-6 left-10 flex items-center gap-4">
@@ -201,14 +199,6 @@ export default function ServicesPage() {
                    </h2>
                 </div>
              </div>
-             <Button 
-              variant="ghost" 
-              size="icon" 
-              className="absolute top-6 right-6 text-foreground/40 hover:text-foreground"
-              onClick={() => setSelectedService(null)}
-             >
-                <X size={24} />
-             </Button>
           </div>
 
           <div className="p-10 space-y-10">
