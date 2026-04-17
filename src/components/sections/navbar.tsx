@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Moon, Sun, Globe, ShoppingCart, User, CloudSun } from "lucide-react";
+import { Menu, X, Moon, Sun, Globe, ShoppingCart, User } from "lucide-react";
 import Link from "next/link";
 import { useSettings } from "@/context/settings-context";
 import { useCart } from "@/context/cart-context";

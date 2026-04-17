@@ -145,7 +145,6 @@ export default function DashboardPage() {
     return registrations?.filter(r => r.status === 'reviewed') || [];
   }, [registrations]);
 
-  // Generate grid data on the client only to avoid hydration mismatch
   useEffect(() => {
     const data = Array.from({ length: 50 }, (_, i) => {
       const lease = activeLeases[i];
@@ -197,23 +196,6 @@ export default function DashboardPage() {
         sensorSignal: Math.random() > 0.8 ? "weak" : Math.random() > 0.4 ? "good" : "excellent"
       } as GridItem;
     });
-
-    // DEMO LEASE FALLBACK: Always keep sector #0 leased for demo
-    if (data.length > 0) {
-      data[0] = {
-        ...data[0],
-        isLeased: true,
-        fieldId: "FLD-2000 (DEMO)",
-        leaseData: data[0].leaseData || { aadharName: "Ramesh Patel", district: "Varanasi", village: "Kashi" },
-        crop: "Organic Wheat",
-        produced: 8.5,
-        rate: 22000,
-        statusColor: "healthy",
-        status: "Optimal",
-        moisture: 42,
-        nutrients: { n: 55, p: 32, k: 44 }
-      };
-    }
 
     setGridData(data);
   }, [activeLeases]);
