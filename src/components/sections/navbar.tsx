@@ -41,11 +41,11 @@ export const Navbar = () => {
   };
 
   const navLinks = [
-    { name: t.about, href: "/about" },
     { name: t.services, href: "/services" },
     { name: t.weather, href: "/weather" },
     { name: t.store, href: "/products" },
     { name: t.lease, href: "/lease-registration" },
+    { name: t.about, href: "/about" },
     { name: t.contact, href: "/contact" },
   ];
 
