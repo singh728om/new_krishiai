@@ -1,10 +1,9 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Moon, Sun, Globe, ShoppingCart, User, Bike, ShoppingBag } from "lucide-react";
+import { Menu, X, Moon, Sun, Globe, ShoppingCart, User } from "lucide-react";
 import Link from "next/link";
 import { useSettings } from "@/context/settings-context";
 import { useCart } from "@/context/cart-context";
@@ -39,14 +38,12 @@ export const Navbar = () => {
     login: lang === 'en' ? 'Login' : 'लॉगिन',
     profile: lang === 'en' ? 'Profile' : 'प्रोफ़ाइल',
     weather: lang === 'en' ? 'Weather' : 'मौसम',
-    partner: lang === 'en' ? 'Sell/Deliver' : 'बेचें/पहुंचाएं',
   };
 
   const navLinks = [
     { name: t.services, href: "/services" },
     { name: t.weather, href: "/weather" },
     { name: t.store, href: "/products" },
-    { name: t.partner, href: "/partner-registration" },
     { name: t.about, href: "/about" },
     { name: t.contact, href: "/contact" },
   ];

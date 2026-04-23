@@ -11,19 +11,21 @@ import {
   CloudSun,
   ShieldCheck,
   ArrowRight,
-  CheckCircle2
+  CheckCircle2,
+  ShoppingBag,
+  Sprout,
+  Store,
+  Bike,
+  Radio
 } from "lucide-react";
 import { Navbar } from "@/components/sections/navbar";
 import { Footer } from "@/components/sections/footer";
 import { useSettings } from "@/context/settings-context";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
 } from "@/components/ui/dialog";
 import Link from "next/link";
 
@@ -108,6 +110,14 @@ const serviceHighlights = [
   }
 ];
 
+const subNavItems = [
+  { labelEn: "Order Online", labelHi: "ऑनलाइन ऑर्डर", icon: ShoppingBag, href: "/products" },
+  { labelEn: "Lease Your Land", labelHi: "जमीन पट्टा", icon: Sprout, href: "/lease-registration" },
+  { labelEn: "Sell on KrishiAI", labelHi: "KrishiAI पर बेचें", icon: Store, href: "/partner-registration?type=farmer" },
+  { labelEn: "Partner with Us", labelHi: "भागीदार बनें", icon: Bike, href: "/partner-registration?type=rider" },
+  { labelEn: "360 Field Monitor", labelHi: "360° मॉनिटर", icon: Radio, href: "/#iot" },
+];
+
 export default function ServicesPage() {
   const { lang } = useSettings();
   const [selectedService, setSelectedService] = useState<typeof serviceHighlights[0] | null>(null);
@@ -115,7 +125,6 @@ export default function ServicesPage() {
   const t = {
     title: lang === 'en' ? "Our Services" : "हमारी सेवाएँ",
     subtitle: lang === 'en' ? "Empowering farmers with clinical-grade technology and actionable insights." : "नैदानिक-ग्रेड तकनीक और कार्रवाई योग्य अंतर्दृष्टि के साथ किसानों को सशक्त बनाना।",
-    cta: lang === 'en' ? "Explore Services" : "सेवाओं का अन्वेषण करें",
     startCta: lang === 'en' ? "Get Started Now" : "अभी शुरू करें",
     learnMore: lang === 'en' ? "Learn More" : "और जानें",
     close: lang === 'en' ? "Close Details" : "विवरण बंद करें",
@@ -127,6 +136,24 @@ export default function ServicesPage() {
     <main className="min-h-screen bg-background flex flex-col">
       <Navbar />
       
+      {/* Services Sub-Navbar */}
+      <div className="sticky top-20 z-40 bg-background/80 backdrop-blur-md border-b border-border py-4">
+        <div className="container mx-auto px-6 overflow-x-auto no-scrollbar">
+           <div className="flex items-center justify-center min-w-max gap-8">
+              {subNavItems.map((item, i) => (
+                <Link 
+                  key={i} 
+                  href={item.href}
+                  className="flex items-center gap-2 text-xs font-headline font-bold uppercase tracking-widest text-foreground/60 hover:text-primary transition-colors whitespace-nowrap"
+                >
+                  <item.icon size={14} className="text-krishi-gold" />
+                  {lang === 'en' ? item.labelEn : item.labelHi}
+                </Link>
+              ))}
+           </div>
+        </div>
+      </div>
+
       {/* Hero Section */}
       <section className="relative py-32 bg-krishi-black text-white overflow-hidden">
         <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/leaf.png')]" />
