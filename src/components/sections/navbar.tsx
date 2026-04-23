@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Moon, Sun, Globe, ShoppingCart, User } from "lucide-react";
+import { Menu, X, Moon, Sun, Globe, ShoppingCart, User, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { useSettings } from "@/context/settings-context";
 import { useCart } from "@/context/cart-context";
@@ -13,6 +13,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 
 export const Navbar = () => {
@@ -40,8 +41,16 @@ export const Navbar = () => {
     weather: lang === 'en' ? 'Weather' : 'मौसम',
   };
 
+  const serviceItems = [
+    { name: lang === 'en' ? "All Services" : "सभी सेवाएं", href: "/services" },
+    { name: lang === 'en' ? "Order Online" : "ऑनलाइन ऑर्डर", href: "/products" },
+    { name: lang === 'en' ? "Lease Your Land" : "जमीन पट्टा", href: "/lease-registration" },
+    { name: lang === 'en' ? "Sell on KrishiAI" : "KrishiAI पर बेचें", href: "/partner-registration?type=farmer" },
+    { name: lang === 'en' ? "Partner with Us" : "भागीदार बनें", href: "/partner-registration?type=rider" },
+    { name: lang === 'en' ? "360 Field Monitor" : "360° मॉनिटर", href: "/#iot" },
+  ];
+
   const navLinks = [
-    { name: t.services, href: "/services" },
     { name: t.weather, href: "/weather" },
     { name: t.store, href: "/products" },
     { name: t.about, href: "/about" },
@@ -64,6 +73,27 @@ export const Navbar = () => {
 
         {/* Desktop Nav */}
         <div className="hidden lg:flex items-center gap-6">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-1 text-sm font-medium text-foreground/70 hover:text-krishi-gold transition-colors outline-none">
+                {t.services}
+                <ChevronDown size={14} className="opacity-50" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="min-w-[200px] rounded-2xl p-2 border-border shadow-xl">
+              {serviceItems.map((item, i) => (
+                <DropdownMenuItem key={i} asChild>
+                  <Link 
+                    href={item.href}
+                    className="flex w-full items-center gap-2 px-3 py-2 text-sm font-medium rounded-xl hover:bg-primary/5 hover:text-primary transition-colors cursor-pointer"
+                  >
+                    {item.name}
+                  </Link>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           {navLinks.map((link) => (
             <Link
               key={link.name}
@@ -151,14 +181,30 @@ export const Navbar = () => {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="absolute top-full left-0 right-0 bg-background border-b border-krishi-gold/10 p-6 flex flex-col gap-6 lg:hidden shadow-2xl"
+            className="absolute top-full left-0 right-0 bg-background border-b border-krishi-gold/10 p-6 flex flex-col gap-6 lg:hidden shadow-2xl max-h-[80vh] overflow-y-auto"
           >
+            <div className="space-y-4">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-foreground/30 px-2">{t.services}</p>
+              {serviceItems.map((item, i) => (
+                <Link
+                  key={i}
+                  href={item.href}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="block text-lg font-headline font-medium text-foreground/90 hover:text-krishi-gold px-2"
+                >
+                  {item.name}
+                </Link>
+              ))}
+            </div>
+            
+            <div className="h-px bg-border w-full" />
+
             {navLinks.map((link) => (
               <Link
                 key={link.name}
                 href={link.href}
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="text-lg font-headline font-medium text-foreground/90 hover:text-krishi-gold"
+                className="text-lg font-headline font-medium text-foreground/90 hover:text-krishi-gold px-2"
               >
                 {link.name}
               </Link>

@@ -56,7 +56,7 @@ export const Iot360View = () => {
   ];
 
   return (
-    <section className="py-24 bg-krishi-black text-white overflow-hidden relative">
+    <section id="iot" className="py-24 bg-krishi-black text-white overflow-hidden relative">
       <div className="absolute inset-0 opacity-5 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
       
       <div className="container mx-auto px-6 relative z-10">
