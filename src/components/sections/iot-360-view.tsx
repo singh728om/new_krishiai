@@ -2,15 +2,36 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Cpu, Wifi, Radio, Zap, ShieldCheck, Activity } from "lucide-react";
+import { 
+  Cpu, 
+  Wifi, 
+  Radio, 
+  Zap, 
+  ShieldCheck, 
+  Activity, 
+  Bike, 
+  Store, 
+  ShoppingBag, 
+  User, 
+  Sprout 
+} from "lucide-react";
 import { useSettings } from "@/context/settings-context";
+
+const ENTITIES = [
+  { icon: Bike, color: "text-blue-400", top: "25%", left: "30%", delay: 0.2, label: "Rider" },
+  { icon: Store, color: "text-krishi-gold", top: "40%", left: "70%", delay: 0.5, label: "Seller" },
+  { icon: ShoppingBag, color: "text-krishi-lime", top: "65%", left: "25%", delay: 0.8, label: "Buyer" },
+  { icon: Bike, color: "text-blue-400", top: "15%", left: "60%", delay: 1.1, label: "Rider" },
+  { icon: User, color: "text-white/40", top: "80%", left: "55%", delay: 1.4, label: "Buyer" },
+  { icon: Store, color: "text-krishi-gold", top: "55%", left: "10%", delay: 1.7, label: "Seller" },
+];
 
 export const Iot360View = () => {
   const { lang } = useSettings();
 
   const t = {
     title: lang === 'en' ? "360° IoT Field Monitoring" : "360° आईओटी फील्ड मॉनिटरिंग",
-    subtitle: lang === 'en' ? "Real-time spectral analysis and soil synchronization across all clusters." : "सभी क्लस्टरों में रीयल-टाइम स्पेक्ट्रल विश्लेषण और मिट्टी का सिंक्रनाइज़ेशन।",
+    subtitle: lang === 'en' ? "Real-time spectral analysis and logistics synchronization across all clusters." : "सभी क्लस्टरों में रीयल-टाइम स्पेक्ट्रल विश्लेषण और रसद सिंक्रनाइज़ेशन।",
     status: lang === 'en' ? "LIVE_RADAR_ACTIVE" : "लाइव_रडार_सक्रिय",
   };
 
@@ -61,12 +82,14 @@ export const Iot360View = () => {
           </div>
 
           <div className="relative flex justify-center items-center">
-            {/* Radar Animation */}
+            {/* Radar Container */}
             <div className="relative w-[300px] h-[300px] md:w-[450px] md:h-[450px]">
+              
+              {/* Radar Sweep Animation */}
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                className="absolute inset-0 rounded-full border border-primary/20"
+                className="absolute inset-0 rounded-full border border-primary/20 z-10"
               >
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1 h-1/2 bg-gradient-to-t from-transparent to-primary shadow-[0_0_20px_rgba(76,175,80,0.5)]" />
               </motion.div>
@@ -75,25 +98,46 @@ export const Iot360View = () => {
               <div className="absolute inset-0 rounded-full border border-white/5 scale-[0.3]" />
               <div className="absolute inset-0 rounded-full border border-white/5 scale-[0.6]" />
               <div className="absolute inset-0 rounded-full border border-white/5 scale-[0.8]" />
+              <div className="absolute inset-0 rounded-full border border-white/10" />
 
-              {/* Data Points */}
-              {Array.from({ length: 8 }).map((_, i) => (
+              {/* Network Entities (Riders, Sellers, Buyers) */}
+              {ENTITIES.map((entity, i) => (
                 <motion.div
                   key={i}
-                  animate={{ opacity: [0.2, 1, 0.2] }}
-                  transition={{ duration: 2, repeat: Infinity, delay: i * 0.5 }}
-                  className="absolute w-2 h-2 bg-krishi-gold rounded-full shadow-[0_0_10px_#D4A017]"
-                  style={{
-                    top: `${Math.random() * 80 + 10}%`,
-                    left: `${Math.random() * 80 + 10}%`,
-                  }}
-                />
+                  initial={{ opacity: 0, scale: 0 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: entity.delay }}
+                  className="absolute z-20 group"
+                  style={{ top: entity.top, left: entity.left }}
+                >
+                  {/* Ping Effect */}
+                  <motion.div
+                    animate={{ scale: [1, 2], opacity: [0.5, 0] }}
+                    transition={{ duration: 2, repeat: Infinity, delay: entity.delay }}
+                    className={`absolute inset-0 rounded-full bg-current ${entity.color} opacity-20`}
+                  />
+                  
+                  <div className={`relative p-2 rounded-lg bg-black/40 backdrop-blur-sm border border-white/10 ${entity.color} shadow-lg transition-all group-hover:scale-125 group-hover:z-30`}>
+                    <entity.icon size={16} />
+                    <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[8px] font-bold uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity bg-black/80 px-1.5 py-0.5 rounded whitespace-nowrap">
+                      {entity.label}
+                    </span>
+                  </div>
+                </motion.div>
               ))}
 
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center border border-primary/20 backdrop-blur-sm">
-                   <Cpu size={40} className="text-primary animate-pulse" />
-                </div>
+              {/* Central Hub (KrishiAI Core) */}
+              <div className="absolute inset-0 flex items-center justify-center z-20">
+                <motion.div 
+                  animate={{ 
+                    boxShadow: ["0 0 0px rgba(76,175,80,0)", "0 0 40px rgba(76,175,80,0.3)", "0 0 0px rgba(76,175,80,0)"] 
+                  }}
+                  transition={{ duration: 3, repeat: Infinity }}
+                  className="w-24 h-24 bg-primary/10 rounded-full flex flex-col items-center justify-center border border-primary/20 backdrop-blur-md"
+                >
+                   <Sprout size={40} className="text-primary animate-pulse" />
+                   <span className="text-[7px] font-bold uppercase tracking-[0.2em] text-primary/60 mt-1">HUB_CENTER</span>
+                </motion.div>
               </div>
             </div>
           </div>
