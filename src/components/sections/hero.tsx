@@ -158,16 +158,16 @@ export const Hero = () => {
   const { lang } = useSettings();
   
   const content = {
-    badge: lang === 'en' ? 'Smart AI Agriculture for Bharat' : 'भारत के लिए स्मार्ट एआई कृषि',
-    headline: lang === 'en' ? 'Your Farm, Fully Connected.' : 'आपका खेत, पूरी तरह से जुड़ा हुआ।',
+    badge: lang === 'en' ? "Bharat's Most Advanced Agri-Tech & Logistics Network" : "भारत का सबसे उन्नत कृषि-तकनीक और रसद नेटवर्क",
+    headline: lang === 'en' ? 'Smart Farming. Local Delivery. Guaranteed Growth.' : 'स्मार्ट खेती। स्थानीय डिलीवरी। गारंटीड विकास।',
     subline: lang === 'en' 
-      ? 'AI-powered precision for Bharat. Increase yield by 40%, diagnose diseases in seconds, and unlock carbon credit revenue.' 
-      : 'भारत के लिए एआई-संचालित सटीक खेती। पैदावार में 40% की वृद्धि करें, सेकंडों में रोगों का निदान करें।',
+      ? 'AI-powered disease diagnosis, real-time IoT monitoring, and a hyper-local marketplace. Lease your land, sell your harvest, or deliver organic goodness—all within 15km.' 
+      : 'एआई-संचालित बीमारी का निदान, वास्तविक समय आईओटी निगरानी और एक हाइपर-लोकल बाजार। अपनी जमीन पट्टे पर दें, अपनी फसल बेचें, या जैविक उत्पाद पहुंचाएं—सब कुछ 15 किमी के भीतर।',
     ctaPrimary: lang === 'en' ? 'Start Growing Free' : 'मुफ्त में शुरू करें',
     ctaSecondary: lang === 'en' ? 'Lease My Land →' : 'मेरी जमीन पट्टे पर दें →',
     stat1: lang === 'en' ? '40% yield increase' : '40% पैदावार वृद्धि',
     stat2: lang === 'en' ? '3-sec diagnosis' : '3-सेकंड निदान',
-    stat3: lang === 'en' ? 'Carbon credits' : 'कार्बन क्रेडिट्स',
+    stat3: lang === 'en' ? '15km hyper-local' : '15 किमी हाइपर-लोकल',
   };
 
   const headlineWords = content.headline.split(" ");
