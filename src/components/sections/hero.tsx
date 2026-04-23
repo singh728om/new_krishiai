@@ -101,13 +101,14 @@ const PlatformPulseNetwork = () => {
         </div>
 
         <div className="relative flex-1 bg-white/[0.02] rounded-3xl border border-white/5 flex items-center justify-center overflow-hidden mb-6">
+          {/* Concentric Background Rings */}
           {[1, 2, 3].map((i) => (
             <motion.div
               key={i}
               initial={{ scale: 0.1, opacity: 0 }}
               animate={{ 
                 scale: [0.1, 1.5], 
-                opacity: [0.5, 0] 
+                opacity: [0.3, 0] 
               }}
               transition={{ 
                 duration: 4, 
@@ -115,52 +116,106 @@ const PlatformPulseNetwork = () => {
                 delay: i * 1.3,
                 ease: "easeOut"
               }}
-              className="absolute w-[150px] md:w-[200px] h-[150px] md:h-[200px] border border-primary/30 rounded-full"
+              className="absolute w-[200px] h-[200px] md:w-[300px] md:h-[300px] border border-primary/20 rounded-full"
             />
           ))}
 
+          {/* Central Hub */}
           <div className="relative z-30">
             <motion.div 
-              animate={{ scale: [1, 1.1, 1] }}
+              animate={{ 
+                scale: [1, 1.1, 1],
+                boxShadow: ["0 0 20px rgba(76,175,80,0.2)", "0 0 50px rgba(76,175,80,0.4)", "0 0 20px rgba(76,175,80,0.2)"]
+              }}
               transition={{ duration: 2, repeat: Infinity }}
-              className="bg-primary/20 p-4 rounded-full border border-primary/50 shadow-[0_0_30px_rgba(76,175,80,0.3)] backdrop-blur-md"
+              className="bg-primary/20 p-5 rounded-full border border-primary/50 backdrop-blur-md"
             >
-              <Sprout size={32} className="text-primary" />
+              <Sprout size={36} className="text-primary" />
             </motion.div>
           </div>
 
-          {/* IoT Nodes */}
-          <div className="absolute top-[20%] left-[25%] text-primary/80">
-             <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 3, repeat: Infinity }}>
-                <Cpu size={16} />
-             </motion.div>
+          {/* IoT Node (Sensor) - Emitting Green Beams */}
+          <div className="absolute top-[20%] left-[20%] group">
+             <div className="relative">
+                <motion.div 
+                  animate={{ scale: [1, 2.5], opacity: [0.6, 0] }} 
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="absolute inset-0 bg-krishi-lime rounded-full"
+                />
+                <div className="relative p-2 bg-krishi-lime/20 rounded-lg border border-krishi-lime/40 text-krishi-lime">
+                   <Cpu size={18} />
+                </div>
+                {/* Data Packet to Hub */}
+                <motion.div
+                  animate={{ left: ["0%", "200%"], top: ["0%", "200%"], opacity: [0, 1, 0] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                  className="absolute w-1 h-1 bg-krishi-lime rounded-full shadow-[0_0_8px_rgba(76,175,80,1)]"
+                />
+             </div>
+             <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[7px] text-white/30 font-bold uppercase whitespace-nowrap">IOT_NODE_04</span>
           </div>
 
-          {/* Seller / Farmer */}
-          <div className="absolute top-[40%] right-[15%] text-krishi-gold">
-            <Store size={20} />
-          </div>
-
-          {/* Rider */}
+          {/* Rider Node - Emitting Blue Pulses */}
           <motion.div
-            animate={{ x: [-5, 10, -5], y: [-10, 5, -10] }}
-            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-[15%] right-[30%] text-blue-400"
+            animate={{ 
+              x: [-10, 20, -10], 
+              y: [-20, 10, -20] 
+            }}
+            transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute top-[15%] right-[25%] group"
           >
-            <Bike size={18} />
+            <div className="relative">
+                <motion.div 
+                  animate={{ scale: [1, 3], opacity: [0.4, 0] }} 
+                  transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
+                  className="absolute inset-0 bg-blue-400 rounded-full"
+                />
+                <div className="relative p-2 bg-blue-400/20 rounded-lg border border-blue-400/40 text-blue-400">
+                   <Bike size={20} />
+                </div>
+                {/* Data Packet to Hub */}
+                <motion.div
+                  animate={{ right: ["0%", "150%"], bottom: ["0%", "150%"], opacity: [0, 1, 0] }}
+                  transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
+                  className="absolute w-1 h-1 bg-blue-400 rounded-full"
+                />
+            </div>
           </motion.div>
 
-          {/* Buyer */}
-          <div className="absolute bottom-[20%] right-[25%] text-white/70">
-            <ShoppingBag size={18} />
+          {/* Merchant Farmer Node */}
+          <div className="absolute bottom-[30%] right-[15%] text-krishi-gold">
+             <div className="relative p-2 bg-krishi-gold/20 rounded-lg border border-krishi-gold/40">
+                <Store size={22} />
+                <motion.div 
+                  animate={{ scale: [1, 2], opacity: [0.3, 0] }} 
+                  transition={{ duration: 3, repeat: Infinity }}
+                  className="absolute inset-0 bg-krishi-gold rounded-full -z-10"
+                />
+             </div>
+          </div>
+
+          {/* Buyer Node */}
+          <div className="absolute bottom-[20%] left-[30%] text-white/50">
+            <motion.div 
+              animate={{ y: [0, -5, 0] }}
+              transition={{ duration: 4, repeat: Infinity }}
+              className="p-2 bg-white/5 rounded-lg border border-white/10"
+            >
+              <ShoppingBag size={18} />
+            </motion.div>
           </div>
         </div>
 
+        {/* Live Feed Terminal */}
         <div className="bg-white/5 rounded-2xl p-4 border border-white/5 space-y-3">
            <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-2">
                 <Navigation size={10} className="text-krishi-gold" />
                 <span className="text-[9px] font-bold text-krishi-gold uppercase tracking-widest">Network Stream</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                 <div className="w-1.5 h-1.5 rounded-full bg-krishi-lime animate-pulse" />
+                 <span className="text-[8px] text-white/40 uppercase font-bold tracking-tighter">Live Sync</span>
               </div>
            </div>
            <div className="space-y-1.5">
@@ -212,7 +267,7 @@ export const Hero = () => {
             {content.badge}
           </motion.div>
 
-          <h1 className="text-4xl md:text-7xl font-display font-medium leading-[1.15] text-foreground max-w-2xl">
+          <h1 className="text-5xl md:text-7xl font-display font-medium leading-[1.15] text-foreground max-w-2xl">
             {headlineWords.map((word, i) => (
               <motion.span
                 key={i}
