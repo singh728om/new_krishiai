@@ -189,7 +189,7 @@ export const Hero = () => {
             {content.badge}
           </motion.div>
 
-          <h1 className="text-5xl md:text-8xl font-display font-medium leading-[1.1] text-foreground">
+          <h1 className="text-5xl md:text-7xl font-display font-medium leading-[1.1] text-foreground max-w-2xl">
             {headlineWords.map((word, i) => (
               <motion.span
                 key={i}
