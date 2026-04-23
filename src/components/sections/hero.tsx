@@ -158,7 +158,7 @@ export const Hero = () => {
   const { lang } = useSettings();
   
   const content = {
-    badge: lang === 'en' ? "Bharat's Most Advanced Agri-Tech & Logistics Network" : "भारत का सबसे उन्नत कृषि-तकनीक और रसद नेटवर्क",
+    badge: lang === 'en' ? "Bharat’s Most Advanced Farm-to-Store Intelligence Network." : "भारत का सबसे उन्नत फार्म-टू-स्टोर इंटेलिजेंस नेटवर्क।",
     headline: lang === 'en' ? 'Decoding Nature, Delivering Quality.' : 'प्रकृति को समझना, गुणवत्ता प्रदान करना।',
     subline: lang === 'en' 
       ? 'AI-powered precision for farmers and nationwide organic commerce delivered fresh from local clusters.' 
