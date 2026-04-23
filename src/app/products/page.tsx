@@ -1,8 +1,23 @@
 
 "use client";
 
-import { motion } from "framer-motion";
-import { Star, ShoppingCart, ArrowLeft, Bike, MapPin, Zap } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  Star, 
+  ShoppingCart, 
+  ArrowLeft, 
+  Bike, 
+  MapPin, 
+  Zap, 
+  Search, 
+  ChevronRight,
+  Store,
+  Clock,
+  Navigation,
+  ShieldCheck,
+  LocateFixed
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
@@ -11,38 +26,58 @@ import { useCart } from "@/context/cart-context";
 import { Navbar } from "@/components/sections/navbar";
 import { Footer } from "@/components/sections/footer";
 import Link from "next/link";
-import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+
+const STORES = [
+  { id: "str-1", name: "Varanasi North Cluster", cluster: "Varanasi", distance: "1.2km", rating: 4.9, time: "30-45 min", image: "https://picsum.photos/seed/farm1/600/400" },
+  { id: "str-2", name: "Ghazipur Organic Hub", cluster: "Ghazipur", distance: "3.4km", rating: 4.7, time: "45-60 min", image: "https://picsum.photos/seed/farm2/600/400" },
+  { id: "str-3", name: "Mirzapur Hill Farm", cluster: "Mirzapur", distance: "12.8km", rating: 4.8, time: "90-120 min", image: "https://picsum.photos/seed/farm3/600/400" },
+  { id: "str-4", name: "Sarnath Green Field", cluster: "Varanasi", distance: "0.8km", rating: 5.0, time: "25-35 min", image: "https://picsum.photos/seed/farm4/600/400" },
+];
 
 const CATEGORIES = [
-  { id: "all", nameEn: "All Products", nameHi: "सभी उत्पाद" },
-  { id: "veggies", nameEn: "Vegetables", nameHi: "सब्जियां" },
-  { id: "fruits", nameEn: "Fruits", nameHi: "फल" },
-  { id: "grains", nameEn: "Grains & Pulses", nameHi: "अनाज और दालें" },
-  { id: "oils", nameEn: "Oils & Ghee", nameHi: "तेल और घी" },
+  { id: "all", nameEn: "All", nameHi: "सब", icon: "🌱" },
+  { id: "veggies", nameEn: "Veggies", nameHi: "सब्जियां", icon: "🥦" },
+  { id: "dairy", nameEn: "Milk & Ghee", nameHi: "दूध और घी", icon: "🥛" },
+  { id: "fruits", nameEn: "Fruits", nameHi: "फल", icon: "🍎" },
+  { id: "pantry", nameEn: "Honey", nameHi: "शहद", icon: "🍯" },
 ];
 
 const ALL_PRODUCTS = [
-  { id: "tomato", cat: "veggies", nameEn: "Organic Cherry Tomatoes", nameHi: "ऑर्गेनिक चेरी टमाटर", price: 180, rating: 4.9, cluster: "Varanasi", nearby: true },
-  { id: "potato", cat: "veggies", nameEn: "Farm Fresh Potatoes", nameHi: "ताजा आलू", price: 45, rating: 4.7, cluster: "Mirzapur", nearby: false },
-  { id: "mango", cat: "fruits", nameEn: "Banarasi Langra Mangoes", nameHi: "बनारसी लंगड़ा आम", price: 600, rating: 5.0, cluster: "Varanasi", nearby: true },
-  { id: "rice", cat: "grains", nameEn: "Premium Basmati Rice", nameHi: "प्रीमियम बासमती चावल", price: 245, rating: 4.8, cluster: "Prayagraj", nearby: false },
-  { id: "wheat", cat: "grains", nameEn: "Sun-dried Wheat", nameHi: "धूप में सुखाया गया गेहूं", price: 120, rating: 4.7, cluster: "Lalganj", nearby: false },
-  { id: "oil", cat: "oils", nameEn: "Cold-pressed Mustard Oil", nameHi: "सरसों का तेल", price: 320, rating: 4.9, cluster: "Madihan", nearby: true },
-  { id: "honey", cat: "pantry", nameEn: "Wild Forest Honey", nameHi: "जंगल का शहद", price: 450, rating: 4.8, cluster: "Sonbhadra", nearby: true },
-  { id: "ghee", cat: "oils", nameEn: "A2 Desi Cow Ghee", nameHi: "ए2 देसी गाय का घी", price: 850, rating: 4.9, cluster: "Prayagraj", nearby: false },
+  { id: "tomato", storeId: "str-1", cat: "veggies", nameEn: "Organic Cherry Tomatoes", nameHi: "ऑर्गेनिक चेरी टमाटर", price: 180, rating: 4.9 },
+  { id: "potato", storeId: "str-2", cat: "veggies", nameEn: "Farm Fresh Potatoes", nameHi: "ताजा आलू", price: 45, rating: 4.7 },
+  { id: "mango", storeId: "str-1", cat: "fruits", nameEn: "Banarasi Langra Mangoes", nameHi: "बनारसी लंगड़ा आम", price: 600, rating: 5.0 },
+  { id: "milk", storeId: "str-4", cat: "dairy", nameEn: "A2 Desi Cow Milk (1L)", nameHi: "ए2 देसी गाय का दूध", price: 90, rating: 4.9 },
+  { id: "ghee", storeId: "str-4", cat: "dairy", nameEn: "A2 Desi Cow Ghee", nameHi: "ए2 देसी गाय का घी", price: 850, rating: 4.9 },
+  { id: "honey", storeId: "str-3", cat: "pantry", nameEn: "Wild Forest Honey", nameHi: "जंगल का शहद", price: 450, rating: 4.8 },
+  { id: "wheat", storeId: "str-2", cat: "veggies", nameEn: "Sun-dried Wheat", nameHi: "धूप में सुखाया गया गेहूं", price: 120, rating: 4.7 },
 ];
 
-export default function ProductsPage() {
+export default function HaritMarketplace() {
   const { lang } = useSettings();
   const { addToCart } = useCart();
   const { toast } = useToast();
+  
+  const [userLocation, setUserLocation] = useState("Varanasi");
   const [activeCategory, setActiveCategory] = useState("all");
+  const [searchQuery, setSearchInput] = useState("");
+  const [selectedStore, setSelectedStore] = useState<typeof STORES[0] | null>(null);
 
-  const filteredProducts = activeCategory === "all" 
-    ? ALL_PRODUCTS 
-    : ALL_PRODUCTS.filter(p => p.cat === activeCategory);
+  // Filter stores based on user location (Simulation)
+  const filteredStores = useMemo(() => {
+    return STORES.filter(s => s.cluster === userLocation);
+  }, [userLocation]);
+
+  // Filter products based on category and search
+  const filteredProducts = useMemo(() => {
+    let list = ALL_PRODUCTS;
+    if (selectedStore) list = list.filter(p => p.storeId === selectedStore.id);
+    if (activeCategory !== "all") list = list.filter(p => p.cat === activeCategory);
+    if (searchQuery) list = list.filter(p => p.nameEn.toLowerCase().includes(searchQuery.toLowerCase()));
+    return list;
+  }, [selectedStore, activeCategory, searchQuery]);
 
   const handleAdd = (product: any) => {
     const imageData = PlaceHolderImages.find(img => img.id === product.id) || PlaceHolderImages[0];
@@ -63,101 +98,162 @@ export default function ProductsPage() {
     <main className="min-h-screen bg-background flex flex-col">
       <Navbar />
 
-      <section className="flex-1 py-24 container mx-auto px-6">
+      <section className="flex-1 pt-32 pb-24 container mx-auto px-6 max-w-6xl">
+        
+        {/* Header: Location & Search */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12">
-          <div>
-            <Link href="/" className="text-primary hover:text-primary/80 flex items-center gap-2 mb-4 font-medium">
-              <ArrowLeft size={16} />
-              {lang === 'en' ? "Back to Home" : "होम पर वापस"}
-            </Link>
-            <h1 className="text-4xl md:text-6xl font-display text-foreground">
-              {lang === 'en' ? "Harit" : "हरित"} <span className="text-primary italic">{lang === 'en' ? "Marketplace" : "बाज़ार"}</span>
-            </h1>
-            <div className="flex items-center gap-3 mt-4">
-              <Badge className="bg-primary/10 text-primary border-primary/20 gap-1 px-3 py-1">
-                 <Zap size={14} /> Express 15km Delivery
-              </Badge>
-              <Badge variant="outline" className="border-border text-foreground/40 font-code text-[10px]">
-                LOC_UP_ACTIVE
-              </Badge>
-            </div>
+          <div className="space-y-1">
+             <div className="flex items-center gap-2 text-primary font-bold text-sm cursor-pointer hover:opacity-80 transition-opacity">
+                <MapPin size={18} />
+                <span>{userLocation}, India</span>
+                <ChevronRight size={14} className="text-foreground/40" />
+             </div>
+             <p className="text-xs text-foreground/40 uppercase tracking-widest font-bold">15km Hyper-local Delivery Active</p>
+          </div>
+
+          <div className="relative flex-1 md:max-w-md">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-foreground/30" size={18} />
+            <Input 
+              placeholder={lang === 'en' ? "Search for fresh veggies, milk, or ghee..." : "ताजी सब्जियां, दूध या घी खोजें..."}
+              className="pl-12 h-14 rounded-2xl bg-card border-border shadow-sm focus:ring-primary"
+              value={searchQuery}
+              onChange={(e) => setSearchInput(e.target.value)}
+            />
           </div>
         </div>
 
-        <div className="flex gap-4 overflow-x-auto pb-8 mb-8 no-scrollbar scroll-smooth">
+        {/* Categories Bar */}
+        <div className="flex gap-4 overflow-x-auto pb-8 mb-8 no-scrollbar">
           {CATEGORIES.map((cat) => (
             <button
               key={cat.id}
               onClick={() => setActiveCategory(cat.id)}
-              className={`px-6 py-3 rounded-full font-headline font-bold text-sm whitespace-nowrap transition-all border ${
+              className={`flex items-center gap-2 px-6 py-4 rounded-2xl font-headline font-bold text-sm whitespace-nowrap transition-all border ${
                 activeCategory === cat.id 
-                ? "bg-primary text-white border-primary shadow-lg" 
-                : "bg-card text-foreground/60 border-border"
+                ? "bg-primary text-white border-primary shadow-lg scale-105" 
+                : "bg-card text-foreground/60 border-border hover:border-primary/20"
               }`}
             >
+              <span className="text-xl">{cat.icon}</span>
               {lang === 'en' ? cat.nameEn : cat.nameHi}
             </button>
           ))}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          {filteredProducts.map((product) => {
-            const imageData = PlaceHolderImages.find(img => img.id === product.id) || PlaceHolderImages[0];
-            return (
-              <motion.div
-                layout
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                key={product.id}
-                className="bg-card rounded-[2rem] border border-border overflow-hidden transition-all hover:border-primary/40 shadow-sm hover:shadow-xl group"
-              >
-                <div className="h-56 relative overflow-hidden bg-muted">
-                  <Image
-                    src={imageData.imageUrl}
-                    alt={lang === 'en' ? product.nameEn : product.nameHi}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-700"
-                  />
-                  {product.nearby && (
-                    <div className="absolute top-4 right-4 bg-krishi-gold text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-lg flex items-center gap-1">
-                      <Bike size={12} /> Nearby Farmer
+        <AnimatePresence mode="wait">
+          {!selectedStore ? (
+            <motion.div 
+              key="store-list"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="space-y-10"
+            >
+              <h2 className="text-3xl font-display italic">Farms in <span className="text-primary">{userLocation}</span></h2>
+              
+              <div className="grid md:grid-cols-2 gap-8">
+                {filteredStores.map((store) => (
+                  <motion.div
+                    key={store.id}
+                    whileHover={{ y: -5 }}
+                    onClick={() => setSelectedStore(store)}
+                    className="group bg-card rounded-[2.5rem] border border-border overflow-hidden cursor-pointer shadow-sm hover:shadow-2xl transition-all"
+                  >
+                    <div className="h-56 relative overflow-hidden bg-muted">
+                      <img src={store.image} alt={store.name} className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-700" />
+                      <div className="absolute top-4 left-4 bg-background/90 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold text-primary border border-border">
+                         {store.distance} AWAY
+                      </div>
+                      <div className="absolute bottom-4 right-4 bg-krishi-lime text-white px-3 py-1 rounded-full text-[10px] font-bold flex items-center gap-1">
+                        <ShieldCheck size={12} /> HYPER-LOCAL
+                      </div>
                     </div>
-                  )}
-                  <div className="absolute bottom-4 left-4 bg-background/90 backdrop-blur-md border border-border px-3 py-1 rounded-full text-[9px] font-bold text-primary flex items-center gap-1 uppercase tracking-widest">
-                    <MapPin size={10} /> {product.cluster} Cluster
-                  </div>
+                    <div className="p-8">
+                      <div className="flex justify-between items-start mb-4">
+                        <h3 className="text-2xl font-headline font-bold group-hover:text-primary transition-colors">{store.name}</h3>
+                        <Badge className="bg-primary/10 text-primary border-primary/20 gap-1">
+                          <Star size={12} fill="currentColor" /> {store.rating}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-6 text-foreground/40 text-sm font-medium">
+                        <div className="flex items-center gap-2"><Clock size={16} className="text-krishi-amber" /> {store.time}</div>
+                        <div className="flex items-center gap-2"><Bike size={16} className="text-blue-500" /> ₹30 Delivery</div>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+
+              <div className="bg-primary/5 rounded-[2.5rem] p-12 text-center border border-primary/10">
+                 <LocateFixed size={48} className="mx-auto text-primary/20 mb-4" />
+                 <h3 className="text-2xl font-display mb-2">Can't see your farm?</h3>
+                 <p className="text-foreground/40 mb-6">Our sensors are expanding daily. Try switching to a different cluster.</p>
+                 <div className="flex justify-center gap-3">
+                    {["Varanasi", "Ghazipur", "Mirzapur"].map(city => (
+                      <Button 
+                        key={city} 
+                        variant={userLocation === city ? "default" : "outline"} 
+                        size="sm" 
+                        onClick={() => setUserLocation(city)}
+                        className="rounded-full"
+                      >
+                        {city}
+                      </Button>
+                    ))}
+                 </div>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="product-list"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="space-y-12"
+            >
+              <div className="flex items-center gap-4">
+                <Button variant="ghost" size="icon" onClick={() => setSelectedStore(null)} className="rounded-full h-12 w-12 border border-border bg-card">
+                  <ArrowLeft size={20} />
+                </Button>
+                <div>
+                  <h2 className="text-3xl font-display">{selectedStore.name}</h2>
+                  <p className="text-foreground/40 text-sm font-bold uppercase tracking-widest">{selectedStore.cluster} Cluster • {selectedStore.time} Delivery</p>
                 </div>
-                
-                <div className="p-6 space-y-4">
-                  <div className="flex justify-between items-start">
-                    <h3 className="font-headline font-bold text-lg leading-tight text-foreground group-hover:text-primary transition-colors">
-                      {lang === 'en' ? product.nameEn : product.nameHi}
-                    </h3>
-                    <div className="flex items-center gap-1 text-krishi-gold text-xs font-bold">
-                      <Star size={14} fill="currentColor" />
-                      {product.rating}
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="flex flex-col">
-                      <span className="text-xs text-foreground/40 font-medium">Price</span>
-                      <span className="text-2xl font-display text-foreground">₹{product.price}</span>
-                    </div>
-                    <Button 
-                      size="sm" 
-                      onClick={() => handleAdd(product)}
-                      className="bg-primary hover:bg-primary/90 text-white rounded-full px-6 shadow-lg shadow-primary/20"
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                {filteredProducts.map((product) => {
+                  const imageData = PlaceHolderImages.find(img => img.id === product.id) || PlaceHolderImages[0];
+                  return (
+                    <motion.div
+                      layout
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      key={product.id}
+                      className="bg-card rounded-[2rem] border border-border overflow-hidden group shadow-sm hover:shadow-xl transition-all"
                     >
-                      <ShoppingCart size={16} className="mr-2" />
-                      {lang === 'en' ? "Add" : "जोड़ें"}
-                    </Button>
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
+                      <div className="h-48 relative overflow-hidden bg-muted">
+                        <img src={imageData.imageUrl} alt={product.nameEn} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700" />
+                      </div>
+                      <div className="p-6 space-y-4">
+                        <h3 className="font-headline font-bold text-lg leading-tight">{lang === 'en' ? product.nameEn : product.nameHi}</h3>
+                        <div className="flex items-center justify-between">
+                          <span className="text-2xl font-display">₹{product.price}</span>
+                          <Button 
+                            size="sm" 
+                            onClick={() => handleAdd(product)}
+                            className="bg-primary hover:bg-primary/90 text-white rounded-full px-6"
+                          >
+                            Add
+                          </Button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </section>
 
       <Footer />
