@@ -161,8 +161,8 @@ export const Hero = () => {
     badge: lang === 'en' ? "Bharat's Most Advanced Agri-Tech & Logistics Network" : "भारत का सबसे उन्नत कृषि-तकनीक और रसद नेटवर्क",
     headline: lang === 'en' ? 'Smart Farming. Local Delivery. Guaranteed Growth.' : 'स्मार्ट खेती। स्थानीय डिलीवरी। गारंटीड विकास।',
     subline: lang === 'en' 
-      ? 'AI-powered disease diagnosis, real-time IoT monitoring, and a hyper-local marketplace. Lease your land, sell your harvest, or deliver organic goodness—all within 15km.' 
-      : 'एआई-संचालित बीमारी का निदान, वास्तविक समय आईओटी निगरानी और एक हाइपर-लोकल बाजार। अपनी जमीन पट्टे पर दें, अपनी फसल बेचें, या जैविक उत्पाद पहुंचाएं—सब कुछ 15 किमी के भीतर।',
+      ? 'Empowering farmers with AI diagnostics, IoT monitoring, and a 15km organic supply chain. Sell direct, ship local, grow forever.' 
+      : 'एआई निदान, आईओटी निगरानी और 15 किमी जैविक आपूर्ति श्रृंखला के साथ किसानों को सशक्त बनाना। सीधा बेचें, स्थानीय शिप करें, हमेशा बढ़ें।',
     ctaPrimary: lang === 'en' ? 'Start Growing Free' : 'मुफ्त में शुरू करें',
     ctaSecondary: lang === 'en' ? 'Lease My Land →' : 'मेरी जमीन पट्टे पर दें →',
     stat1: lang === 'en' ? '40% yield increase' : '40% पैदावार वृद्धि',
