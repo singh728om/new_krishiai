@@ -5,6 +5,7 @@ import { CustomCursor } from "@/components/ui/custom-cursor";
 import { Navbar } from "@/components/sections/navbar";
 import { Hero } from "@/components/sections/hero";
 import { SocialProofBar } from "@/components/sections/social-proof";
+import { ActionCards } from "@/components/sections/action-cards";
 import { FeatureGrid } from "@/components/sections/features";
 import { WeatherIntelligence } from "@/components/sections/weather-intelligence";
 import { DiagnosticsDemo } from "@/components/sections/diagnostics-demo";
@@ -25,6 +26,7 @@ export default function LandingPage() {
       <div className="flex-1">
         <Hero />
         <SocialProofBar />
+        <ActionCards />
         <FeatureGrid />
         <Iot360View />
         <WeatherIntelligence />
