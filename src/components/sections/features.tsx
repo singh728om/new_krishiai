@@ -19,11 +19,11 @@ const FeatureCard = ({
   children?: React.ReactNode;
 }) => (
   <motion.div
-    initial={{ opacity: 0, y: 30 }}
+    initial={{ opacity: 0, y: 20 }}
     whileInView={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.6, delay }}
-    viewport={{ once: true }}
-    className={`group relative overflow-hidden rounded-[2rem] bg-card border border-border p-8 hover:border-primary/30 transition-all duration-500 hover:-translate-y-1 shadow-sm ${className}`}
+    transition={{ duration: 0.5, delay }}
+    viewport={{ once: true, margin: "-50px" }}
+    className={`group relative overflow-hidden rounded-[2rem] bg-card border border-border p-8 hover:border-primary/30 transition-all duration-300 shadow-sm ${className}`}
   >
     <div className="mb-6 p-3 rounded-2xl bg-primary/5 w-fit text-primary group-hover:scale-110 transition-transform">
       {icon}
@@ -32,7 +32,6 @@ const FeatureCard = ({
     <p className="text-foreground/60 font-body leading-relaxed max-w-xs">{description}</p>
     {children}
     
-    {/* Subtle hover glow */}
     <div className="absolute inset-0 bg-gradient-to-tr from-primary/0 via-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
   </motion.div>
 );
@@ -49,7 +48,6 @@ export const FeatureGrid = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Card 1 - Disease Diagnostics */}
           <FeatureCard
             title="Disease Diagnostics"
             description="Instant leaf-level pathology using Gemini Vision AI. Identifies over 120+ crop diseases."
@@ -64,42 +62,41 @@ export const FeatureGrid = () => {
                 <div className="w-full bg-foreground/5 h-1 rounded-full overflow-hidden">
                    <div className="bg-primary w-[97.2%] h-full" />
                 </div>
-                <div className="text-foreground/40">RESULT: EARLY BLIGHT (ALTERNARIA SOLANI)</div>
              </div>
           </FeatureCard>
 
-          {/* Card 2 - Market Alpha */}
           <FeatureCard
             title="Market Alpha"
             description="Predict commodity price peaks 3 weeks ahead using global market data."
             icon={<TrendingUp size={32} />}
+            delay={0.1}
           >
              <div className="mt-6 font-code">
-                <div className="text-krishi-amber text-lg font-bold">WHEAT ↑ ₹267 <span className="text-[10px] text-foreground/40 font-normal ml-1">EST. PEAK</span></div>
+                <div className="text-krishi-amber text-lg font-bold">WHEAT ↑ ₹267</div>
              </div>
           </FeatureCard>
 
-          {/* Card 3 - Weather Guard */}
           <FeatureCard
             title="Weather Guard"
             description="Hyper-local 98% accuracy for your pincode. Built for monsoons."
             icon={<CloudSun size={32} />}
+            delay={0.2}
           />
 
-          {/* Card 4 - Carbon Economy */}
           <FeatureCard
             title="Carbon Economy"
             description="Monetize soil health. Earn credits automatically by maintaining soil organic carbon."
             icon={<Leaf size={32} />}
+            delay={0.3}
           >
              <div className="mt-4 text-primary font-headline font-bold">₹4,820 EARNED</div>
           </FeatureCard>
 
-          {/* Card 5 - Village Networks */}
           <FeatureCard
             title="FPO Connect"
             description="Connect with local Farmer Producer Organizations for better bargaining power."
             icon={<Sprout size={32} />}
+            delay={0.4}
           />
         </div>
       </div>

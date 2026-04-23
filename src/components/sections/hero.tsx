@@ -36,23 +36,6 @@ const AgricultureScene = () => (
           <circle key={i} cx={210 + i * 20} cy={105} r="3" />
         ))}
       </g>
-      <g className="fill-krishi-soil">
-        <motion.path 
-          animate={{ x: [0, 10, 0] }}
-          transition={{ duration: 10, repeat: Infinity }}
-          d="M850,70 h15 v8 h-15 Z M862,70 v-5 h3 v5 Z" 
-        />
-      </g>
-      <motion.g
-        initial={{ x: -100 }}
-        animate={{ x: 1300 }}
-        transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
-      >
-        <rect x="0" y="80" width="20" height="12" rx="2" className="fill-krishi-amber" />
-        <rect x="12" y="70" width="10" height="10" rx="1" className="fill-krishi-soil" />
-        <circle cx="4" cy="92" r="4" className="fill-black" />
-        <circle cx="16" cy="92" r="4" className="fill-black" />
-      </motion.g>
     </svg>
   </div>
 );
@@ -99,13 +82,12 @@ const PlatformPulseNetwork = () => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: 40 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.8, delay: 0.4 }}
-      className="relative p-1 rounded-[3rem] bg-gradient-to-br from-primary/40 to-transparent"
+      initial={{ opacity: 0, y: 40 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, delay: 0.4 }}
+      className="relative p-1 rounded-[3rem] bg-gradient-to-br from-primary/40 to-transparent w-full max-w-[500px] mx-auto"
     >
-      <div className="bg-[#0A0F08] rounded-[2.8rem] p-8 border border-white/5 shadow-2xl overflow-hidden min-h-[500px] flex flex-col">
-        {/* Terminal Header */}
+      <div className="bg-[#0A0F08] rounded-[2.8rem] p-6 md:p-8 border border-white/5 shadow-2xl overflow-hidden min-h-[400px] md:min-h-[500px] flex flex-col">
         <div className="flex items-center justify-between mb-6">
           <div className="flex gap-2">
             <div className="w-2 h-2 rounded-full bg-red-500/80 animate-pulse" />
@@ -114,14 +96,11 @@ const PlatformPulseNetwork = () => {
           </div>
           <div className="flex items-center gap-2">
              <Signal size={12} className="text-primary animate-pulse" />
-             <span className="text-[10px] text-white/40 uppercase tracking-[0.2em] font-bold">Pulse Intelligence</span>
+             <span className="text-[9px] text-white/40 uppercase tracking-[0.2em] font-bold">Pulse Intelligence</span>
           </div>
         </div>
 
-        {/* Pulse Network Visual */}
         <div className="relative flex-1 bg-white/[0.02] rounded-3xl border border-white/5 flex items-center justify-center overflow-hidden mb-6">
-          
-          {/* Radiating Pulse Waves */}
           {[1, 2, 3].map((i) => (
             <motion.div
               key={i}
@@ -136,11 +115,10 @@ const PlatformPulseNetwork = () => {
                 delay: i * 1.3,
                 ease: "easeOut"
               }}
-              className="absolute w-[200px] h-[200px] border border-primary/30 rounded-full"
+              className="absolute w-[150px] md:w-[200px] h-[150px] md:h-[200px] border border-primary/30 rounded-full"
             />
           ))}
 
-          {/* Central Hub */}
           <div className="relative z-30">
             <motion.div 
               animate={{ scale: [1, 1.1, 1] }}
@@ -149,135 +127,52 @@ const PlatformPulseNetwork = () => {
             >
               <Sprout size={32} className="text-primary" />
             </motion.div>
-            {/* Core Pulse */}
-            <motion.div 
-              animate={{ scale: [1, 2], opacity: [0.6, 0] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="absolute inset-0 bg-primary/40 rounded-full -z-10"
-            />
           </div>
 
-          {/* Network Nodes with Individual Pulse Feedback */}
           {/* IoT Nodes */}
-          <div className="absolute top-[20%] left-[25%] text-primary/80 group">
-             <motion.div whileHover={{ scale: 1.2 }}>
-                <Cpu size={18} />
+          <div className="absolute top-[20%] left-[25%] text-primary/80">
+             <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 3, repeat: Infinity }}>
+                <Cpu size={16} />
              </motion.div>
-             <motion.div 
-               animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.8, 0.2] }}
-               transition={{ duration: 3, repeat: Infinity }}
-               className="absolute -inset-2 bg-primary/10 rounded-full -z-10 blur-sm"
-             />
-          </div>
-
-          <div className="absolute bottom-[30%] left-[15%] text-primary/60">
-             <Cpu size={14} />
           </div>
 
           {/* Seller / Farmer */}
           <div className="absolute top-[40%] right-[15%] text-krishi-gold">
-            <motion.div animate={{ y: [0, -5, 0] }} transition={{ duration: 4, repeat: Infinity }}>
-               <Store size={22} />
-            </motion.div>
-            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-1 bg-krishi-gold/20 blur-sm rounded-full" />
+            <Store size={20} />
           </div>
 
           {/* Rider */}
           <motion.div
-            animate={{ 
-              x: [-10, 20, -10],
-              y: [-15, 10, -15]
-            }}
+            animate={{ x: [-5, 10, -5], y: [-10, 5, -10] }}
             transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
             className="absolute top-[15%] right-[30%] text-blue-400"
           >
-            <Bike size={20} />
-            <div className="absolute inset-0 bg-blue-500/10 blur-xl rounded-full -z-10" />
+            <Bike size={18} />
           </motion.div>
 
           {/* Buyer */}
           <div className="absolute bottom-[20%] right-[25%] text-white/70">
-            <ShoppingBag size={20} />
-            <motion.div
-              animate={{ scale: [1, 1.3, 1], opacity: [0.5, 1, 0.5] }}
-              transition={{ duration: 2, repeat: Infinity, delay: 1 }}
-              className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full shadow-[0_0_10px_rgba(76,175,80,1)]"
-            />
+            <ShoppingBag size={18} />
           </div>
-
-          {/* Connection Lines (Static logic, animated dash) */}
-          <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-20">
-             <motion.path 
-               d="M 150 150 L 100 80" 
-               stroke="currentColor" 
-               className="text-primary"
-               strokeWidth="1"
-               fill="none"
-               strokeDasharray="4 4"
-               animate={{ strokeDashoffset: -20 }}
-               transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-             />
-             <motion.path 
-               d="M 150 150 L 250 160" 
-               stroke="currentColor" 
-               className="text-krishi-gold"
-               strokeWidth="1"
-               fill="none"
-               strokeDasharray="4 4"
-               animate={{ strokeDashoffset: -20 }}
-               transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-             />
-             <motion.path 
-               d="M 150 150 L 220 250" 
-               stroke="currentColor" 
-               className="text-white"
-               strokeWidth="1"
-               fill="none"
-               strokeDasharray="4 4"
-               animate={{ strokeDashoffset: -20 }}
-               transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-             />
-          </svg>
         </div>
 
-        {/* Network Logistics Feed */}
-        <div className="bg-white/5 rounded-2xl p-5 border border-white/5 space-y-4">
+        <div className="bg-white/5 rounded-2xl p-4 border border-white/5 space-y-3">
            <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-2">
                 <Navigation size={10} className="text-krishi-gold" />
                 <span className="text-[9px] font-bold text-krishi-gold uppercase tracking-widest">Network Stream</span>
               </div>
-              <span className="text-[8px] text-white/20 uppercase font-bold">Signal Strength: Optimal</span>
            </div>
-           <div className="space-y-2">
+           <div className="space-y-1.5">
               {logs.map((log, i) => (
-                <motion.div 
-                  key={log + i}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1 - (i * 0.3), x: 0 }}
-                  className="flex items-center justify-between text-[11px] font-medium font-code"
-                >
+                <div key={log + i} className="flex items-center justify-between text-[10px] font-medium font-code">
                    <span className="text-white/60">_ {log}</span>
                    <span className="text-[8px] text-white/20">{new Date().toLocaleTimeString()}</span>
-                </motion.div>
+                </div>
               ))}
            </div>
         </div>
-
-        {/* Diagnostic Footer */}
-        <div className="mt-6 pt-6 border-t border-white/5 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <ShieldCheck size={14} className="text-primary" />
-            <span className="text-[10px] text-white/40 font-bold uppercase tracking-widest">Security_Protocol_V2</span>
-          </div>
-          <div className="text-[9px] text-white/20 font-bold font-code">
-             Encryption: SHA-256
-          </div>
-        </div>
       </div>
-      
-      {/* Background Glow */}
-      <div className="absolute -inset-10 bg-primary/5 blur-[100px] -z-10 rounded-full" />
     </motion.div>
   );
 };
@@ -301,7 +196,7 @@ export const Hero = () => {
   const headlineWords = content.headline.split(" ");
 
   return (
-    <section className="relative min-h-[90vh] flex items-center overflow-hidden pt-24 grain bg-background">
+    <section className="relative min-h-[90vh] flex items-center overflow-hidden pt-32 pb-16 grain bg-background">
       <AgricultureScene />
       <SkyElements />
       
@@ -317,13 +212,13 @@ export const Hero = () => {
             {content.badge}
           </motion.div>
 
-          <h1 className="text-5xl md:text-7xl font-display font-medium leading-[1.15] text-foreground max-w-2xl">
+          <h1 className="text-4xl md:text-7xl font-display font-medium leading-[1.15] text-foreground max-w-2xl">
             {headlineWords.map((word, i) => (
               <motion.span
                 key={i}
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: i * 0.1, ease: "easeOut" }}
+                transition={{ duration: 0.5, delay: i * 0.08 }}
                 className="inline-block mr-[0.25em]"
               >
                 {word}
@@ -334,7 +229,7 @@ export const Hero = () => {
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.6 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
             className="text-lg md:text-xl text-foreground/70 max-w-xl font-body leading-relaxed"
           >
             {content.subline}
@@ -343,17 +238,17 @@ export const Hero = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.8 }}
+            transition={{ duration: 0.5, delay: 0.7 }}
             className="flex flex-col sm:flex-row gap-4"
           >
-            <Link href="/login">
-              <Button size="lg" className="bg-primary hover:bg-primary/90 text-white rounded-full px-10 h-16 text-lg font-bold group w-full sm:w-auto shadow-xl shadow-primary/20">
+            <Link href="/login" className="w-full sm:w-auto">
+              <Button size="lg" className="bg-primary hover:bg-primary/90 text-white rounded-full px-10 h-16 text-lg font-bold group w-full shadow-xl shadow-primary/20">
                 {content.ctaPrimary}
                 <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Button>
             </Link>
-            <Link href="/lease-registration">
-              <Button variant="outline" size="lg" className="border-primary/30 text-primary hover:bg-primary/5 rounded-full px-10 h-16 text-lg font-bold w-full sm:w-auto">
+            <Link href="/lease-registration" className="w-full sm:w-auto">
+              <Button variant="outline" size="lg" className="border-primary/30 text-primary hover:bg-primary/5 rounded-full px-10 h-16 text-lg font-bold w-full">
                 {content.ctaSecondary}
               </Button>
             </Link>
@@ -362,27 +257,27 @@ export const Hero = () => {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 1, delay: 1.2 }}
-            className="flex flex-wrap gap-8 pt-8"
+            transition={{ duration: 0.8, delay: 1 }}
+            className="flex flex-wrap gap-6 pt-4"
           >
             <div className="flex items-center gap-2 text-xs font-headline font-bold uppercase tracking-widest text-primary">
-              <Sprout size={18} className="animate-bounce" /> {content.stat1}
+              <Sprout size={16} /> {content.stat1}
             </div>
             <div className="flex items-center gap-2 text-xs font-headline font-bold uppercase tracking-widest text-primary">
-              <CloudRain size={18} /> {content.stat2}
+              <CloudRain size={16} /> {content.stat2}
             </div>
             <div className="flex items-center gap-2 text-xs font-headline font-bold uppercase tracking-widest text-primary">
-              <Wind size={18} /> {content.stat3}
+              <Wind size={16} /> {content.stat3}
             </div>
           </motion.div>
         </div>
 
-        <div className="lg:col-span-5 hidden lg:block">
+        <div className="lg:col-span-5 flex justify-center lg:justify-end">
           <PlatformPulseNetwork />
         </div>
       </div>
 
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[800px] h-[800px] bg-primary/5 blur-[120px] rounded-full pointer-events-none" />
     </section>
   );
 };
