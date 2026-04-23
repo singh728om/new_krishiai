@@ -159,15 +159,15 @@ export const Hero = () => {
   
   const content = {
     badge: lang === 'en' ? "Bharat's Most Advanced Agri-Tech & Logistics Network" : "भारत का सबसे उन्नत कृषि-तकनीक और रसद नेटवर्क",
-    headline: lang === 'en' ? 'Smart Farming. Local Delivery. Guaranteed Growth.' : 'स्मार्ट खेती। स्थानीय डिलीवरी। गारंटीड विकास।',
+    headline: lang === 'en' ? 'Smart. Local. Connected.' : 'स्मार्ट। स्थानीय। जुड़ा हुआ।',
     subline: lang === 'en' 
-      ? 'Empowering farmers with AI diagnostics, IoT monitoring, and a 15km organic supply chain. Sell direct, ship local, grow forever.' 
-      : 'एआई निदान, आईओटी निगरानी और 15 किमी जैविक आपूर्ति श्रृंखला के साथ किसानों को सशक्त बनाना। सीधा बेचें, स्थानीय शिप करें, हमेशा बढ़ें।',
+      ? 'AI-powered precision for farmers and nationwide organic commerce delivered fresh from local clusters.' 
+      : 'किसानों के लिए एआई-संचालित सटीकता और स्थानीय क्लस्टरों से ताज़ा वितरित राष्ट्रव्यापी जैविक वाणिज्य।',
     ctaPrimary: lang === 'en' ? 'Start Growing Free' : 'मुफ्त में शुरू करें',
     ctaSecondary: lang === 'en' ? 'Lease My Land →' : 'मेरी जमीन पट्टे पर दें →',
     stat1: lang === 'en' ? '40% yield increase' : '40% पैदावार वृद्धि',
     stat2: lang === 'en' ? '3-sec diagnosis' : '3-सेकंड निदान',
-    stat3: lang === 'en' ? '15km hyper-local' : '15 किमी हाइपर-लोकल',
+    stat3: lang === 'en' ? 'Nationwide Speed' : 'राष्ट्रव्यापी गति',
   };
 
   const headlineWords = content.headline.split(" ");
@@ -189,7 +189,7 @@ export const Hero = () => {
             {content.badge}
           </motion.div>
 
-          <h1 className="text-4xl md:text-6xl font-display font-medium leading-[1.2] text-foreground">
+          <h1 className="text-5xl md:text-8xl font-display font-medium leading-[1.1] text-foreground">
             {headlineWords.map((word, i) => (
               <motion.span
                 key={i}

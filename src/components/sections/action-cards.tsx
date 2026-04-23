@@ -1,4 +1,3 @@
-
 "use client";
 
 import { motion } from "framer-motion";
@@ -11,8 +10,8 @@ const ACTIONS = [
     id: "order",
     titleEn: "Order Online",
     titleHi: "ऑनलाइन ऑर्डर करें",
-    descEn: "Fresh organic produce within 15km.",
-    descHi: "15 किमी के भीतर ताजी उपज।",
+    descEn: "Fresh organic produce delivered nationwide.",
+    descHi: "राष्ट्रव्यापी ताजी जैविक उपज पहुंचाई गई।",
     icon: ShoppingBag,
     href: "/products",
     color: "bg-krishi-lime/10 text-krishi-lime",
@@ -22,8 +21,8 @@ const ACTIONS = [
     id: "sell",
     titleEn: "Sell on KrishiAI",
     titleHi: "KrishiAI पर बेचें",
-    descEn: "List your produce to local buyers.",
-    descHi: "स्थानीय खरीदारों के लिए उत्पाद।",
+    descEn: "List your harvest for local and national buyers.",
+    descHi: "स्थानीय और राष्ट्रीय खरीदारों के लिए उत्पाद।",
     icon: Store,
     href: "/partner-registration?type=farmer",
     color: "bg-krishi-gold/10 text-krishi-gold",
@@ -33,8 +32,8 @@ const ACTIONS = [
     id: "partner",
     titleEn: "Partner with Us",
     titleHi: "भागीदार बनें",
-    descEn: "Earn by fulfilling local orders.",
-    descHi: "ऑर्डर पूरे करके कमाएं।",
+    descEn: "Earn by fulfilling local pincode orders.",
+    descHi: "स्थानीय पिनकोड ऑर्डर पूरे करके कमाएं।",
     icon: Bike,
     href: "/partner-registration?type=rider",
     color: "bg-blue-500/10 text-blue-500",

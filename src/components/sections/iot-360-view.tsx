@@ -1,62 +1,55 @@
-
 "use client";
 
 import { motion } from "framer-motion";
 import { 
-  Cpu, 
-  Wifi, 
   Radio, 
-  Zap, 
-  ShieldCheck, 
-  Activity, 
   Bike, 
   Store, 
   ShoppingBag, 
   User, 
   Sprout,
   MapPin,
-  Clock,
-  Navigation,
-  Globe
+  ShieldCheck,
+  Navigation
 } from "lucide-react";
 import { useSettings } from "@/context/settings-context";
 
 const ENTITIES = [
-  { icon: Bike, color: "text-blue-400", top: "25%", left: "30%", delay: 0.2, label: "Rider" },
-  { icon: Store, color: "text-krishi-gold", top: "40%", left: "70%", delay: 0.5, label: "Farmer/Seller" },
-  { icon: ShoppingBag, color: "text-krishi-lime", top: "65%", left: "25%", delay: 0.8, label: "Local Buyer" },
-  { icon: Bike, color: "text-blue-400", top: "15%", left: "60%", delay: 1.1, label: "Rider" },
-  { icon: User, color: "text-white/40", top: "80%", left: "55%", delay: 1.4, label: "Consumer" },
-  { icon: Store, color: "text-krishi-gold", top: "55%", left: "10%", delay: 1.7, label: "Agri-Merchant" },
+  { icon: Bike, color: "text-blue-400", top: "25%", left: "30%", delay: 0.2, label: "Local Rider" },
+  { icon: Store, color: "text-krishi-gold", top: "40%", left: "70%", delay: 0.5, label: "Merchant Farmer" },
+  { icon: ShoppingBag, color: "text-krishi-lime", top: "65%", left: "25%", delay: 0.8, label: "Direct Buyer" },
+  { icon: Bike, color: "text-blue-400", top: "15%", left: "60%", delay: 1.1, label: "Local Rider" },
+  { icon: User, color: "text-white/40", top: "80%", left: "55%", delay: 1.4, label: "National Buyer" },
+  { icon: Store, color: "text-krishi-gold", top: "55%", left: "10%", delay: 1.7, label: "Agri-Cluster" },
 ];
 
 export const Iot360View = () => {
   const { lang } = useSettings();
 
   const t = {
-    title: lang === 'en' ? "360° Hyper-local Ecosystem" : "360° हाइपर-लोकल इकोसिस्टम",
-    subtitle: lang === 'en' ? "Connecting smart field monitoring with pincode-wise delivery. Farmers sell direct, riders ship within 15km, and buyers get verified organic produce." : "स्मार्ट फील्ड मॉनिटरिंग को पिनकोड-वार डिलीवरी के साथ जोड़ना। किसान सीधे बेचते हैं, राइडर 15 किमी के भीतर शिप करते हैं, और खरीदारों को सत्यापित जैविक उत्पाद मिलते हैं।",
-    status: lang === 'en' ? "LOGISTICS_RADAR_ACTIVE" : "लॉजिस्टिक्स_रडार_सक्रिय",
+    title: lang === 'en' ? "360° Network Ecosystem" : "360° नेटवर्क इकोसिस्टम",
+    subtitle: lang === 'en' ? "Connecting nationwide field monitoring with hyper-local speed. Farmers sell direct across India, while local orders are fulfilled in minutes via nearby farming clusters." : "देशव्यापी फील्ड मॉनिटरिंग को हाइपर-लोकल गति के साथ जोड़ना। किसान पूरे भारत में सीधा बेचते हैं, जबकि स्थानीय ऑर्डर पास के फार्म क्लस्टर द्वारा मिनटों में पूरे किए जाते हैं।",
+    status: lang === 'en' ? "NATIONWIDE_NETWORK_ACTIVE" : "राष्ट्रव्यापी_नेटवर्क_सक्रिय",
   };
 
   const stats = [
     { 
-      label: lang === 'en' ? "Delivery Radius" : "डिलीवरी रेडियस", 
-      val: "15km Max", 
+      label: lang === 'en' ? "Fulfillment" : "अनुपालन", 
+      val: "Hyper-local", 
       icon: Navigation 
     },
     { 
-      label: lang === 'en' ? "Farm to Fork" : "खेत से थाली तक", 
-      val: "Direct Connect", 
+      label: lang === 'en' ? "Reach" : "पहुंच", 
+      val: "All Over India", 
       icon: Sprout 
     },
     { 
-      label: lang === 'en' ? "Pincode Range" : "पिनकोड रेंज", 
-      val: lang === 'en' ? "Varanasi / UP" : "वाराणसी / यूपी", 
+      label: lang === 'en' ? "Supply Model" : "आपूर्ति मॉडल", 
+      val: lang === 'en' ? "Direct Farm" : "सीधा खेत", 
       icon: MapPin 
     },
     { 
-      label: lang === 'en' ? "Traceability" : "ट्रैसेबिलिटी", 
+      label: lang === 'en' ? "Quality" : "गुणवत्ता", 
       val: "100% Organic", 
       icon: ShieldCheck 
     },
