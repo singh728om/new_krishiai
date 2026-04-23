@@ -15,7 +15,8 @@ import {
   Cpu, 
   Store, 
   Bike,
-  ShieldCheck
+  ShieldCheck,
+  Signal
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useSettings } from "@/context/settings-context";
@@ -75,7 +76,7 @@ const SkyElements = () => (
   </div>
 );
 
-const PlatformRadarMap = () => {
+const PlatformPulseNetwork = () => {
   const [logs, setLogs] = useState<string[]>([
     "SAT_LINK: ACTIVE",
     "CLUSTER_09: OPTIMAL",
@@ -112,95 +113,131 @@ const PlatformRadarMap = () => {
             <div className="w-2 h-2 rounded-full bg-primary/80" />
           </div>
           <div className="flex items-center gap-2">
-             <Radio size={12} className="text-primary animate-pulse" />
-             <span className="text-[10px] text-white/40 uppercase tracking-[0.2em] font-bold">Network Intelligence</span>
+             <Signal size={12} className="text-primary animate-pulse" />
+             <span className="text-[10px] text-white/40 uppercase tracking-[0.2em] font-bold">Pulse Intelligence</span>
           </div>
         </div>
 
-        {/* Radar Map Visual */}
+        {/* Pulse Network Visual */}
         <div className="relative flex-1 bg-white/[0.02] rounded-3xl border border-white/5 flex items-center justify-center overflow-hidden mb-6">
-          {/* Radar Circles */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-[300px] h-[300px] border border-white/5 rounded-full" />
-            <div className="w-[200px] h-[200px] border border-white/5 rounded-full" />
-            <div className="w-[100px] h-[100px] border border-white/10 rounded-full" />
-            
-            {/* Axis Lines */}
-            <div className="absolute h-full w-px bg-white/5" />
-            <div className="absolute w-full h-px bg-white/5" />
-          </div>
-
-          {/* Sweep Animation */}
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
-            className="absolute w-[300px] h-[300px] rounded-full border-t-2 border-primary/40 z-10"
-          >
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1 h-1/2 bg-gradient-to-t from-transparent to-primary/20" />
-          </motion.div>
-
-          {/* Network Entities */}
-          {/* IoT Sensors (Green Pulsing) */}
-          <motion.div 
-            animate={{ opacity: [0.3, 1, 0.3] }} 
-            transition={{ duration: 2, repeat: Infinity }}
-            className="absolute top-[20%] left-[30%] text-primary"
-          >
-            <Cpu size={16} />
-            <div className="absolute -inset-2 bg-primary/20 blur-md rounded-full -z-10" />
-          </motion.div>
           
-          <motion.div 
-            animate={{ opacity: [0.3, 1, 0.3] }} 
-            transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
-            className="absolute bottom-[25%] left-[20%] text-primary"
-          >
-            <Cpu size={14} />
-          </motion.div>
+          {/* Radiating Pulse Waves */}
+          {[1, 2, 3].map((i) => (
+            <motion.div
+              key={i}
+              initial={{ scale: 0.1, opacity: 0 }}
+              animate={{ 
+                scale: [0.1, 1.5], 
+                opacity: [0.5, 0] 
+              }}
+              transition={{ 
+                duration: 4, 
+                repeat: Infinity, 
+                delay: i * 1.3,
+                ease: "easeOut"
+              }}
+              className="absolute w-[200px] h-[200px] border border-primary/30 rounded-full"
+            />
+          ))}
 
-          {/* Sellers / Farms (Gold) */}
-          <div className="absolute top-[45%] right-[25%] text-krishi-gold">
-            <Store size={20} />
+          {/* Central Hub */}
+          <div className="relative z-30">
             <motion.div 
-              animate={{ scale: [1, 1.2, 1] }} 
-              transition={{ duration: 3, repeat: Infinity }}
-              className="absolute -inset-2 border border-krishi-gold/30 rounded-lg -z-10" 
+              animate={{ scale: [1, 1.1, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className="bg-primary/20 p-4 rounded-full border border-primary/50 shadow-[0_0_30px_rgba(76,175,80,0.3)] backdrop-blur-md"
+            >
+              <Sprout size={32} className="text-primary" />
+            </motion.div>
+            {/* Core Pulse */}
+            <motion.div 
+              animate={{ scale: [1, 2], opacity: [0.6, 0] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className="absolute inset-0 bg-primary/40 rounded-full -z-10"
             />
           </div>
 
-          {/* Buyers (White) */}
-          <div className="absolute bottom-[15%] right-[35%] text-white/80">
-            <ShoppingBag size={18} />
+          {/* Network Nodes with Individual Pulse Feedback */}
+          {/* IoT Nodes */}
+          <div className="absolute top-[20%] left-[25%] text-primary/80 group">
+             <motion.div whileHover={{ scale: 1.2 }}>
+                <Cpu size={18} />
+             </motion.div>
+             <motion.div 
+               animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.8, 0.2] }}
+               transition={{ duration: 3, repeat: Infinity }}
+               className="absolute -inset-2 bg-primary/10 rounded-full -z-10 blur-sm"
+             />
           </div>
 
-          {/* Riders (Moving Blue) */}
+          <div className="absolute bottom-[30%] left-[15%] text-primary/60">
+             <Cpu size={14} />
+          </div>
+
+          {/* Seller / Farmer */}
+          <div className="absolute top-[40%] right-[15%] text-krishi-gold">
+            <motion.div animate={{ y: [0, -5, 0] }} transition={{ duration: 4, repeat: Infinity }}>
+               <Store size={22} />
+            </motion.div>
+            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-1 bg-krishi-gold/20 blur-sm rounded-full" />
+          </div>
+
+          {/* Rider */}
           <motion.div
             animate={{ 
-              x: [-20, 40, -20],
-              y: [-10, 20, -10]
+              x: [-10, 20, -10],
+              y: [-15, 10, -15]
             }}
-            transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-            className="absolute top-[10%] right-[10%] text-blue-400"
+            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute top-[15%] right-[30%] text-blue-400"
           >
             <Bike size={20} />
-            <div className="absolute -inset-2 bg-blue-500/10 blur-xl rounded-full -z-10" />
+            <div className="absolute inset-0 bg-blue-500/10 blur-xl rounded-full -z-10" />
           </motion.div>
 
-          <motion.div
-            animate={{ 
-              x: [30, -50, 30],
-              y: [20, -10, 20]
-            }}
-            transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
-            className="absolute bottom-[40%] left-[15%] text-blue-400/60"
-          >
-            <Bike size={16} />
-          </motion.div>
-
-          {/* Central Hub */}
-          <div className="z-20 bg-[#0A0F08] p-3 rounded-full border border-primary/30 shadow-[0_0_20px_rgba(76,175,80,0.2)]">
-            <Sprout size={24} className="text-primary" />
+          {/* Buyer */}
+          <div className="absolute bottom-[20%] right-[25%] text-white/70">
+            <ShoppingBag size={20} />
+            <motion.div
+              animate={{ scale: [1, 1.3, 1], opacity: [0.5, 1, 0.5] }}
+              transition={{ duration: 2, repeat: Infinity, delay: 1 }}
+              className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full shadow-[0_0_10px_rgba(76,175,80,1)]"
+            />
           </div>
+
+          {/* Connection Lines (Static logic, animated dash) */}
+          <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-20">
+             <motion.path 
+               d="M 150 150 L 100 80" 
+               stroke="currentColor" 
+               className="text-primary"
+               strokeWidth="1"
+               fill="none"
+               strokeDasharray="4 4"
+               animate={{ strokeDashoffset: -20 }}
+               transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+             />
+             <motion.path 
+               d="M 150 150 L 250 160" 
+               stroke="currentColor" 
+               className="text-krishi-gold"
+               strokeWidth="1"
+               fill="none"
+               strokeDasharray="4 4"
+               animate={{ strokeDashoffset: -20 }}
+               transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+             />
+             <motion.path 
+               d="M 150 150 L 220 250" 
+               stroke="currentColor" 
+               className="text-white"
+               strokeWidth="1"
+               fill="none"
+               strokeDasharray="4 4"
+               animate={{ strokeDashoffset: -20 }}
+               transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+             />
+          </svg>
         </div>
 
         {/* Network Logistics Feed */}
@@ -210,7 +247,7 @@ const PlatformRadarMap = () => {
                 <Navigation size={10} className="text-krishi-gold" />
                 <span className="text-[9px] font-bold text-krishi-gold uppercase tracking-widest">Network Stream</span>
               </div>
-              <span className="text-[8px] text-white/20 uppercase font-bold">15km Hyper-local Active</span>
+              <span className="text-[8px] text-white/20 uppercase font-bold">Signal Strength: Optimal</span>
            </div>
            <div className="space-y-2">
               {logs.map((log, i) => (
@@ -231,10 +268,10 @@ const PlatformRadarMap = () => {
         <div className="mt-6 pt-6 border-t border-white/5 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <ShieldCheck size={14} className="text-primary" />
-            <span className="text-[10px] text-white/40 font-bold uppercase tracking-widest">Trust_Verified</span>
+            <span className="text-[10px] text-white/40 font-bold uppercase tracking-widest">Security_Protocol_V2</span>
           </div>
           <div className="text-[9px] text-white/20 font-bold font-code">
-             Coords: 25.31° N, 82.97° E
+             Encryption: SHA-256
           </div>
         </div>
       </div>
@@ -341,7 +378,7 @@ export const Hero = () => {
         </div>
 
         <div className="lg:col-span-5 hidden lg:block">
-          <PlatformRadarMap />
+          <PlatformPulseNetwork />
         </div>
       </div>
 
