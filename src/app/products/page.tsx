@@ -2,7 +2,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Star, ShoppingCart, ArrowLeft } from "lucide-react";
+import { Star, ShoppingCart, ArrowLeft, Bike, MapPin, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
@@ -13,6 +13,7 @@ import { Footer } from "@/components/sections/footer";
 import Link from "next/link";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
 
 const CATEGORIES = [
   { id: "all", nameEn: "All Products", nameHi: "सभी उत्पाद" },
@@ -23,14 +24,14 @@ const CATEGORIES = [
 ];
 
 const ALL_PRODUCTS = [
-  { id: "tomato", cat: "veggies", nameEn: "Organic Cherry Tomatoes", nameHi: "ऑर्गेनिक चेरी टमाटर", price: 180, rating: 4.9, cluster: "Varanasi" },
-  { id: "potato", cat: "veggies", nameEn: "Farm Fresh Potatoes", nameHi: "ताजा आलू", price: 45, rating: 4.7, cluster: "Mirzapur" },
-  { id: "mango", cat: "fruits", nameEn: "Banarasi Langra Mangoes", nameHi: "बनारसी लंगड़ा आम", price: 600, rating: 5.0, cluster: "Varanasi" },
-  { id: "rice", cat: "grains", nameEn: "Premium Basmati Rice", nameHi: "प्रीमियम बासमती चावल", price: 245, rating: 4.8, cluster: "Prayagraj" },
-  { id: "wheat", cat: "grains", nameEn: "Sun-dried Wheat", nameHi: "धूप में सुखाया गया गेहूं", price: 120, rating: 4.7, cluster: "Lalganj" },
-  { id: "oil", cat: "oils", nameEn: "Cold-pressed Mustard Oil", nameHi: "सरसों का तेल", price: 320, rating: 4.9, cluster: "Madihan" },
-  { id: "honey", cat: "pantry", nameEn: "Wild Forest Honey", nameHi: "जंगल का शहद", price: 450, rating: 4.8, cluster: "Sonbhadra" },
-  { id: "ghee", cat: "oils", nameEn: "A2 Desi Cow Ghee", nameHi: "ए2 देसी गाय का घी", price: 850, rating: 4.9, cluster: "Prayagraj" },
+  { id: "tomato", cat: "veggies", nameEn: "Organic Cherry Tomatoes", nameHi: "ऑर्गेनिक चेरी टमाटर", price: 180, rating: 4.9, cluster: "Varanasi", nearby: true },
+  { id: "potato", cat: "veggies", nameEn: "Farm Fresh Potatoes", nameHi: "ताजा आलू", price: 45, rating: 4.7, cluster: "Mirzapur", nearby: false },
+  { id: "mango", cat: "fruits", nameEn: "Banarasi Langra Mangoes", nameHi: "बनारसी लंगड़ा आम", price: 600, rating: 5.0, cluster: "Varanasi", nearby: true },
+  { id: "rice", cat: "grains", nameEn: "Premium Basmati Rice", nameHi: "प्रीमियम बासमती चावल", price: 245, rating: 4.8, cluster: "Prayagraj", nearby: false },
+  { id: "wheat", cat: "grains", nameEn: "Sun-dried Wheat", nameHi: "धूप में सुखाया गया गेहूं", price: 120, rating: 4.7, cluster: "Lalganj", nearby: false },
+  { id: "oil", cat: "oils", nameEn: "Cold-pressed Mustard Oil", nameHi: "सरसों का तेल", price: 320, rating: 4.9, cluster: "Madihan", nearby: true },
+  { id: "honey", cat: "pantry", nameEn: "Wild Forest Honey", nameHi: "जंगल का शहद", price: 450, rating: 4.8, cluster: "Sonbhadra", nearby: true },
+  { id: "ghee", cat: "oils", nameEn: "A2 Desi Cow Ghee", nameHi: "ए2 देसी गाय का घी", price: 850, rating: 4.9, cluster: "Prayagraj", nearby: false },
 ];
 
 export default function ProductsPage() {
@@ -54,7 +55,7 @@ export default function ProductsPage() {
     });
     toast({
       title: lang === 'en' ? "Added to Cart" : "कार्ट में जोड़ा गया",
-      description: `${lang === 'en' ? product.nameEn : product.nameHi} ${lang === 'en' ? "has been added." : "जोड़ दिया गया है।"}`,
+      description: `${lang === 'en' ? product.nameEn : product.nameHi} added.`,
     });
   };
 
@@ -72,9 +73,14 @@ export default function ProductsPage() {
             <h1 className="text-4xl md:text-6xl font-display text-foreground">
               {lang === 'en' ? "Harit" : "हरित"} <span className="text-primary italic">{lang === 'en' ? "Marketplace" : "बाज़ार"}</span>
             </h1>
-            <p className="text-xl text-foreground/60 font-body mt-2">
-              {lang === 'en' ? "Clinical-grade organic produce from Uttar Pradesh." : "उत्तर प्रदेश से क्लिनिकल-ग्रेड जैविक उपज।"}
-            </p>
+            <div className="flex items-center gap-3 mt-4">
+              <Badge className="bg-primary/10 text-primary border-primary/20 gap-1 px-3 py-1">
+                 <Zap size={14} /> Express 15km Delivery
+              </Badge>
+              <Badge variant="outline" className="border-border text-foreground/40 font-code text-[10px]">
+                LOC_UP_ACTIVE
+              </Badge>
+            </div>
           </div>
         </div>
 
@@ -85,8 +91,8 @@ export default function ProductsPage() {
               onClick={() => setActiveCategory(cat.id)}
               className={`px-6 py-3 rounded-full font-headline font-bold text-sm whitespace-nowrap transition-all border ${
                 activeCategory === cat.id 
-                ? "bg-primary text-white border-primary shadow-lg shadow-primary/20" 
-                : "bg-card text-foreground/60 border-border hover:border-primary/40"
+                ? "bg-primary text-white border-primary shadow-lg" 
+                : "bg-card text-foreground/60 border-border"
               }`}
             >
               {lang === 'en' ? cat.nameEn : cat.nameHi}
@@ -112,8 +118,13 @@ export default function ProductsPage() {
                     fill
                     className="object-cover group-hover:scale-105 transition-transform duration-700"
                   />
-                  <div className="absolute top-4 left-4 bg-background/90 backdrop-blur-md border border-border px-4 py-1.5 rounded-full text-[10px] font-headline font-bold text-primary uppercase tracking-widest shadow-sm">
-                    {product.cluster} Cluster
+                  {product.nearby && (
+                    <div className="absolute top-4 right-4 bg-krishi-gold text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-lg flex items-center gap-1">
+                      <Bike size={12} /> Nearby Farmer
+                    </div>
+                  )}
+                  <div className="absolute bottom-4 left-4 bg-background/90 backdrop-blur-md border border-border px-3 py-1 rounded-full text-[9px] font-bold text-primary flex items-center gap-1 uppercase tracking-widest">
+                    <MapPin size={10} /> {product.cluster} Cluster
                   </div>
                 </div>
                 

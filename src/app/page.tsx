@@ -10,6 +10,7 @@ import { WeatherIntelligence } from "@/components/sections/weather-intelligence"
 import { DiagnosticsDemo } from "@/components/sections/diagnostics-demo";
 import { LandLease } from "@/components/sections/land-lease";
 import { HaritStore } from "@/components/sections/harit-store";
+import { Iot360View } from "@/components/sections/iot-360-view";
 import { Stats } from "@/components/sections/stats";
 import { Testimonials } from "@/components/sections/testimonials";
 import { CtaSection } from "@/components/sections/cta-pricing";
@@ -25,6 +26,7 @@ export default function LandingPage() {
         <Hero />
         <SocialProofBar />
         <FeatureGrid />
+        <Iot360View />
         <WeatherIntelligence />
         <DiagnosticsDemo />
         <LandLease />
