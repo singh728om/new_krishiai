@@ -9,15 +9,11 @@ import {
   ArrowLeft, 
   Bike, 
   MapPin, 
-  Zap, 
   Search, 
   ChevronRight,
-  Store,
   Clock,
   Navigation,
   ShieldCheck,
-  LocateFixed,
-  Map as MapIcon,
   Loader2,
   CheckCircle2,
   Filter
@@ -29,7 +25,6 @@ import { useSettings } from "@/context/settings-context";
 import { useCart } from "@/context/cart-context";
 import { Navbar } from "@/components/sections/navbar";
 import { Footer } from "@/components/sections/footer";
-import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -38,7 +33,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 
@@ -121,6 +115,9 @@ const ALL_PRODUCTS = [
   { id: "ghee", storeId: "str-4", cat: "dairy", nameEn: "A2 Desi Cow Ghee", nameHi: "ए2 देसी गाय का घी", price: 850, rating: 4.9 },
   { id: "honey", storeId: "str-3", cat: "pantry", nameEn: "Wild Forest Honey", nameHi: "जंगल का शहद", price: 450, rating: 4.8 },
   { id: "wheat", storeId: "str-2", cat: "veggies", nameEn: "Sun-dried Wheat", nameHi: "धूप में सुखाया गया गेहूं", price: 120, rating: 4.7 },
+  { id: "corn", storeId: "str-1", cat: "veggies", nameEn: "Sweet Yellow Corn", nameHi: "मीठी पीली मकई", price: 60, rating: 4.6 },
+  { id: "dal", storeId: "str-3", cat: "pantry", nameEn: "Organic Toor Dal", nameHi: "जैविक अरहर दाल", price: 180, rating: 4.9 },
+  { id: "turmeric", storeId: "str-5", cat: "pantry", nameEn: "Pure Turmeric", nameHi: "शुद्ध हल्दी", price: 250, rating: 5.0 },
 ];
 
 export default function HaritMarketplace() {
@@ -151,10 +148,8 @@ export default function HaritMarketplace() {
   }, [location]);
 
   const filteredProducts = useMemo(() => {
-    // Show products from selected store, OR all products if category is specific and no store selected
     let list = ALL_PRODUCTS;
     
-    // Filter by nearby stores first if no store is selected explicitly
     if (!selectedStore) {
       const nearbyStoreIds = filteredStores.map(s => s.id);
       list = list.filter(p => nearbyStoreIds.includes(p.storeId));
@@ -174,6 +169,7 @@ export default function HaritMarketplace() {
       setIsLocating(false);
       setIsLocationDialogOpen(false);
       setSelectedStore(null);
+      setActiveCategory("all");
       toast({
         title: lang === 'en' ? "Location Updated" : "स्थान अपडेट किया गया",
         description: `${tempLocation.village}, ${tempLocation.district} is now active.`
@@ -192,8 +188,18 @@ export default function HaritMarketplace() {
     });
     toast({
       title: lang === 'en' ? "Added to Cart" : "कार्ट में जोड़ा गया",
-      description: `${lang === 'en' ? product.nameEn : product.nameHi} added.`,
+      description: `${lang === 'en' ? product.nameEn : product.nameHi} added to basket.`,
     });
+  };
+
+  const handleCategoryClick = (catId: string) => {
+    setActiveCategory(catId);
+    // If user clicks "All", we return to the farm list (if no specific farm was selected)
+    // or just show all items of the farm.
+    // Standard Zomato behavior for the "All" tab in top nav is resetting to main dashboard.
+    if (catId === 'all') {
+      setSelectedStore(null);
+    }
   };
 
   return (
@@ -231,13 +237,7 @@ export default function HaritMarketplace() {
           {CATEGORIES.map((cat) => (
             <button
               key={cat.id}
-              onClick={() => {
-                setActiveCategory(cat.id);
-                // If we select a specific category from 'all', maybe we want to see all products nearby
-                if (cat.id !== 'all') {
-                  // Option: Stay in store or show all nearby
-                }
-              }}
+              onClick={() => handleCategoryClick(cat.id)}
               className={`flex items-center gap-2 px-5 py-3 rounded-xl font-headline font-bold text-xs whitespace-nowrap transition-all border ${
                 activeCategory === cat.id 
                 ? "bg-primary text-white border-primary shadow-md scale-105" 
@@ -251,7 +251,6 @@ export default function HaritMarketplace() {
         </div>
 
         <AnimatePresence mode="wait">
-          {/* If a category is selected (not 'all') AND no store is selected, show products globally nearby */}
           {(!selectedStore && activeCategory === 'all') ? (
             <motion.div 
               key="store-list"
@@ -329,7 +328,7 @@ export default function HaritMarketplace() {
                 )}
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                 {filteredProducts.length > 0 ? filteredProducts.map((product) => {
                   const imageData = PlaceHolderImages.find(img => img.id === product.id) || PlaceHolderImages[0];
                   return (
@@ -338,26 +337,26 @@ export default function HaritMarketplace() {
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
                       key={product.id}
-                      className="bg-card rounded-3xl border border-border overflow-hidden group shadow-sm hover:shadow-lg transition-all"
+                      className="bg-card rounded-2xl border border-border overflow-hidden group shadow-sm hover:shadow-lg transition-all"
                     >
-                      <div className="h-32 relative overflow-hidden bg-muted">
+                      <div className="h-28 relative overflow-hidden bg-muted">
                         <img src={imageData.imageUrl} alt={product.nameEn} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700" />
                         {!selectedStore && (
-                           <div className="absolute top-2 right-2 bg-black/50 backdrop-blur-md px-1.5 py-0.5 rounded text-[8px] text-white font-bold uppercase">
+                           <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded text-[7px] text-white font-bold uppercase">
                               {STORES.find(s => s.id === product.storeId)?.name.split(' ')[0]}
                            </div>
                         )}
                       </div>
-                      <div className="p-4 space-y-3">
-                        <h3 className="font-headline font-bold text-sm leading-tight line-clamp-2 h-10">
+                      <div className="p-3 space-y-2">
+                        <h3 className="font-headline font-bold text-xs leading-tight line-clamp-2 h-8">
                           {lang === 'en' ? product.nameEn : product.nameHi}
                         </h3>
                         <div className="flex items-center justify-between">
-                          <span className="text-lg font-display font-bold">₹{product.price}</span>
+                          <span className="text-sm font-display font-bold">₹{product.price}</span>
                           <Button 
                             size="sm" 
                             onClick={() => handleAdd(product)}
-                            className="bg-primary hover:bg-primary/90 text-white rounded-full h-8 px-4 text-xs font-bold"
+                            className="bg-primary hover:bg-primary/90 text-white rounded-full h-7 px-3 text-[10px] font-bold"
                           >
                             Add
                           </Button>
