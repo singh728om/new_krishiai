@@ -4,7 +4,6 @@
 import { motion } from "framer-motion";
 import { ShoppingBag, Store, Bike, ArrowRight } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
 import { useSettings } from "@/context/settings-context";
 
 const ACTIONS = [
@@ -12,37 +11,34 @@ const ACTIONS = [
     id: "order",
     titleEn: "Order Online",
     titleHi: "ऑनलाइन ऑर्डर करें",
-    descEn: "Get fresh organic produce delivered from nearby farms within 15km.",
-    descHi: "15 किमी के भीतर पास के खेतों से ताजी जैविक उपज प्राप्त करें।",
+    descEn: "Fresh organic produce within 15km.",
+    descHi: "15 किमी के भीतर ताजी उपज।",
     icon: ShoppingBag,
     href: "/products",
-    image: "https://picsum.photos/seed/agri-order/800/600",
-    imageHint: "vegetable delivery",
-    color: "from-krishi-lime to-primary"
+    color: "bg-krishi-lime/10 text-krishi-lime",
+    glow: "shadow-krishi-lime/20"
   },
   {
     id: "sell",
     titleEn: "Sell on KrishiAI",
     titleHi: "KrishiAI पर बेचें",
-    descEn: "List your farm produce and reach thousands of local buyers directly.",
-    descHi: "अपने खेत की उपज को सूचीबद्ध करें और सीधे स्थानीय खरीदारों तक पहुंचें।",
+    descEn: "List your produce to local buyers.",
+    descHi: "स्थानीय खरीदारों के लिए उत्पाद।",
     icon: Store,
     href: "/partner-registration?type=farmer",
-    image: "https://picsum.photos/seed/agri-sell/800/600",
-    imageHint: "farmer market",
-    color: "from-krishi-gold to-krishi-amber"
+    color: "bg-krishi-gold/10 text-krishi-gold",
+    glow: "shadow-krishi-gold/20"
   },
   {
     id: "partner",
-    titleEn: "Join us as Partner",
-    titleHi: "भागीदार के रूप में जुड़ें",
-    descEn: "Become a delivery partner and earn by fulfilling local organic orders.",
-    descHi: "डिलीवरी पार्टनर बनें और स्थानीय जैविक ऑर्डर पूरे करके कमाएं।",
+    titleEn: "Partner with Us",
+    titleHi: "भागीदार बनें",
+    descEn: "Earn by fulfilling local orders.",
+    descHi: "ऑर्डर पूरे करके कमाएं।",
     icon: Bike,
     href: "/partner-registration?type=rider",
-    image: "https://picsum.photos/seed/agri-rider/800/600",
-    imageHint: "delivery boy",
-    color: "from-blue-500 to-sky-600"
+    color: "bg-blue-500/10 text-blue-500",
+    glow: "shadow-blue-500/20"
   }
 ];
 
@@ -50,9 +46,9 @@ export const ActionCards = () => {
   const { lang } = useSettings();
 
   return (
-    <section className="py-24 bg-background overflow-hidden">
+    <section className="py-16 bg-background relative z-20">
       <div className="container mx-auto px-6">
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {ACTIONS.map((action, index) => (
             <motion.div
               key={action.id}
@@ -63,41 +59,29 @@ export const ActionCards = () => {
             >
               <Link href={action.href}>
                 <motion.div
-                  whileHover={{ y: -12 }}
-                  className="group relative h-[450px] rounded-[2.5rem] overflow-hidden border border-border shadow-sm hover:shadow-2xl transition-all duration-500"
+                  whileHover={{ y: -5, scale: 1.02 }}
+                  className="group p-8 rounded-[2rem] bg-card border border-border hover:border-primary/20 transition-all duration-300 shadow-sm hover:shadow-xl relative overflow-hidden"
                 >
-                  {/* Background Image with Overlay */}
-                  <Image
-                    src={action.image}
-                    alt={action.titleEn}
-                    fill
-                    className="object-cover transition-transform duration-700 group-hover:scale-110"
-                    data-ai-hint={action.imageHint}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-krishi-black via-krishi-black/40 to-transparent" />
+                  <div className={`w-16 h-16 rounded-2xl ${action.color} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500`}>
+                    <action.icon size={32} />
+                  </div>
                   
-                  {/* Content */}
-                  <div className="absolute inset-0 p-8 flex flex-col justify-end text-white">
-                    <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${action.color} flex items-center justify-center mb-6 shadow-lg group-hover:scale-110 transition-transform duration-500`}>
-                      <action.icon size={28} />
-                    </div>
-                    
-                    <h3 className="text-3xl font-display mb-3 group-hover:text-krishi-gold transition-colors">
+                  <div className="space-y-2">
+                    <h3 className="text-2xl font-display font-bold text-foreground">
                       {lang === 'en' ? action.titleEn : action.titleHi}
                     </h3>
-                    
-                    <p className="text-white/70 font-body text-sm leading-relaxed mb-6 transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
+                    <p className="text-foreground/50 font-body text-sm">
                       {lang === 'en' ? action.descEn : action.descHi}
                     </p>
-                    
-                    <div className="flex items-center gap-2 text-xs font-headline font-bold uppercase tracking-widest text-krishi-gold">
-                      {lang === 'en' ? "Get Started" : "शुरू करें"}
-                      <ArrowRight size={14} className="group-hover:translate-x-2 transition-transform" />
-                    </div>
                   </div>
 
-                  {/* Corner Accent */}
-                  <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl ${action.color} opacity-20 blur-2xl group-hover:opacity-40 transition-opacity`} />
+                  <div className="mt-6 flex items-center gap-2 text-[10px] font-headline font-bold uppercase tracking-widest text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                    {lang === 'en' ? "Get Started" : "शुरू करें"}
+                    <ArrowRight size={12} />
+                  </div>
+
+                  {/* Subtle Background Accent */}
+                  <div className={`absolute -right-4 -bottom-4 w-24 h-24 rounded-full ${action.color} opacity-0 group-hover:opacity-5 blur-2xl transition-opacity`} />
                 </motion.div>
               </Link>
             </motion.div>
