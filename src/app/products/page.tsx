@@ -19,7 +19,8 @@ import {
   LocateFixed,
   Map as MapIcon,
   Loader2,
-  CheckCircle2
+  CheckCircle2,
+  Filter
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
@@ -127,7 +128,6 @@ export default function HaritMarketplace() {
   const { addToCart } = useCart();
   const { toast } = useToast();
   
-  // Advanced Location State
   const [location, setLocation] = useState({
     village: "Lanka",
     pincode: "221005",
@@ -143,9 +143,7 @@ export default function HaritMarketplace() {
   const [searchQuery, setSearchInput] = useState("");
   const [selectedStore, setSelectedStore] = useState<typeof STORES[0] | null>(null);
 
-  // Filter stores based on user location (Within 15km logic simulation)
   const filteredStores = useMemo(() => {
-    // We simulate 15km by matching district or pincode proximity
     return STORES.filter(s => 
       s.district.toLowerCase() === location.district.toLowerCase() || 
       s.pincode.slice(0, 3) === location.pincode.slice(0, 3)
@@ -153,16 +151,24 @@ export default function HaritMarketplace() {
   }, [location]);
 
   const filteredProducts = useMemo(() => {
+    // Show products from selected store, OR all products if category is specific and no store selected
     let list = ALL_PRODUCTS;
-    if (selectedStore) list = list.filter(p => p.storeId === selectedStore.id);
+    
+    // Filter by nearby stores first if no store is selected explicitly
+    if (!selectedStore) {
+      const nearbyStoreIds = filteredStores.map(s => s.id);
+      list = list.filter(p => nearbyStoreIds.includes(p.storeId));
+    } else {
+      list = list.filter(p => p.storeId === selectedStore.id);
+    }
+
     if (activeCategory !== "all") list = list.filter(p => p.cat === activeCategory);
-    if (searchQuery) list = list.filter(p => p.nameEn.toLowerCase().includes(searchQuery.toLowerCase()));
+    if (searchQuery) list = list.filter(p => (lang === 'en' ? p.nameEn : p.nameHi).toLowerCase().includes(searchQuery.toLowerCase()));
     return list;
-  }, [selectedStore, activeCategory, searchQuery]);
+  }, [selectedStore, activeCategory, searchQuery, filteredStores, lang]);
 
   const handleSetLocation = () => {
     setIsLocating(true);
-    // Simulate technical scanning
     setTimeout(() => {
       setLocation(tempLocation);
       setIsLocating(false);
@@ -194,10 +200,10 @@ export default function HaritMarketplace() {
     <main className="min-h-screen bg-background flex flex-col">
       <Navbar />
 
-      <section className="flex-1 pt-32 pb-24 container mx-auto px-6 max-w-6xl">
+      <section className="flex-1 pt-32 pb-24 container mx-auto px-6 max-w-7xl">
         
-        {/* Header: Advanced Location Selector & Search */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12">
+        {/* Header: Location & Search */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-8">
           <div className="space-y-1">
              <button 
                onClick={() => setIsLocationDialogOpen(true)}
@@ -207,16 +213,13 @@ export default function HaritMarketplace() {
                 <span className="max-w-[200px] truncate">{location.village}, {location.district}</span>
                 <ChevronRight size={14} className="text-foreground/40" />
              </button>
-             <p className="text-[10px] text-foreground/40 uppercase tracking-widest font-bold ml-4">
-               15km Hyper-local Network Active
-             </p>
           </div>
 
           <div className="relative flex-1 md:max-w-md">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-foreground/30" size={18} />
             <Input 
-              placeholder={lang === 'en' ? "Search for fresh veggies, milk, or ghee..." : "ताजी सब्जियां, दूध या घी खोजें..."}
-              className="pl-12 h-14 rounded-2xl bg-card border-border shadow-sm focus:ring-primary"
+              placeholder={lang === 'en' ? "Search fresh organic products..." : "ताजे जैविक उत्पाद खोजें..."}
+              className="pl-12 h-12 rounded-2xl bg-card border-border shadow-sm"
               value={searchQuery}
               onChange={(e) => setSearchInput(e.target.value)}
             />
@@ -224,80 +227,78 @@ export default function HaritMarketplace() {
         </div>
 
         {/* Categories Bar */}
-        <div className="flex gap-4 overflow-x-auto pb-8 mb-8 no-scrollbar">
+        <div className="flex gap-3 overflow-x-auto pb-6 mb-4 no-scrollbar">
           {CATEGORIES.map((cat) => (
             <button
               key={cat.id}
-              onClick={() => setActiveCategory(cat.id)}
-              className={`flex items-center gap-2 px-6 py-4 rounded-2xl font-headline font-bold text-sm whitespace-nowrap transition-all border ${
+              onClick={() => {
+                setActiveCategory(cat.id);
+                // If we select a specific category from 'all', maybe we want to see all products nearby
+                if (cat.id !== 'all') {
+                  // Option: Stay in store or show all nearby
+                }
+              }}
+              className={`flex items-center gap-2 px-5 py-3 rounded-xl font-headline font-bold text-xs whitespace-nowrap transition-all border ${
                 activeCategory === cat.id 
-                ? "bg-primary text-white border-primary shadow-lg scale-105" 
+                ? "bg-primary text-white border-primary shadow-md scale-105" 
                 : "bg-card text-foreground/60 border-border hover:border-primary/20"
               }`}
             >
-              <span className="text-xl">{cat.icon}</span>
+              <span className="text-lg">{cat.icon}</span>
               {lang === 'en' ? cat.nameEn : cat.nameHi}
             </button>
           ))}
         </div>
 
         <AnimatePresence mode="wait">
-          {!selectedStore ? (
+          {/* If a category is selected (not 'all') AND no store is selected, show products globally nearby */}
+          {(!selectedStore && activeCategory === 'all') ? (
             <motion.div 
               key="store-list"
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="space-y-10"
+              className="space-y-8"
             >
-              <div className="flex items-center gap-3">
-                <h2 className="text-3xl font-display italic">Farms in <span className="text-primary">{location.district}</span></h2>
-                <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">{filteredStores.length} ACTIVE</Badge>
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-display italic">Farms in <span className="text-primary">{location.district}</span></h2>
+                <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-widest text-primary/60 border-primary/20">
+                  {filteredStores.length} Hubs Found
+                </Badge>
               </div>
               
-              <div className="grid md:grid-cols-2 gap-8">
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredStores.length > 0 ? filteredStores.map((store) => (
                   <motion.div
                     key={store.id}
                     whileHover={{ y: -5 }}
                     onClick={() => setSelectedStore(store)}
-                    className="group bg-card rounded-[2.5rem] border border-border overflow-hidden cursor-pointer shadow-sm hover:shadow-2xl transition-all"
+                    className="group bg-card rounded-[2rem] border border-border overflow-hidden cursor-pointer shadow-sm hover:shadow-xl transition-all"
                   >
-                    <div className="h-56 relative overflow-hidden bg-muted">
+                    <div className="h-44 relative overflow-hidden bg-muted">
                       <img src={store.image} alt={store.name} className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-700" />
-                      <div className="absolute top-4 left-4 bg-background/90 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold text-primary border border-border">
+                      <div className="absolute top-3 left-3 bg-background/90 backdrop-blur-md px-2.5 py-1 rounded-full text-[9px] font-bold text-primary border border-border">
                          {store.distance} AWAY
                       </div>
-                      <div className="absolute bottom-4 right-4 bg-krishi-lime text-white px-3 py-1 rounded-full text-[10px] font-bold flex items-center gap-1">
-                        <ShieldCheck size={12} /> HYPER-LOCAL
-                      </div>
                     </div>
-                    <div className="p-8">
-                      <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <h3 className="text-2xl font-headline font-bold group-hover:text-primary transition-colors">{store.name}</h3>
-                          <p className="text-[10px] font-code text-foreground/40 uppercase mt-1">PINCODE: {store.pincode}</p>
-                        </div>
-                        <Badge className="bg-primary/10 text-primary border-primary/20 gap-1">
-                          <Star size={12} fill="currentColor" /> {store.rating}
+                    <div className="p-6">
+                      <div className="flex justify-between items-start mb-2">
+                        <h3 className="text-xl font-headline font-bold group-hover:text-primary transition-colors">{store.name}</h3>
+                        <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px] h-6">
+                          <Star size={10} fill="currentColor" className="mr-1" /> {store.rating}
                         </Badge>
                       </div>
-                      <div className="flex items-center gap-6 text-foreground/40 text-sm font-medium">
-                        <div className="flex items-center gap-2"><Clock size={16} className="text-krishi-amber" /> {store.time}</div>
-                        <div className="flex items-center gap-2"><Bike size={16} className="text-blue-500" /> ₹30 Delivery</div>
+                      <div className="flex items-center gap-4 text-foreground/40 text-[10px] font-bold uppercase tracking-widest">
+                        <div className="flex items-center gap-1.5"><Clock size={14} className="text-krishi-amber" /> {store.time}</div>
+                        <div className="flex items-center gap-1.5"><Bike size={14} className="text-blue-500" /> ₹30 Delivery</div>
                       </div>
                     </div>
                   </motion.div>
                 )) : (
-                  <div className="col-span-2 py-24 text-center space-y-6 bg-muted/10 rounded-[3rem] border border-dashed border-border">
-                    <div className="w-20 h-20 bg-muted/50 rounded-full flex items-center justify-center mx-auto text-foreground/20">
-                      <Navigation size={40} />
-                    </div>
-                    <div className="space-y-2">
-                      <h3 className="text-2xl font-display">No Clusters in {location.district} yet.</h3>
-                      <p className="text-foreground/40 max-w-sm mx-auto">We are expanding our IoT sensor network daily. Try searching for "Varanasi" or "Prayagraj".</p>
-                    </div>
-                    <Button onClick={() => setIsLocationDialogOpen(true)} variant="outline" className="rounded-full px-8">Change Location</Button>
+                  <div className="col-span-full py-24 text-center space-y-6 bg-muted/10 rounded-[3rem] border border-dashed border-border">
+                    <Navigation size={40} className="mx-auto text-foreground/20" />
+                    <h3 className="text-xl font-display">No Clusters in {location.district} yet.</h3>
+                    <Button onClick={() => setIsLocationDialogOpen(true)} variant="outline" className="rounded-full">Change Location</Button>
                   </div>
                 )}
               </div>
@@ -305,42 +306,58 @@ export default function HaritMarketplace() {
           ) : (
             <motion.div
               key="product-list"
-              initial={{ opacity: 0, x: 20 }}
+              initial={{ opacity: 0, x: 10 }}
               animate={{ opacity: 1, x: 0 }}
-              className="space-y-12"
+              className="space-y-8"
             >
-              <div className="flex items-center gap-4">
-                <Button variant="ghost" size="icon" onClick={() => setSelectedStore(null)} className="rounded-full h-12 w-12 border border-border bg-card">
-                  <ArrowLeft size={20} />
-                </Button>
-                <div>
-                  <h2 className="text-3xl font-display">{selectedStore.name}</h2>
-                  <p className="text-foreground/40 text-sm font-bold uppercase tracking-widest">{selectedStore.district} Cluster • {selectedStore.time} Delivery</p>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <Button variant="ghost" size="icon" onClick={() => { setSelectedStore(null); setActiveCategory('all'); }} className="rounded-full h-10 w-10 border border-border bg-card">
+                    <ArrowLeft size={18} />
+                  </Button>
+                  <div>
+                    <h2 className="text-2xl font-display">
+                      {selectedStore ? selectedStore.name : `${CATEGORIES.find(c => c.id === activeCategory)?.nameEn} Nearby`}
+                    </h2>
+                    <p className="text-foreground/40 text-[10px] font-bold uppercase tracking-widest">
+                      {selectedStore ? `${selectedStore.district} Hub` : 'Showing items from all local hubs'}
+                    </p>
+                  </div>
                 </div>
+                {activeCategory !== 'all' && (
+                   <Badge className="bg-primary text-white font-bold">{activeCategory.toUpperCase()}</Badge>
+                )}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                {filteredProducts.map((product) => {
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                {filteredProducts.length > 0 ? filteredProducts.map((product) => {
                   const imageData = PlaceHolderImages.find(img => img.id === product.id) || PlaceHolderImages[0];
                   return (
                     <motion.div
                       layout
-                      initial={{ opacity: 0, scale: 0.9 }}
+                      initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
                       key={product.id}
-                      className="bg-card rounded-[2rem] border border-border overflow-hidden group shadow-sm hover:shadow-xl transition-all"
+                      className="bg-card rounded-3xl border border-border overflow-hidden group shadow-sm hover:shadow-lg transition-all"
                     >
-                      <div className="h-48 relative overflow-hidden bg-muted">
+                      <div className="h-32 relative overflow-hidden bg-muted">
                         <img src={imageData.imageUrl} alt={product.nameEn} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700" />
+                        {!selectedStore && (
+                           <div className="absolute top-2 right-2 bg-black/50 backdrop-blur-md px-1.5 py-0.5 rounded text-[8px] text-white font-bold uppercase">
+                              {STORES.find(s => s.id === product.storeId)?.name.split(' ')[0]}
+                           </div>
+                        )}
                       </div>
-                      <div className="p-6 space-y-4">
-                        <h3 className="font-headline font-bold text-lg leading-tight">{lang === 'en' ? product.nameEn : product.nameHi}</h3>
+                      <div className="p-4 space-y-3">
+                        <h3 className="font-headline font-bold text-sm leading-tight line-clamp-2 h-10">
+                          {lang === 'en' ? product.nameEn : product.nameHi}
+                        </h3>
                         <div className="flex items-center justify-between">
-                          <span className="text-2xl font-display">₹{product.price}</span>
+                          <span className="text-lg font-display font-bold">₹{product.price}</span>
                           <Button 
                             size="sm" 
                             onClick={() => handleAdd(product)}
-                            className="bg-primary hover:bg-primary/90 text-white rounded-full px-6"
+                            className="bg-primary hover:bg-primary/90 text-white rounded-full h-8 px-4 text-xs font-bold"
                           >
                             Add
                           </Button>
@@ -348,7 +365,12 @@ export default function HaritMarketplace() {
                       </div>
                     </motion.div>
                   );
-                })}
+                }) : (
+                  <div className="col-span-full py-20 text-center bg-muted/10 rounded-3xl border border-dashed border-border">
+                    <Filter className="mx-auto text-foreground/10 mb-4" size={32} />
+                    <p className="text-foreground/40 text-sm font-medium">No products found in this category nearby.</p>
+                  </div>
+                )}
               </div>
             </motion.div>
           )}
@@ -356,14 +378,13 @@ export default function HaritMarketplace() {
 
         {/* Location Selector Dialog */}
         <Dialog open={isLocationDialogOpen} onOpenChange={setIsLocationDialogOpen}>
-          <DialogContent className="rounded-[3rem] p-0 overflow-hidden border-border bg-card max-w-lg">
-            <div className="h-32 bg-primary relative flex items-center justify-center overflow-hidden">
+          <DialogContent className="rounded-[2.5rem] p-0 overflow-hidden border-border bg-card max-w-lg">
+            <div className="h-24 bg-primary relative flex items-center justify-center overflow-hidden">
                <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/leaf.png')]" />
-               <MapIcon className="text-white/20 w-48 h-48 absolute rotate-12 -right-8 -top-8" />
-               <DialogTitle className="text-2xl font-display italic text-white relative z-10">Select Delivery Cluster</DialogTitle>
+               <DialogTitle className="text-xl font-display italic text-white relative z-10">Select Delivery Hub</DialogTitle>
             </div>
 
-            <div className="p-8 space-y-6">
+            <div className="p-6 space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">Village / Locality</Label>
@@ -371,7 +392,7 @@ export default function HaritMarketplace() {
                     value={tempLocation.village} 
                     onChange={e => setTempLocation({...tempLocation, village: e.target.value})}
                     placeholder="E.g. Lanka" 
-                    className="rounded-xl h-12" 
+                    className="rounded-xl h-10 text-sm" 
                   />
                 </div>
                 <div className="space-y-2">
@@ -381,7 +402,7 @@ export default function HaritMarketplace() {
                     onChange={e => setTempLocation({...tempLocation, pincode: e.target.value})}
                     placeholder="6-digit PIN" 
                     maxLength={6}
-                    className="rounded-xl h-12" 
+                    className="rounded-xl h-10 text-sm" 
                   />
                 </div>
               </div>
@@ -393,7 +414,7 @@ export default function HaritMarketplace() {
                     value={tempLocation.district} 
                     onChange={e => setTempLocation({...tempLocation, district: e.target.value})}
                     placeholder="E.g. Varanasi" 
-                    className="rounded-xl h-12" 
+                    className="rounded-xl h-10 text-sm" 
                   />
                 </div>
                 <div className="space-y-2">
@@ -402,27 +423,27 @@ export default function HaritMarketplace() {
                     value={tempLocation.state} 
                     onChange={e => setTempLocation({...tempLocation, state: e.target.value})}
                     placeholder="Uttar Pradesh" 
-                    className="rounded-xl h-12" 
+                    className="rounded-xl h-10 text-sm" 
                   />
                 </div>
               </div>
 
-              <div className="p-6 bg-primary/5 rounded-2xl border border-primary/10 flex items-start gap-4">
-                 <ShieldCheck className="text-primary shrink-0 mt-1" size={20} />
-                 <p className="text-[11px] text-foreground/60 leading-relaxed">
-                   KrishiAI operates through local farming clusters. We fulfill orders within a 15km radius of each hub to ensure maximum freshness.
+              <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10 flex items-start gap-3">
+                 <ShieldCheck className="text-primary shrink-0 mt-0.5" size={16} />
+                 <p className="text-[10px] text-foreground/60 leading-relaxed">
+                   We fulfill orders within a 15km radius of our farming hubs to ensure maximum freshness.
                  </p>
               </div>
 
               <Button 
                 onClick={handleSetLocation} 
                 disabled={isLocating}
-                className="w-full rounded-full py-8 text-lg font-bold bg-primary text-white shadow-lg shadow-primary/20"
+                className="w-full rounded-full py-6 text-md font-bold bg-primary text-white shadow-lg shadow-primary/20"
               >
                 {isLocating ? (
-                  <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Scanning Clusters...</>
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Scanning...</>
                 ) : (
-                  <><CheckCircle2 className="mr-2 h-5 w-5" /> Confirm Location</>
+                  <><CheckCircle2 className="mr-2 h-4 w-4" /> Confirm Location</>
                 )}
               </Button>
             </div>
@@ -434,4 +455,3 @@ export default function HaritMarketplace() {
     </main>
   );
 }
-
