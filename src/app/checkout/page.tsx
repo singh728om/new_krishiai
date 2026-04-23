@@ -11,7 +11,8 @@ import { Footer } from "@/components/sections/footer";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { Badge } from "@/components/ui/badge";
+import { collection, doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
@@ -36,7 +37,7 @@ export default function CheckoutPage() {
 
   if (isUserLoading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
 
-  const handlePlaceOrder = async () => {
+  const handlePlaceOrder = () => {
     if (!firestore || !user || cart.length === 0) return;
     setIsProcessing(true);
 
@@ -50,26 +51,28 @@ export default function CheckoutPage() {
       createdAt: serverTimestamp(),
     };
 
-    try {
-      const colRef = collection(firestore, "orders");
-      const docRef = await addDoc(colRef, orderData);
-      
-      toast({
-        title: lang === 'en' ? "Order Placed!" : "ऑर्डर दिया गया!",
-        description: lang === 'en' ? "Your order will be delivered soon." : "आपका ऑर्डर जल्द ही पहुँचा दिया जाएगा।",
+    const colRef = collection(firestore, "orders");
+    const newOrderRef = doc(colRef);
+
+    // Non-blocking write to leverage optimistic UI
+    setDoc(newOrderRef, orderData)
+      .catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+          path: newOrderRef.path,
+          operation: 'create',
+          requestResourceData: orderData,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        setIsProcessing(false);
       });
 
-      clearCart();
-      router.push(`/order-track/${docRef.id}`);
-    } catch (error: any) {
-      const permissionError = new FirestorePermissionError({
-        path: "orders",
-        operation: 'create',
-        requestResourceData: orderData,
-      });
-      errorEmitter.emit('permission-error', permissionError);
-      setIsProcessing(false);
-    }
+    toast({
+      title: lang === 'en' ? "Order Placed!" : "ऑर्डर दिया गया!",
+      description: lang === 'en' ? "Your order will be delivered soon." : "आपका ऑर्डर जल्द ही पहुँचा दिया जाएगा।",
+    });
+
+    clearCart();
+    router.push(`/order-track/${newOrderRef.id}`);
   };
 
   return (
@@ -92,7 +95,7 @@ export default function CheckoutPage() {
                     <p className="text-xs text-foreground/40">Est. Time: 45-60 mins</p>
                   </div>
                </div>
-               <Badge variant="outline" className="border-primary/20 text-primary">₹30 CHARGE</Badge>
+               <Badge variant="outline" className="border-primary/20 text-primary font-bold">₹30 CHARGE</Badge>
             </div>
 
             {cart.length === 0 ? (
