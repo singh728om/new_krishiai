@@ -27,8 +27,8 @@ export default function LandingPage() {
         <Hero />
         <SocialProofBar />
         <ActionCards />
-        <FeatureGrid />
         <Iot360View />
+        <FeatureGrid />
         <WeatherIntelligence />
         <DiagnosticsDemo />
         <LandLease />
