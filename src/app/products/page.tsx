@@ -16,7 +16,10 @@ import {
   Clock,
   Navigation,
   ShieldCheck,
-  LocateFixed
+  LocateFixed,
+  Map as MapIcon,
+  Loader2,
+  CheckCircle2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
@@ -29,12 +32,76 @@ import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 
 const STORES = [
-  { id: "str-1", name: "Varanasi North Cluster", cluster: "Varanasi", distance: "1.2km", rating: 4.9, time: "30-45 min", image: "https://picsum.photos/seed/farm1/600/400" },
-  { id: "str-2", name: "Ghazipur Organic Hub", cluster: "Ghazipur", distance: "3.4km", rating: 4.7, time: "45-60 min", image: "https://picsum.photos/seed/farm2/600/400" },
-  { id: "str-3", name: "Mirzapur Hill Farm", cluster: "Mirzapur", distance: "12.8km", rating: 4.8, time: "90-120 min", image: "https://picsum.photos/seed/farm3/600/400" },
-  { id: "str-4", name: "Sarnath Green Field", cluster: "Varanasi", distance: "0.8km", rating: 5.0, time: "25-35 min", image: "https://picsum.photos/seed/farm4/600/400" },
+  { 
+    id: "str-1", 
+    name: "Varanasi North Cluster", 
+    district: "Varanasi", 
+    pincode: "221001",
+    distance: "1.2km", 
+    rating: 4.9, 
+    time: "30-45 min", 
+    image: "https://picsum.photos/seed/farm1/600/400" 
+  },
+  { 
+    id: "str-2", 
+    name: "Ghazipur Organic Hub", 
+    district: "Ghazipur", 
+    pincode: "233001",
+    distance: "3.4km", 
+    rating: 4.7, 
+    time: "45-60 min", 
+    image: "https://picsum.photos/seed/farm2/600/400" 
+  },
+  { 
+    id: "str-3", 
+    name: "Mirzapur Hill Farm", 
+    district: "Mirzapur", 
+    pincode: "231001",
+    distance: "12.8km", 
+    rating: 4.8, 
+    time: "90-120 min", 
+    image: "https://picsum.photos/seed/farm3/600/400" 
+  },
+  { 
+    id: "str-4", 
+    name: "Sarnath Green Field", 
+    district: "Varanasi", 
+    pincode: "221007",
+    distance: "0.8km", 
+    rating: 5.0, 
+    time: "25-35 min", 
+    image: "https://picsum.photos/seed/farm4/600/400" 
+  },
+  { 
+    id: "str-5", 
+    name: "Prayagraj River Cluster", 
+    district: "Prayagraj", 
+    pincode: "211001",
+    distance: "2.5km", 
+    rating: 4.6, 
+    time: "40-50 min", 
+    image: "https://picsum.photos/seed/farm5/600/400" 
+  },
+  { 
+    id: "str-6", 
+    name: "Sonbhadra Valley Farm", 
+    district: "Sonbhadra", 
+    pincode: "231216",
+    distance: "5.1km", 
+    rating: 4.8, 
+    time: "60-80 min", 
+    image: "https://picsum.photos/seed/farm6/600/400" 
+  },
 ];
 
 const CATEGORIES = [
@@ -60,17 +127,31 @@ export default function HaritMarketplace() {
   const { addToCart } = useCart();
   const { toast } = useToast();
   
-  const [userLocation, setUserLocation] = useState("Varanasi");
+  // Advanced Location State
+  const [location, setLocation] = useState({
+    village: "Lanka",
+    pincode: "221005",
+    district: "Varanasi",
+    state: "Uttar Pradesh"
+  });
+  
+  const [isLocating, setIsLocating] = useState(false);
+  const [isLocationDialogOpen, setIsLocationDialogOpen] = useState(false);
+  const [tempLocation, setTempLocation] = useState(location);
+
   const [activeCategory, setActiveCategory] = useState("all");
   const [searchQuery, setSearchInput] = useState("");
   const [selectedStore, setSelectedStore] = useState<typeof STORES[0] | null>(null);
 
-  // Filter stores based on user location (Simulation)
+  // Filter stores based on user location (Within 15km logic simulation)
   const filteredStores = useMemo(() => {
-    return STORES.filter(s => s.cluster === userLocation);
-  }, [userLocation]);
+    // We simulate 15km by matching district or pincode proximity
+    return STORES.filter(s => 
+      s.district.toLowerCase() === location.district.toLowerCase() || 
+      s.pincode.slice(0, 3) === location.pincode.slice(0, 3)
+    );
+  }, [location]);
 
-  // Filter products based on category and search
   const filteredProducts = useMemo(() => {
     let list = ALL_PRODUCTS;
     if (selectedStore) list = list.filter(p => p.storeId === selectedStore.id);
@@ -78,6 +159,21 @@ export default function HaritMarketplace() {
     if (searchQuery) list = list.filter(p => p.nameEn.toLowerCase().includes(searchQuery.toLowerCase()));
     return list;
   }, [selectedStore, activeCategory, searchQuery]);
+
+  const handleSetLocation = () => {
+    setIsLocating(true);
+    // Simulate technical scanning
+    setTimeout(() => {
+      setLocation(tempLocation);
+      setIsLocating(false);
+      setIsLocationDialogOpen(false);
+      setSelectedStore(null);
+      toast({
+        title: lang === 'en' ? "Location Updated" : "स्थान अपडेट किया गया",
+        description: `${tempLocation.village}, ${tempLocation.district} is now active.`
+      });
+    }, 1500);
+  };
 
   const handleAdd = (product: any) => {
     const imageData = PlaceHolderImages.find(img => img.id === product.id) || PlaceHolderImages[0];
@@ -100,15 +196,20 @@ export default function HaritMarketplace() {
 
       <section className="flex-1 pt-32 pb-24 container mx-auto px-6 max-w-6xl">
         
-        {/* Header: Location & Search */}
+        {/* Header: Advanced Location Selector & Search */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12">
           <div className="space-y-1">
-             <div className="flex items-center gap-2 text-primary font-bold text-sm cursor-pointer hover:opacity-80 transition-opacity">
-                <MapPin size={18} />
-                <span>{userLocation}, India</span>
+             <button 
+               onClick={() => setIsLocationDialogOpen(true)}
+               className="flex items-center gap-2 text-primary font-bold text-sm hover:opacity-80 transition-opacity group bg-primary/5 px-4 py-2 rounded-full border border-primary/10"
+             >
+                <MapPin size={18} className="group-hover:animate-bounce" />
+                <span className="max-w-[200px] truncate">{location.village}, {location.district}</span>
                 <ChevronRight size={14} className="text-foreground/40" />
-             </div>
-             <p className="text-xs text-foreground/40 uppercase tracking-widest font-bold">15km Hyper-local Delivery Active</p>
+             </button>
+             <p className="text-[10px] text-foreground/40 uppercase tracking-widest font-bold ml-4">
+               15km Hyper-local Network Active
+             </p>
           </div>
 
           <div className="relative flex-1 md:max-w-md">
@@ -149,10 +250,13 @@ export default function HaritMarketplace() {
               exit={{ opacity: 0, scale: 0.95 }}
               className="space-y-10"
             >
-              <h2 className="text-3xl font-display italic">Farms in <span className="text-primary">{userLocation}</span></h2>
+              <div className="flex items-center gap-3">
+                <h2 className="text-3xl font-display italic">Farms in <span className="text-primary">{location.district}</span></h2>
+                <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">{filteredStores.length} ACTIVE</Badge>
+              </div>
               
               <div className="grid md:grid-cols-2 gap-8">
-                {filteredStores.map((store) => (
+                {filteredStores.length > 0 ? filteredStores.map((store) => (
                   <motion.div
                     key={store.id}
                     whileHover={{ y: -5 }}
@@ -170,7 +274,10 @@ export default function HaritMarketplace() {
                     </div>
                     <div className="p-8">
                       <div className="flex justify-between items-start mb-4">
-                        <h3 className="text-2xl font-headline font-bold group-hover:text-primary transition-colors">{store.name}</h3>
+                        <div>
+                          <h3 className="text-2xl font-headline font-bold group-hover:text-primary transition-colors">{store.name}</h3>
+                          <p className="text-[10px] font-code text-foreground/40 uppercase mt-1">PINCODE: {store.pincode}</p>
+                        </div>
                         <Badge className="bg-primary/10 text-primary border-primary/20 gap-1">
                           <Star size={12} fill="currentColor" /> {store.rating}
                         </Badge>
@@ -181,26 +288,18 @@ export default function HaritMarketplace() {
                       </div>
                     </div>
                   </motion.div>
-                ))}
-              </div>
-
-              <div className="bg-primary/5 rounded-[2.5rem] p-12 text-center border border-primary/10">
-                 <LocateFixed size={48} className="mx-auto text-primary/20 mb-4" />
-                 <h3 className="text-2xl font-display mb-2">Can't see your farm?</h3>
-                 <p className="text-foreground/40 mb-6">Our sensors are expanding daily. Try switching to a different cluster.</p>
-                 <div className="flex justify-center gap-3">
-                    {["Varanasi", "Ghazipur", "Mirzapur"].map(city => (
-                      <Button 
-                        key={city} 
-                        variant={userLocation === city ? "default" : "outline"} 
-                        size="sm" 
-                        onClick={() => setUserLocation(city)}
-                        className="rounded-full"
-                      >
-                        {city}
-                      </Button>
-                    ))}
-                 </div>
+                )) : (
+                  <div className="col-span-2 py-24 text-center space-y-6 bg-muted/10 rounded-[3rem] border border-dashed border-border">
+                    <div className="w-20 h-20 bg-muted/50 rounded-full flex items-center justify-center mx-auto text-foreground/20">
+                      <Navigation size={40} />
+                    </div>
+                    <div className="space-y-2">
+                      <h3 className="text-2xl font-display">No Clusters in {location.district} yet.</h3>
+                      <p className="text-foreground/40 max-w-sm mx-auto">We are expanding our IoT sensor network daily. Try searching for "Varanasi" or "Prayagraj".</p>
+                    </div>
+                    <Button onClick={() => setIsLocationDialogOpen(true)} variant="outline" className="rounded-full px-8">Change Location</Button>
+                  </div>
+                )}
               </div>
             </motion.div>
           ) : (
@@ -216,7 +315,7 @@ export default function HaritMarketplace() {
                 </Button>
                 <div>
                   <h2 className="text-3xl font-display">{selectedStore.name}</h2>
-                  <p className="text-foreground/40 text-sm font-bold uppercase tracking-widest">{selectedStore.cluster} Cluster • {selectedStore.time} Delivery</p>
+                  <p className="text-foreground/40 text-sm font-bold uppercase tracking-widest">{selectedStore.district} Cluster • {selectedStore.time} Delivery</p>
                 </div>
               </div>
 
@@ -254,9 +353,85 @@ export default function HaritMarketplace() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Location Selector Dialog */}
+        <Dialog open={isLocationDialogOpen} onOpenChange={setIsLocationDialogOpen}>
+          <DialogContent className="rounded-[3rem] p-0 overflow-hidden border-border bg-card max-w-lg">
+            <div className="h-32 bg-primary relative flex items-center justify-center overflow-hidden">
+               <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/leaf.png')]" />
+               <MapIcon className="text-white/20 w-48 h-48 absolute rotate-12 -right-8 -top-8" />
+               <DialogTitle className="text-2xl font-display italic text-white relative z-10">Select Delivery Cluster</DialogTitle>
+            </div>
+
+            <div className="p-8 space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">Village / Locality</Label>
+                  <Input 
+                    value={tempLocation.village} 
+                    onChange={e => setTempLocation({...tempLocation, village: e.target.value})}
+                    placeholder="E.g. Lanka" 
+                    className="rounded-xl h-12" 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">Pincode</Label>
+                  <Input 
+                    value={tempLocation.pincode} 
+                    onChange={e => setTempLocation({...tempLocation, pincode: e.target.value})}
+                    placeholder="6-digit PIN" 
+                    maxLength={6}
+                    className="rounded-xl h-12" 
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">District</Label>
+                  <Input 
+                    value={tempLocation.district} 
+                    onChange={e => setTempLocation({...tempLocation, district: e.target.value})}
+                    placeholder="E.g. Varanasi" 
+                    className="rounded-xl h-12" 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">State</Label>
+                  <Input 
+                    value={tempLocation.state} 
+                    onChange={e => setTempLocation({...tempLocation, state: e.target.value})}
+                    placeholder="Uttar Pradesh" 
+                    className="rounded-xl h-12" 
+                  />
+                </div>
+              </div>
+
+              <div className="p-6 bg-primary/5 rounded-2xl border border-primary/10 flex items-start gap-4">
+                 <ShieldCheck className="text-primary shrink-0 mt-1" size={20} />
+                 <p className="text-[11px] text-foreground/60 leading-relaxed">
+                   KrishiAI operates through local farming clusters. We fulfill orders within a 15km radius of each hub to ensure maximum freshness.
+                 </p>
+              </div>
+
+              <Button 
+                onClick={handleSetLocation} 
+                disabled={isLocating}
+                className="w-full rounded-full py-8 text-lg font-bold bg-primary text-white shadow-lg shadow-primary/20"
+              >
+                {isLocating ? (
+                  <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Scanning Clusters...</>
+                ) : (
+                  <><CheckCircle2 className="mr-2 h-5 w-5" /> Confirm Location</>
+                )}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </section>
 
       <Footer />
     </main>
   );
 }
+
