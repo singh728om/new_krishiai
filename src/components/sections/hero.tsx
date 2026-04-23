@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, CloudRain, Sprout, Wind, Cloud } from "lucide-react";
+import { ArrowRight, CloudRain, Sprout, Wind, Cloud, Radio, Activity, Navigation, ShoppingBag } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useSettings } from "@/context/settings-context";
 import Link from "next/link";
@@ -94,6 +94,12 @@ const DataTerminal = () => {
     moisture: 42,
   });
 
+  const [logs, setLogs] = useState<string[]>([
+    "SAT_LINK: ACTIVE",
+    "CLUSTER_09: OPTIMAL",
+    "RIDER_42: ON_TASK",
+  ]);
+
   useEffect(() => {
     const interval = setInterval(() => {
       setData((prev) => ({
@@ -102,7 +108,16 @@ const DataTerminal = () => {
         risk: prev.health > 90 ? "LOW" : "MODERATE",
         moisture: Math.min(60, Math.max(30, prev.moisture + Math.floor((Math.random() - 0.5) * 4))),
       }));
-    }, 2000);
+
+      const newEvents = [
+        "BASMATI_ORD: RECEIVED",
+        "RIDER_SYNC: OK",
+        "SPECTRAL_SCAN: COMPLETE",
+        "PADDY_FIELD_04: IRRIGATE",
+        "MARKET_PEAK: +12%",
+      ];
+      setLogs(prev => [newEvents[Math.floor(Math.random() * newEvents.length)], prev[0], prev[1]]);
+    }, 3000);
     return () => clearInterval(interval);
   }, []);
 
@@ -111,45 +126,96 @@ const DataTerminal = () => {
       initial={{ opacity: 0, x: 40 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.8, delay: 0.4 }}
-      className="relative p-1 rounded-2xl bg-gradient-to-br from-primary/30 to-transparent"
+      className="relative p-1 rounded-[2.5rem] bg-gradient-to-br from-primary/40 to-transparent"
     >
-      <div className="bg-card rounded-2xl p-6 border border-border shadow-2xl font-code text-sm">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex gap-1.5">
-            <div className="w-2.5 h-2.5 rounded-full bg-red-500/50" />
-            <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/50" />
-            <div className="w-2.5 h-2.5 rounded-full bg-primary/50" />
+      <div className="bg-[#0A0F08] rounded-[2.4rem] p-8 border border-white/5 shadow-2xl font-code text-sm text-white/90 overflow-hidden">
+        {/* Terminal Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex gap-2">
+            <div className="w-2 h-2 rounded-full bg-red-500/80 animate-pulse" />
+            <div className="w-2 h-2 rounded-full bg-krishi-gold/80" />
+            <div className="w-2 h-2 rounded-full bg-primary/80" />
           </div>
-          <span className="text-[10px] text-foreground/40 uppercase tracking-widest">Krishi Core AI v2.4</span>
+          <div className="flex items-center gap-2">
+             <Radio size={12} className="text-primary animate-pulse" />
+             <span className="text-[10px] text-white/40 uppercase tracking-[0.2em] font-bold">Live Intelligence</span>
+          </div>
         </div>
 
+        {/* Diagnostic Grid */}
+        <div className="grid grid-cols-2 gap-6 mb-8">
+          <div className="space-y-1">
+             <p className="text-[9px] text-white/30 uppercase font-bold">Soil Status</p>
+             <div className="flex items-end justify-between border-b border-white/10 pb-1">
+                <span className="text-primary font-bold">pH {data.pH}</span>
+                <Activity size={12} className="text-white/20" />
+             </div>
+             <div className="w-full bg-white/5 h-1 rounded-full overflow-hidden mt-1">
+                <motion.div 
+                  animate={{ width: `${(data.pH / 14) * 100}%` }}
+                  className="bg-primary h-full" 
+                />
+             </div>
+          </div>
+          <div className="space-y-1">
+             <p className="text-[9px] text-white/30 uppercase font-bold">Crop Health</p>
+             <div className="flex items-end justify-between border-b border-white/10 pb-1">
+                <span className="text-krishi-lime font-bold">{data.health}%</span>
+                <Sprout size={12} className="text-white/20" />
+             </div>
+             <div className="w-full bg-white/5 h-1 rounded-full overflow-hidden mt-1">
+                <motion.div 
+                  animate={{ width: `${data.health}%` }}
+                  className="bg-krishi-lime h-full" 
+                />
+             </div>
+          </div>
+        </div>
+
+        {/* Network Logistics Feed */}
+        <div className="bg-white/5 rounded-2xl p-4 border border-white/5 mb-8">
+           <div className="flex items-center gap-2 mb-3">
+              <Navigation size={10} className="text-krishi-gold" />
+              <span className="text-[9px] font-bold text-krishi-gold uppercase tracking-widest">Network Stream</span>
+           </div>
+           <div className="space-y-2">
+              {logs.map((log, i) => (
+                <motion.div 
+                  key={log + i}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1 - (i * 0.3), x: 0 }}
+                  className="flex items-center justify-between text-[11px] font-medium"
+                >
+                   <span className="text-white/60">_ {log}</span>
+                   <span className="text-[8px] text-white/20">{new Date().toLocaleTimeString()}</span>
+                </motion.div>
+              ))}
+           </div>
+        </div>
+
+        {/* Action & Footer */}
         <div className="space-y-4">
-          <div className="flex justify-between items-center group">
-            <span className="text-foreground/60">SOIL_PH</span>
-            <span className="text-primary font-bold">{data.pH}</span>
+          <div className="flex items-center justify-between p-3 bg-primary/10 rounded-xl border border-primary/20">
+             <div className="flex items-center gap-3">
+                <ShoppingBag size={14} className="text-primary" />
+                <span className="text-xs font-bold">Harit Market Active</span>
+             </div>
+             <span className="text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded-full font-bold">UP_EAST</span>
           </div>
-          <div className="flex justify-between items-center">
-            <span className="text-foreground/60">CROP_HEALTH</span>
-            <span className="text-primary">{data.health}%</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-foreground/60">MOISTURE</span>
-            <span className="text-foreground">{data.moisture}%</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-foreground/60">PATH_RISK</span>
-            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${data.risk === 'LOW' ? 'bg-primary/20 text-primary' : 'bg-krishi-amber/20 text-krishi-amber'}`}>
-              {data.risk}
-            </span>
-          </div>
-        </div>
 
-        <div className="mt-8 pt-4 border-t border-border text-[10px] text-foreground/30">
-          <p className="animate-pulse">_ ANALYZING REAL-TIME SPECTRAL IMAGERY...</p>
-          <p className="mt-1">_ COORDINATES: 21.1458° N, 79.0882° E</p>
+          <div className="pt-4 border-t border-white/10 text-[9px] text-white/20 font-bold uppercase tracking-widest">
+            <p className="animate-pulse">Analyzing spectral imagery: Sector_09</p>
+            <div className="flex justify-between mt-1">
+               <span>Coords: 25.3176° N, 82.9739° E</span>
+               <span className="text-primary">Latency: 14ms</span>
+            </div>
+          </div>
         </div>
       </div>
-      <div className="absolute -inset-4 bg-primary/5 blur-3xl -z-10 rounded-full" />
+      
+      {/* Dynamic Background Effects */}
+      <div className="absolute -inset-10 bg-primary/10 blur-[80px] -z-10 rounded-full animate-pulse-slow" />
+      <div className="absolute top-0 right-0 w-32 h-32 bg-krishi-gold/10 blur-[60px] -z-10 rounded-full" />
     </motion.div>
   );
 };
@@ -173,13 +239,13 @@ export const Hero = () => {
   const headlineWords = content.headline.split(" ");
 
   return (
-    <section className="relative min-h-[90vh] flex items-center overflow-hidden pt-20 grain bg-background">
+    <section className="relative min-h-[90vh] flex items-center overflow-hidden pt-24 grain bg-background">
       <AgricultureScene />
       <SkyElements />
       
-      <div className="container mx-auto px-6 grid lg:grid-cols-12 gap-12 items-center relative z-10">
+      <div className="container mx-auto px-6 grid lg:grid-cols-12 gap-12 lg:gap-24 items-center relative z-10">
         
-        <div className="lg:col-span-7 space-y-8">
+        <div className="lg:col-span-7 space-y-10">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -189,14 +255,14 @@ export const Hero = () => {
             {content.badge}
           </motion.div>
 
-          <h1 className="text-5xl md:text-7xl font-display font-medium leading-[1.1] text-foreground max-w-2xl">
+          <h1 className="text-5xl md:text-7xl font-display font-medium leading-[1.15] text-foreground max-w-2xl">
             {headlineWords.map((word, i) => (
               <motion.span
                 key={i}
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: i * 0.1, ease: "easeOut" }}
-                className="inline-block mr-[0.2em]"
+                className="inline-block mr-[0.25em]"
               >
                 {word}
               </motion.span>
@@ -219,13 +285,13 @@ export const Hero = () => {
             className="flex flex-col sm:flex-row gap-4"
           >
             <Link href="/login">
-              <Button size="lg" className="bg-primary hover:bg-primary/90 text-white rounded-full px-8 h-14 text-lg font-semibold group w-full sm:w-auto">
+              <Button size="lg" className="bg-primary hover:bg-primary/90 text-white rounded-full px-10 h-16 text-lg font-bold group w-full sm:w-auto shadow-xl shadow-primary/20">
                 {content.ctaPrimary}
                 <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Button>
             </Link>
             <Link href="/lease-registration">
-              <Button variant="outline" size="lg" className="border-primary/40 text-primary hover:bg-primary/10 rounded-full px-8 h-14 text-lg font-semibold w-full sm:w-auto">
+              <Button variant="outline" size="lg" className="border-primary/30 text-primary hover:bg-primary/5 rounded-full px-10 h-16 text-lg font-bold w-full sm:w-auto">
                 {content.ctaSecondary}
               </Button>
             </Link>
