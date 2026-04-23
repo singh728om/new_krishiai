@@ -13,27 +13,54 @@ import {
   Store, 
   ShoppingBag, 
   User, 
-  Sprout 
+  Sprout,
+  MapPin,
+  Clock,
+  Navigation,
+  Globe
 } from "lucide-react";
 import { useSettings } from "@/context/settings-context";
 
 const ENTITIES = [
   { icon: Bike, color: "text-blue-400", top: "25%", left: "30%", delay: 0.2, label: "Rider" },
-  { icon: Store, color: "text-krishi-gold", top: "40%", left: "70%", delay: 0.5, label: "Seller" },
-  { icon: ShoppingBag, color: "text-krishi-lime", top: "65%", left: "25%", delay: 0.8, label: "Buyer" },
+  { icon: Store, color: "text-krishi-gold", top: "40%", left: "70%", delay: 0.5, label: "Farmer/Seller" },
+  { icon: ShoppingBag, color: "text-krishi-lime", top: "65%", left: "25%", delay: 0.8, label: "Local Buyer" },
   { icon: Bike, color: "text-blue-400", top: "15%", left: "60%", delay: 1.1, label: "Rider" },
-  { icon: User, color: "text-white/40", top: "80%", left: "55%", delay: 1.4, label: "Buyer" },
-  { icon: Store, color: "text-krishi-gold", top: "55%", left: "10%", delay: 1.7, label: "Seller" },
+  { icon: User, color: "text-white/40", top: "80%", left: "55%", delay: 1.4, label: "Consumer" },
+  { icon: Store, color: "text-krishi-gold", top: "55%", left: "10%", delay: 1.7, label: "Agri-Merchant" },
 ];
 
 export const Iot360View = () => {
   const { lang } = useSettings();
 
   const t = {
-    title: lang === 'en' ? "360° IoT Field Monitoring" : "360° आईओटी फील्ड मॉनिटरिंग",
-    subtitle: lang === 'en' ? "Real-time spectral analysis and logistics synchronization across all clusters." : "सभी क्लस्टरों में रीयल-टाइम स्पेक्ट्रल विश्लेषण और रसद सिंक्रनाइज़ेशन।",
-    status: lang === 'en' ? "LIVE_RADAR_ACTIVE" : "लाइव_रडार_सक्रिय",
+    title: lang === 'en' ? "360° Hyper-local Ecosystem" : "360° हाइपर-लोकल इकोसिस्टम",
+    subtitle: lang === 'en' ? "Connecting smart field monitoring with pincode-wise delivery. Farmers sell direct, riders ship within 15km, and buyers get verified organic produce." : "स्मार्ट फील्ड मॉनिटरिंग को पिनकोड-वार डिलीवरी के साथ जोड़ना। किसान सीधे बेचते हैं, राइडर 15 किमी के भीतर शिप करते हैं, और खरीदारों को सत्यापित जैविक उत्पाद मिलते हैं।",
+    status: lang === 'en' ? "LOGISTICS_RADAR_ACTIVE" : "लॉजिस्टिक्स_रडार_सक्रिय",
   };
+
+  const stats = [
+    { 
+      label: lang === 'en' ? "Delivery Radius" : "डिलीवरी रेडियस", 
+      val: "15km Max", 
+      icon: Navigation 
+    },
+    { 
+      label: lang === 'en' ? "Farm to Fork" : "खेत से थाली तक", 
+      val: "Direct Connect", 
+      icon: Sprout 
+    },
+    { 
+      label: lang === 'en' ? "Pincode Range" : "पिनकोड रेंज", 
+      val: lang === 'en' ? "Varanasi / UP" : "वाराणसी / यूपी", 
+      icon: MapPin 
+    },
+    { 
+      label: lang === 'en' ? "Traceability" : "ट्रैसेबिलिटी", 
+      val: "100% Organic", 
+      icon: ShieldCheck 
+    },
+  ];
 
   return (
     <section className="py-24 bg-krishi-black text-white overflow-hidden relative">
@@ -53,17 +80,12 @@ export const Iot360View = () => {
             <h2 className="text-5xl md:text-7xl font-display leading-tight">
               {t.title}
             </h2>
-            <p className="text-xl text-white/60 font-body max-w-lg">
+            <p className="text-xl text-white/60 font-body max-w-lg leading-relaxed">
               {t.subtitle}
             </p>
 
             <div className="grid grid-cols-2 gap-6">
-              {[
-                { label: "Latency", val: "14ms", icon: Zap },
-                { label: "Uptime", val: "99.9%", icon: ShieldCheck },
-                { label: "Sync Rate", val: "2.4GB/s", icon: Activity },
-                { label: "Coverage", val: "15km Radius", icon: Wifi },
-              ].map((stat, i) => (
+              {stats.map((stat, i) => (
                 <motion.div
                   key={i}
                   initial={{ opacity: 0, y: 10 }}
@@ -136,7 +158,7 @@ export const Iot360View = () => {
                   className="w-24 h-24 bg-primary/10 rounded-full flex flex-col items-center justify-center border border-primary/20 backdrop-blur-md"
                 >
                    <Sprout size={40} className="text-primary animate-pulse" />
-                   <span className="text-[7px] font-bold uppercase tracking-[0.2em] text-primary/60 mt-1">HUB_CENTER</span>
+                   <span className="text-[7px] font-bold uppercase tracking-[0.2em] text-primary/60 mt-1">KRISHI_HUB</span>
                 </motion.div>
               </div>
             </div>
